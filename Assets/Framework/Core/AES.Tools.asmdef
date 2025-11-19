@@ -1,0 +1,29 @@
+{
+  "name": "AES.Tools",
+  "rootNamespace": "",
+  "references": [
+    "UniTask",
+    "Unity.Addressables",
+    "Unity.Localization",
+    "Unity.ResourceManager",
+    "Unity.InputSystem",
+    "Unity.TextMeshPro",
+    "AYellowpaper.SerializedCollections"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "autoReferenced": true,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "defineConstraints": [],
+  "versionDefines": [
+    {
+      "name": "com.cysharp.unitask",
+      "expression": "",
+      "define": "AESFW_UNITASK"
+    }
+  ],
+  "noEngineReferences": false
+  
+}

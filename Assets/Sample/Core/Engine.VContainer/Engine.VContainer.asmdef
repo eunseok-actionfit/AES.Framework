@@ -1,0 +1,20 @@
+{
+  "name": "Engine.VContainer",
+  "rootNamespace": "Engine.VContainer",
+  "references": [
+    "Engine",
+    "VContainer",
+    "Systems",
+    "UnityUtils",
+    "Presentation"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

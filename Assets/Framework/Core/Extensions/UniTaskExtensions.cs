@@ -1,0 +1,53 @@
+#if AESFW_UNITASK
+using Cysharp.Threading.Tasks;
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using UnityEngine;
+
+namespace UnityUtils.Core.UnityUtils.Extensions
+{
+    public static class UniTaskExtensions
+    {
+        // 안전한 fire-and-forget (로그 포함)
+        public static void ForgetWithLog(this UniTask task, string tag = null, bool ignoreCancellation = true)
+        {
+            task.Forget(ex => {
+                if (ignoreCancellation && ex is OperationCanceledException) return;
+                Debug.LogError($"[UniTask] {tag ?? "Task"} error: {ex}");
+            });
+        }
+
+
+        public async static UniTask<T> WithTimeout<T>(this UniTask<T> task, TimeSpan timeout, CancellationToken ct = default)
+        {
+            using var cts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+            var delay = UniTask.Delay(timeout, cancellationToken: cts.Token);
+            var completed = await UniTask.WhenAny(task, delay);
+
+            if (completed.hasResultLeft)
+            {
+                cts.Cancel();
+                return completed.result;
+            }
+
+            throw new TimeoutException($"Task timed out after {timeout.TotalMilliseconds}ms");
+        }
+
+        public async static UniTask WithTimeout(this UniTask task, TimeSpan timeout, CancellationToken ct = default)
+        {
+            using var cts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+            var delay = UniTask.Delay(timeout, cancellationToken: cts.Token);
+            var completed = await UniTask.WhenAny(task, delay);
+
+            if (completed == 0)
+            {
+                cts.Cancel();
+                return;
+            }
+
+            throw new TimeoutException($"Task timed out after {timeout.TotalMilliseconds}ms");
+        }
+    }
+}
+#endif

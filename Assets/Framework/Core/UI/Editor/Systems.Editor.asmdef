@@ -1,0 +1,17 @@
+{
+  "name": "Systems.UI.Editor",
+  "references": [
+    "Systems",
+    "Engine",
+    "UnityEngine.UI",
+    "Unity.Addressables",
+    "Unity.ResourceManager",
+    "Unity.Addressables.Editor",
+    "AES.Tools"
+  ],
+  "includePlatforms": ["Editor"],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "autoReferenced": true,
+  "noEngineReferences": false
+}
