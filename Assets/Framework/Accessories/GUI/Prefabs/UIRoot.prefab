@@ -218,7 +218,7 @@ MonoBehaviour:
   HudLayer: {fileID: 8839528818924711048}
   PopupLayer: {fileID: 3396654106442531969}
   OverlayLayer: {fileID: 5687202241123315306}
-  Role: 1
+  role: 1
 --- !u!1 &4130191831033156252
 GameObject:
   m_ObjectHideFlags: 0
@@ -452,7 +452,7 @@ MonoBehaviour:
   m_BlockingObjects: 0
   m_BlockingMask:
     serializedVersion: 2
-    m_Bits: 55
+    m_Bits: 4294967295
 --- !u!114 &8839528818924711048
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -472,7 +472,7 @@ MonoBehaviour:
     ModalStack: 0
     SortingPolicy: 0
     AutoBindCamera: 0
-    UseSafeArea: 0
+    UseSafeArea: 1
     InputBlocker: {fileID: 0}
     DimColor: {r: 0, g: 0, b: 0, a: 0}
     BaseTransitionAsset: {fileID: 0}

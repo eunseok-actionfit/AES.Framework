@@ -173,21 +173,36 @@ namespace Core.Systems.UI.Core.UIManager
             if (!_registry.TryGet(key, out var entry))
                 throw new InvalidOperationException($"UI id not registered: {typeof(TEnum).Name}.{id}");
 
+            // Singleton/DenyIfOpen은 ShowAsync 사용
             if (entry.InstancePolicy is UIInstancePolicy.Singleton or UIInstancePolicy.DenyIfOpen)
                 return await ShowAsync(id, model, ct);
 
+            // Multi/ReplaceExisting: 새 인스턴스 생성
             var role = RoleOf(entry.Scope);
             var root = _provider.Get(role) ?? throw new InvalidOperationException($"UIRoot({role}) not found.");
             var parent = ResolveParent(root, entry, out var layer);
             PrepareLayer(layer);
 
-            if (entry.ExclusiveGroup != UIExclusiveGroup.None &&
-                _openByGroup.TryGetValue(entry.ExclusiveGroup, out var glist))
+            // ReplaceExisting만 기존 인스턴스 정리
+            if (entry.InstancePolicy == UIInstancePolicy.ReplaceExisting)
             {
-                foreach (var v in glist.ToArray())
+                if (_multiInstances.TryGetValue(key, out var existingList))
                 {
-                    var vid = GetKeyOf(v);
-                    await HideInstanceCore(v, vid, ct);
+                    foreach (var v in existingList.ToArray())
+                    {
+                        await HideInstanceCore(v, key, ct);
+                    }
+                }
+
+                // ExclusiveGroup 정리
+                if (entry.ExclusiveGroup != UIExclusiveGroup.None &&
+                    _openByGroup.TryGetValue(entry.ExclusiveGroup, out var glist))
+                {
+                    foreach (var v in glist.ToArray())
+                    {
+                        var vid = GetKeyOf(v);
+                        await HideInstanceCore(v, vid, ct);
+                    }
                 }
             }
 
@@ -206,7 +221,13 @@ namespace Core.Systems.UI.Core.UIManager
                 inst = await _factory.CreateAsync(entry, parent, ct);
             }
 
+            // Multi: _instToKey에만 저장, _open은 사용 안 함
             _instToKey[inst] = key;
+
+            // Multi 인스턴스 추적
+            if (!_multiInstances.TryGetValue(key, out var list))
+                _multiInstances[key] = list = new List<UIView.UIView>(4);
+            list.Add(inst);
 
             var hints = GetHints(inst);
             var expectedParent = (layer.Content != null) ? layer.Content : layer.transform;
@@ -222,28 +243,37 @@ namespace Core.Systems.UI.Core.UIManager
                 layer.PlaceBlockerBelowTop(inst.transform);
             }
 
-            var fx = PickFx(root, expectedParent, entry);
-            using (var cts = CancellationTokenSource.CreateLinkedTokenSource(ct, inst.DestroyToken))
+            _animating.Add(key);
+
+            try
             {
-                var linked = cts.Token;
-                await inst.ShowAsync(model, fx, linked);
+                var fx = PickFx(root, expectedParent, entry);
+                using (var cts = CancellationTokenSource.CreateLinkedTokenSource(ct, inst.DestroyToken))
+                {
+                    var linked = cts.Token;
+                    await inst.ShowAsync(model, fx, linked);
+                }
+
+                PushStack(expectedParent, inst);
+
+                var asLayer = layer;
+                if (asLayer != null && asLayer.Policy.BlocksInput)
+                {
+                    if (_stackByParent.TryGetValue(expectedParent, out var l) && l.Count > 0)
+                        asLayer.PlaceBlockerBelowTop(l[^1].transform);
+                }
+
+                if (entry.ExclusiveGroup != UIExclusiveGroup.None)
+                {
+                    if (!_openByGroup.TryGetValue(entry.ExclusiveGroup, out var egList))
+                        _openByGroup[entry.ExclusiveGroup] = egList = new List<UIView.UIView>(4);
+
+                    egList.Add(inst);
+                }
             }
-
-            PushStack(expectedParent, inst);
-
-            var asLayer = layer;
-            if (asLayer != null && asLayer.Policy.BlocksInput)
+            finally
             {
-                if (_stackByParent.TryGetValue(expectedParent, out var l) && l.Count > 0)
-                    asLayer.PlaceBlockerBelowTop(l[^1].transform);
-            }
-
-            if (entry.ExclusiveGroup != UIExclusiveGroup.None)
-            {
-                if (!_openByGroup.TryGetValue(entry.ExclusiveGroup, out var list))
-                    _openByGroup[entry.ExclusiveGroup] = list = new List<UIView.UIView>(4);
-
-                list.Add(inst);
+                _animating.Remove(key);
             }
 
             return inst;
@@ -252,6 +282,8 @@ namespace Core.Systems.UI.Core.UIManager
         public async UniTask HideInstanceAsync(UIView.UIView view, CancellationToken ct = default)
         {
             if (view == null) return;
+            if (!view.gameObject) return;
+
 
             var key = GetKeyOf(view);
             await HideInstanceCore(view, key, ct);
@@ -259,10 +291,27 @@ namespace Core.Systems.UI.Core.UIManager
 
         private async UniTask HideInstanceCore(UIView.UIView view, UIWindowKey key, CancellationToken ct)
         {
-            if (view == null) return;
+            if (view == null) return;  // ← 이미 있음
+            
+            if (!view.gameObject)
+            {
+                // 이미 삭제된 객체는 정리만 함
+                _open.Remove(key);
+                _instToKey.Remove(view);
+                
+                // Multi 인스턴스 정리
+                if (_multiInstances.TryGetValue(key, out var multiList))
+                {
+                    multiList.Remove(view);
+                    if (multiList.Count == 0)
+                        _multiInstances.Remove(key);
+                }
+                return;
+            }
+            
+
             if (!_registry.TryGet(key, out var entry))
             {
-                // 등록이 사라진 뷰는 그냥 Destroy
                 UnityEngine.Object.Destroy(view.gameObject);
                 return;
             }
@@ -282,6 +331,20 @@ namespace Core.Systems.UI.Core.UIManager
                     await view.HideAsync(fx, linked);
                 }
 
+                
+                if (!view.gameObject)
+                {
+                    _open.Remove(key);
+                    _instToKey.Remove(view);
+                    if (_multiInstances.TryGetValue(key, out var multiList))
+                    {
+                        multiList.Remove(view);
+                        if (multiList.Count == 0)
+                            _multiInstances.Remove(key);
+                    }
+                    return;
+                }
+
                 if (parent != null)
                     PopStack(parent, view);
 
@@ -299,6 +362,14 @@ namespace Core.Systems.UI.Core.UIManager
                     glist.Remove(view);
 
                 RestoreViewRect(view);
+
+                // // Multi 인스턴스 정리
+                // if (_multiInstances.TryGetValue(key, out var multiList))
+                // {
+                //     multiList.Remove(view);
+                //     if (multiList.Count == 0)
+                //         _multiInstances.Remove(key);
+                // }
 
                 if (_pooled.TryGetValue(key, out var pooled))
                 {

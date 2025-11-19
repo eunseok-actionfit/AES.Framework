@@ -9,27 +9,27 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 624cba6cef4dc4e60b967bcdb83a3348, type: 3}
+  m_Script: {fileID: 0}
   m_Name: New Global UI Registry
   m_EditorClassIdentifier: Assembly-CSharp::GlobalUIRegistry
   entries:
     _serializedList:
     - Key: 2
       Value:
-        prefab: {fileID: 2811051215334592983, guid: 62c8b0ccda839469182d0bf934835567, type: 3}
+        prefab: {fileID: 1671263855364709555, guid: 110ce79e175e74c73b8a30033fdf5beb, type: 3}
         addressGuid: 
         Scope: 0
-        Kind: 1
-        InstancePolicy: 0
-        Concurrency: 0
+        Kind: 2
+        InstancePolicy: 1
+        Concurrency: 1
         ExclusiveGroup: 0
-        UsePool: 0
+        UsePool: 1
         Capacity: 10
         WarmUp: 10
         ReturnDelay: 0
     - Key: 1
       Value:
-        prefab: {fileID: 5278959235053231526, guid: 214219027316747bcb407f9e280b2745, type: 3}
+        prefab: {fileID: 2811051215334592983, guid: 62c8b0ccda839469182d0bf934835567, type: 3}
         addressGuid: 
         Scope: 1
         Kind: 1
@@ -42,14 +42,14 @@ MonoBehaviour:
         ReturnDelay: 0
     - Key: 0
       Value:
-        prefab: {fileID: 1671263855364709555, guid: 110ce79e175e74c73b8a30033fdf5beb, type: 3}
+        prefab: {fileID: 5278959235053231526, guid: 214219027316747bcb407f9e280b2745, type: 3}
         addressGuid: 
-        Scope: 0
-        Kind: 2
-        InstancePolicy: 3
-        Concurrency: 1
+        Scope: 1
+        Kind: 1
+        InstancePolicy: 0
+        Concurrency: 0
         ExclusiveGroup: 0
-        UsePool: 1
+        UsePool: 0
         Capacity: 10
         WarmUp: 10
         ReturnDelay: 0

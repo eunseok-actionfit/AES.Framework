@@ -101,7 +101,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Sample.Scripts.Toast
   canvasGroup: {fileID: 8510148365727030937}
   blocksRaycasts: 1
-  overrideTransition: {fileID: 11400000, guid: dd312fce0ad8148eebfa89c1b1b0d86a, type: 2}
+  overrideTransition: {fileID: 11400000, guid: bca3486f2b6254208a698d9fdad845dc, type: 2}
   zPriority: 0
   text: {fileID: 8116756289672239497}
 --- !u!1 &6277546598025575474

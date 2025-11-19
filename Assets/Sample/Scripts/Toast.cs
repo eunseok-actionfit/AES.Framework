@@ -6,16 +6,16 @@ using UnityEngine.UI;
 
 namespace Sample.Scripts
 {
-    public class Toast : UIView
+    public struct ToastModel { public string Message; }
+    public class Toast : UIView<ToastModel>
     {
         public Text text;
-        
-        protected override UniTask OnShow(object model, CancellationToken ct)
+
+        protected override void Bind(ToastModel model)
         {
-            
-            text.text = model.ToString();
-            return UniTask.CompletedTask;
+            text.text = model.Message;
         }
+        
     }
 }
 

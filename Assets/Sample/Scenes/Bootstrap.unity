@@ -496,7 +496,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: AES.Tools::UIEntry
   globalRootPrefab: {fileID: 3319331548284698414, guid: 19a4268cdcfcc4fe996eb66de01a306f, type: 3}
-  windowRegistry: {fileID: 11400000, guid: 65378a954d27d45f78f3f368403edb65, type: 2}
+  windowRegistry: {fileID: 11400000, guid: 921df35f3b28e4a6ebd4c2d466e76e5a, type: 2}
 --- !u!4 &1217032783
 Transform:
   m_ObjectHideFlags: 0

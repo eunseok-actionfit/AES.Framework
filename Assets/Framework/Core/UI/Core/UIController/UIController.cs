@@ -30,6 +30,7 @@ namespace Core.Systems.UI.Core.UIManager
         private readonly ITransition _ovlFx = new CanvasGroupFade(0.08f);
 
         // runtime 정책 상태
+        private readonly Dictionary<UIWindowKey, List<UIView.UIView>> _multiInstances = new();
         private readonly Dictionary<UIExclusiveGroup, List<UIView.UIView>> _openByGroup = new();
         private readonly HashSet<UIWindowKey> _animating = new();
         private readonly HashSet<UILayer.UILayer> _subscribedLayers = new();

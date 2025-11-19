@@ -1,5 +1,6 @@
 using System;
 using System.Threading;
+using System.Threading.Tasks;
 using Core.Systems.UI;
 using Core.Systems.UI.Core.UILayer;
 using Core.Systems.UI.Core.UIManager;
@@ -20,4 +21,11 @@ public static class UI
 
     public static UniTask CloseAllAsync(UIRootRole scope, CancellationToken ct = default)
         => Controller.CloseAllAsync(scope, ct);
+
+    public static UniTask<UIView> ShowInstanceAsync<TEnum>(TEnum id, object model = null, CancellationToken ct = default) where TEnum : Enum 
+        => Controller.ShowInstanceAsync(id, model, ct);
+
+    public static  UniTask HideInstanceAsync(UIView view, CancellationToken ct = default) 
+        => Controller.HideInstanceAsync(view, ct);
+
 }
