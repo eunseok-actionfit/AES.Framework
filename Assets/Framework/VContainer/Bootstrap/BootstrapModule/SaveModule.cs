@@ -11,10 +11,12 @@ namespace AES.Tools.VContainer
     public sealed class SaveModule : BootstrapModule
     {
         [Header("기본 슬롯 ID")]
-        [SerializeField] string defaultSlotId = "slot1";
+        [SerializeField]
+        private string defaultSlotId = "slot1";
 
         [Header("시작 시 자동 로드")]
-        [SerializeField] bool autoLoadOnStart = true;
+        [SerializeField]
+        private bool autoLoadOnStart = true;
 
         public override  async UniTask Initialize(LifetimeScope rootScope)
         {

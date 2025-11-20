@@ -12,13 +12,16 @@ namespace AES.Tools.VContainer
         public sealed class SdkModule : BootstrapModule
         {
             [Header("광고 SDK 활성화")]
-            [SerializeField] bool enableAds = true;
+            [SerializeField]
+            private bool enableAds = true;
 
             [Header("Analytics SDK 활성화")]
-            [SerializeField] bool enableAnalytics = true;
+            [SerializeField]
+            private bool enableAnalytics = true;
 
             [Header("리모트 설정(원격 Config) 활성화")]
-            [SerializeField] bool enableRemoteConfig = false;
+            [SerializeField]
+            private bool enableRemoteConfig = false;
 
             public override UniTask Initialize(LifetimeScope rootScope)
             {
@@ -41,7 +44,7 @@ namespace AES.Tools.VContainer
                 return UniTask.CompletedTask;
             }
 
-            void InitializeAds(LifetimeScope rootScope)
+            private void InitializeAds(LifetimeScope rootScope)
             {
                 Debug.Log("[SdkModule] Ads SDK init");
 
@@ -51,7 +54,7 @@ namespace AES.Tools.VContainer
                 // adsService?.Initialize();
             }
 
-            void InitializeAnalytics(LifetimeScope rootScope)
+            private void InitializeAnalytics(LifetimeScope rootScope)
             {
                 Debug.Log("[SdkModule] Analytics SDK init");
 
@@ -61,7 +64,7 @@ namespace AES.Tools.VContainer
                 // analytics?.SetUserId(...);
             }
 
-            void InitializeRemoteConfig(LifetimeScope rootScope)
+            private void InitializeRemoteConfig(LifetimeScope rootScope)
             {
                 Debug.Log("[SdkModule] Remote Config init");
 

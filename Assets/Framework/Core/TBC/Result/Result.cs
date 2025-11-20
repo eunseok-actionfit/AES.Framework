@@ -7,21 +7,29 @@ namespace AES.Tools
     /// 성공/실패만 표현하는 결과 타입
     /// - 실패 시 Error 포함
     /// </summary>
+
+
     public readonly struct Result
     {
         public readonly bool IsSuccess;
         public readonly Error Error;
 
-        private Result(bool ok, Error error)
+
+        public bool IsFail => !IsSuccess;
+
+
+        private Result(bool ok, Error err)
         {
             IsSuccess = ok;
-            Error = error;
+            Error = err;
         }
 
-        public static Result Ok() => new Result(true, Error.None);
-        public static Result Fail(Error error) => new Result(false, error);
 
-        public override string ToString() => IsSuccess ? "Ok" : $"Fail({Error})";
+        public static Result Ok() => new(true, Error.None);
+        public static Result Fail(Error e) => new(false, e);
+        
+        public override string ToString() =>
+            IsSuccess ? $"Ok" : $"Fail({Error})";
     }
 
     /// <summary>
@@ -37,6 +45,8 @@ namespace AES.Tools
         public readonly bool IsSuccess;
         public readonly T Value;
         public readonly Error Error;
+        
+        public bool IsFail => !IsSuccess;
 
         public Result(bool ok, T value, Error error)
         {

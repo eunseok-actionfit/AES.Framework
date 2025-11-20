@@ -5,7 +5,7 @@ using VContainer.Unity;
 
 namespace AES.Tools.VContainer
 {
-    [CreateAssetMenu(menuName = "Game/Modules/FrameRate Module", fileName = "FrameRateModule")]
+    [CreateAssetMenu(menuName = "Game/Bootstrap Modules/FrameRate Module", fileName = "FrameRateModule")]
     public sealed class FrameRateBootstrapModule : BootstrapModule
     {
         public int targetFrameRate = 60;

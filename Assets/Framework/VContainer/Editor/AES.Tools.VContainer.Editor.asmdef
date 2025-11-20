@@ -1,0 +1,21 @@
+{
+  "name": "AES.Tools.VContainer.Editor",
+  "rootNamespace": "AES.Tools.VContainer.Editor",
+  "references": [
+    "AES.Tools.VContainer",
+    "VContainer.Editor",
+    "VContainer",
+    "UniTask",
+    "AES.Tools"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "autoReferenced": true,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "defineConstraints": [],
+  "noEngineReferences": false
+}

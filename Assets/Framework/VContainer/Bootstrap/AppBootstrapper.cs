@@ -33,8 +33,8 @@ namespace AES.Tools.VContainer
             }
             catch (Exception e) { Debug.LogError($"[App] Bootstrap failed: {e}"); }
         }
-        
-        void Awake()
+
+        private void Awake()
         {
             QualitySettings.vSyncCount = 0;   // VSync 끄기
             UnityEngine.Application.targetFrameRate = 60; // 60프레임 타깃

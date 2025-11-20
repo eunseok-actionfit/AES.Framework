@@ -17,5 +17,15 @@ namespace AES.Tools
 
         public static Maybe<T> Some(T value) => new Maybe<T>(value, true);
         public static Maybe<T> None => new Maybe<T>(default, false);
+        
+    }
+    
+    public static class MaybeExtensions
+    {
+        public static bool TryGet<T>(this Maybe<T> m, out T value)
+        {
+            value = m.Value;
+            return m.HasValue;
+        }
     }
 }

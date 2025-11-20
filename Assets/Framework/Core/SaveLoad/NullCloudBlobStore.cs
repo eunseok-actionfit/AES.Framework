@@ -1,0 +1,18 @@
+using System.Threading;
+using AES.Tools.Core;
+using Cysharp.Threading.Tasks;
+
+
+// TODO GPGS, FirebaseStorge 등 클라우드 서비스 구현
+namespace AES.Tools.Impl
+{
+    public class NullCloudBlobStore : ICloudBlobStore
+    {
+        public UniTask<byte[]> LoadOrNullAsync(string key, CancellationToken ct = default) => UniTask.FromResult<byte[]>(null);
+
+        public UniTask<Result> SaveAsync(string key, byte[] bytes, CancellationToken ct = default) =>  Result.Ok().AsUniTask();
+        public UniTask<Result> DeleteAsync(string key, CancellationToken ct = default) => Result.Ok().AsUniTask();
+    }
+}
+
+

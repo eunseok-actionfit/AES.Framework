@@ -15,20 +15,30 @@ namespace AES.Tools
         public readonly string Code;
         public readonly string Message;
         public readonly Exception Exception;
+        public readonly string Context;     // 예: "settings", "progress", "local", "cloud"
+        public readonly bool Retriable;     // 재시도 가능한 오류인지 여부
 
         public bool HasException => Exception != null;
 
-        public Error(string code, string message, Exception ex = null)
+        public Error(
+            string code,
+            string message,
+            string context = "",
+            bool retriable = false,
+            Exception ex = null)
         {
             Code = code;
             Message = message;
+            Context = context;
+            Retriable = retriable;
             Exception = ex;
         }
 
-        public override string ToString() =>
-            HasException
-                ? $"{Code}: {Message} ({Exception.GetType().Name})"
-                : $"{Code}: {Message}";
+        public override string ToString()
+        {
+            var exc = HasException ? $" ({Exception.GetType().Name})" : "";
+            return $"{Code}: {Message} [{Context}] Retry={Retriable}{exc}";
+        }
 
         public static readonly Error None = new("", "");
     }

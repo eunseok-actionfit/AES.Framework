@@ -12,24 +12,34 @@ namespace AES.Tools.VContainer.Scope
     {
         [SerializeField] private AppConfig config;
         
+        [Header("Game Installers (게임에서 채우는 슬롯)")]
+        [SerializeField] ScriptableInstaller[] installers;
         protected override void Configure(IContainerBuilder builder)
         {
             if (!config)
                 throw new System.NullReferenceException("AppConfig 누락");
 
             builder.RegisterInstance(config);
+            
+            if (installers != null)
+            {
+                foreach (var installer in installers)
+                {
+                    if (!installer) continue;
+                    installer.Install(builder);
+                }
+            }
 
             // Core (엔진 + 앱)
             new CoreEngineInstaller().Install(builder);
-
-            // Assets (엔진)
-            //new AssetSystemInstaller(config.assets).Install(builder);
-
             // Scene Flow (앱)
             new SceneFlowInstaller().Install(builder);
 
+            // Assets (엔진)
+            //new AssetSystemInstaller(config.assets).Install(builder);
+            
             // Save / Load (앱)
-            new SaveAndLoadInstaller().Install(builder);
+            new SaveAndLoadInstaller(config.storageProfile).Install(builder);
 
             // Input (엔진 Installer, config 넘김)
             new InputInstaller(config.inputConfig).Install(builder);

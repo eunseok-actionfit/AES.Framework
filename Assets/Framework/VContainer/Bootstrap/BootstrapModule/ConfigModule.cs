@@ -13,8 +13,9 @@ namespace AES.Tools.VContainer
         // [SerializeField] BalanceTable balanceTable;
 
         [Header("추가 JSON 설정 파일 (StreamingAssets 등)")]
-        [SerializeField] bool loadExtraJsonConfig = false;
-        [SerializeField] string extraJsonFileName = "config.json";
+        [SerializeField]
+        private bool loadExtraJsonConfig = false;
+        [SerializeField] private string extraJsonFileName = "config.json";
 
         public override UniTask Initialize(LifetimeScope rootScope)
         {
@@ -39,7 +40,7 @@ namespace AES.Tools.VContainer
             return UniTask.CompletedTask;
         }
 
-        void LoadExtraJsonConfig()
+        private void LoadExtraJsonConfig()
         {
             // 예시: StreamingAssets 또는 PersistentDataPath 등에서 JSON 읽기
             // var path = Path.Combine(Application.streamingAssetsPath, extraJsonFileName);

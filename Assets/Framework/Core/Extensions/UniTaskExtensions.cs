@@ -48,6 +48,28 @@ namespace AES.Tools
 
             throw new TimeoutException($"Task timed out after {timeout.TotalMilliseconds}ms");
         }
+        
+        public static UniTask<Result> AsUniTask(this Result result)
+        {
+            return UniTask.FromResult(result);
+        }
+        
+        public async static UniTask<Result<T>> BindAsync<T>(
+            this UniTask<Result> task,
+            Func<UniTask<Result<T>>> next)
+        {
+            var r = await task;
+            return r.IsSuccess ? await next() : Result<T>.Fail(r.Error);
+        }
+
+        public async static UniTask<Result<U>> MapAsync<T,U>(
+            this UniTask<Result<T>> task,
+            Func<T, U> mapper)
+        {
+            var r = await task;
+            return r.IsSuccess ? Result<U>.Ok(mapper(r.Value)) : Result<U>.Fail(r.Error);
+        }
+
     }
 }
 

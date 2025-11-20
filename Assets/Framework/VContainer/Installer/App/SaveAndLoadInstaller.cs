@@ -3,11 +3,12 @@ using AES.Tools.Impl;
 using VContainer;
 using VContainer.Unity;
 
-
 namespace AES.Tools.VContainer.Installer.App
 {
     public class SaveAndLoadInstaller : IInstaller
     {
+        private readonly StorageProfile storageProfile;
+        public SaveAndLoadInstaller(StorageProfile storageProfile) => this.storageProfile = storageProfile;
         public void Install(IContainerBuilder builder)
         {
             // Storage Core
@@ -18,28 +19,27 @@ namespace AES.Tools.VContainer.Installer.App
                 .As<ILocalBlobStore>();
 
 #if UNITY_ANDROID && USE_GPGS
-    builder.Register<GpgsBlobStore>(Lifetime.Singleton)
-           .As<ICloudBlobStore>();
+            builder.Register<GpgsBlobStore>(Lifetime.Singleton)
+                .As<ICloudBlobStore>();
 #else
             builder.Register<NullCloudBlobStore>(Lifetime.Singleton)
                 .As<ICloudBlobStore>();
 #endif
-            
+
             builder.Register<IJsonSerializer>(r
                 => new NewtonsoftJsonSerializer(), Lifetime.Singleton);
-
-            // builder.RegisterInstance(new JsonSerializerSettings
-            //     {
-            //         Formatting = Formatting.None,
-            //         MissingMemberHandling = MissingMemberHandling.Ignore,
-            //         NullValueHandling = NullValueHandling.Include
-            //     })
-            //     .AsSelf();
-            //
-            // builder.Register<NewtonsoftJsonSerializer>(Lifetime.Singleton).As<IJsonSerializer>();
             
+            builder.RegisterInstance(storageProfile);
+
+            builder.Register<StorageService>(Lifetime.Singleton)
+                .As<IStorageService>()
+                .WithParameter(storageProfile);
+
+            builder.Register<SaveCoordinator>(Lifetime.Singleton)
+                .As<ISaveCoordinator>();
+            
+            
+            builder.RegisterEntryPoint<AutoSaveOnAppEvents>();
         }
     }
 }
-
-

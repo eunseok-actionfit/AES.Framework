@@ -12,28 +12,32 @@ namespace AES.Tools.VContainer
     {
         public static BootstrapSettings Instance { get; private set; }
 
-        static LifetimeScope rootLifetimeScopeInstance;
+        private static LifetimeScope _rootLifetimeScopeInstance;
 
         [Header("Root LifetimeScope 프리팹")]
-        [SerializeField] LifetimeScope rootLifetimeScope;
+        [SerializeField]
+        private LifetimeScope rootLifetimeScope;
 
         [Header("시작 시 자동 실행")]
-        [SerializeField] bool autoRunRootLifetimeScope = true;
+        [SerializeField]
+        private bool autoRunRootLifetimeScope = true;
 
         [Header("이름에서 (Clone) 제거")]
-        [SerializeField] bool removeClonePostfix = true;
+        [SerializeField]
+        private bool removeClonePostfix = true;
 
         [Header("선택: 첫 씬 이름 (비워두면 그대로 현재 씬 사용)")]
-        [SerializeField] string firstSceneName;
+        [SerializeField]
+        private string firstSceneName;
         
 
         #region Static reset
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        static void ResetStatics()
+        private static void ResetStatics()
         {
             Instance = null;
-            rootLifetimeScopeInstance = null;
+            _rootLifetimeScopeInstance = null;
         }
 
         #endregion
@@ -62,7 +66,7 @@ namespace AES.Tools.VContainer
             UnityEditor.Selection.activeObject = newSettings;
         }
 
-        static BootstrapSettings LoadFromPreloadedAssets()
+        private static BootstrapSettings LoadFromPreloadedAssets()
         {
             var preloadAsset = UnityEditor.PlayerSettings
                 .GetPreloadedAssets()
@@ -74,7 +78,7 @@ namespace AES.Tools.VContainer
         #region Bootstrap entry
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
-        static void Bootstrap()
+        private static void Bootstrap()
         {
             BootstrapSettings settings;
 
@@ -120,10 +124,10 @@ namespace AES.Tools.VContainer
 
         public LifetimeScope GetOrCreateRootLifetimeScopeInstance()
         {
-            if (rootLifetimeScopeInstance != null &&
-                rootLifetimeScopeInstance.Container != null)
+            if (_rootLifetimeScopeInstance != null &&
+                _rootLifetimeScopeInstance.Container != null)
             {
-                return rootLifetimeScopeInstance;
+                return _rootLifetimeScopeInstance;
             }
 
             if (rootLifetimeScope == null)
@@ -135,20 +139,20 @@ namespace AES.Tools.VContainer
             var activeBefore = rootLifetimeScope.gameObject.activeSelf;
             rootLifetimeScope.gameObject.SetActive(false);
 
-            rootLifetimeScopeInstance = Instantiate(rootLifetimeScope);
-            SetName(rootLifetimeScopeInstance, rootLifetimeScope);
-            DontDestroyOnLoad(rootLifetimeScopeInstance);
-            rootLifetimeScopeInstance.gameObject.SetActive(true);
+            _rootLifetimeScopeInstance = Instantiate(rootLifetimeScope);
+            SetName(_rootLifetimeScopeInstance, rootLifetimeScope);
+            DontDestroyOnLoad(_rootLifetimeScopeInstance);
+            _rootLifetimeScopeInstance.gameObject.SetActive(true);
 
             rootLifetimeScope.gameObject.SetActive(activeBefore);
 
-            return rootLifetimeScopeInstance;
+            return _rootLifetimeScopeInstance;
         }
 
         public bool IsRootLifetimeScopeInstance(LifetimeScope lifetimeScope) =>
-            rootLifetimeScope == lifetimeScope || rootLifetimeScopeInstance == lifetimeScope;
+            rootLifetimeScope == lifetimeScope || _rootLifetimeScopeInstance == lifetimeScope;
 
-        void SetName(Object instance, Object prefab)
+        private void SetName(Object instance, Object prefab)
         {
             if (removeClonePostfix)
                 instance.name = prefab.name;
@@ -158,9 +162,9 @@ namespace AES.Tools.VContainer
 
         #region Modules
 
-        void InitializeModules()
+        private void InitializeModules()
         {
-            var root = rootLifetimeScopeInstance; // null일 수도 있음
+            var root = _rootLifetimeScopeInstance; // null일 수도 있음
 
             var modules = root.Container.Resolve<AppConfig>().modules;
             if (modules == null)

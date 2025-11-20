@@ -9,12 +9,14 @@ namespace AES.Tools.VContainer
     public sealed class LoggerModule : BootstrapModule
     {
         [Header("최소 로그 레벨")]
-        [SerializeField] LogType minimumLogType = LogType.Log;
+        [SerializeField]
+        private LogType minimumLogType = LogType.Log;
 
         [Header("파일 로그 활성화")]
-        [SerializeField] bool enableFileLog = false;
+        [SerializeField]
+        private bool enableFileLog = false;
 
-        bool initialized;
+        private bool initialized;
         
         public override UniTask Initialize(LifetimeScope rootScope)
         {
@@ -47,7 +49,7 @@ namespace AES.Tools.VContainer
             return UniTask.CompletedTask;
         }
 
-        void OnLogMessageReceived(string condition, string stackTrace, LogType type)
+        private void OnLogMessageReceived(string condition, string stackTrace, LogType type)
         {
             // if (type < minimumLogType)
             //     return;
