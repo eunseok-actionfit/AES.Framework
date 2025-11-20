@@ -3,6 +3,7 @@
   "rootNamespace": "",
   "references": [
     "VContainer",
+    "UniTask",
     "AES.Tools"
   ],
   "includePlatforms": [],

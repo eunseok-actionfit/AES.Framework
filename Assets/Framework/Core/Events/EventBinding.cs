@@ -9,8 +9,14 @@ namespace AES.Tools
     }
 
     public class EventBinding<T> : IEventBinding<T>, IDisposable where T : IEvent {
-        Action<T> onEvent = _ => { };
-        Action onEventNoArgs = () => { };
+        Action<T> onEvent = delegate { };
+        Action onEventNoArgs = delegate { };
+        
+        public string Name { get; set; }
+        public object Owner { get; set; }
+        public Predicate<T> Filter { get; set; }
+        public bool OneShot { get; set; }
+
 
         Action<T> IEventBinding<T>.OnEvent {
             get => onEvent;
@@ -22,6 +28,7 @@ namespace AES.Tools
             set => onEventNoArgs = value;
         }
 
+        public EventBinding() { }
         public EventBinding(Action<T> onEvent) => this.onEvent = onEvent;
         public EventBinding(Action onEventNoArgs) => this.onEventNoArgs = onEventNoArgs;
     
@@ -31,19 +38,25 @@ namespace AES.Tools
         public void Add(Action<T> onEvent) => this.onEvent += onEvent;
         public void Remove(Action<T> onEvent) => this.onEvent -= onEvent;
         
-        public void Register()
+        internal void InvokeInternal(T @event)
         {
-            EventBus<T>.Register(this);
+            if (Filter != null && !Filter(@event))
+                return;
+
+            onEvent?.Invoke(@event);
+            onEventNoArgs?.Invoke();
+
+            if (OneShot)
+            {
+                Deregister();
+            }
         }
 
-        public void Deregister()
-        {
-            EventBus<T>.Register(this);
-        }
         
-        void IDisposable.Dispose()
-        {
-            EventBus<T>.Deregister(this);
-        }
+        public void Register() => EventBus<T>.Register(this);
+
+        public void Deregister() => EventBus<T>.Deregister(this);
+
+        void IDisposable.Dispose() => Deregister();
     }
 }
