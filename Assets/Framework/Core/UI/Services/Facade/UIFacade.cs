@@ -1,13 +1,12 @@
 using System;
 using System.Threading;
-using AES.Tools.Core.Controller;
-using AES.Tools.Core.Root;
-using AES.Tools.Core.View;
-using AES.Tools.Services.Infrastructure;
+using AES.Tools.Controller;
+using AES.Tools.Root;
+using AES.Tools.View;
 using Cysharp.Threading.Tasks;
 
 
-namespace AES.Tools.Services.Facade
+namespace AES.Tools
 {
     public static class UI
     {

@@ -1,11 +1,9 @@
 // Systems/UI/Core/UILayer.cs
-using AES.Tools.Core.Input;
-using AES.Tools.Transitions;
 using UnityEngine;
 using UnityEngine.UI;
 
 
-namespace AES.Tools.Core.Layer
+namespace AES.Tools.Layer
 {
     public enum LayerSortingPolicy { ByZPriority, ByTime }
 

@@ -1,17 +1,14 @@
 using System;
-using AES.Tools;
+using AES.Tools.VContainer.Scope;
 using UnityEngine;
-using VContainer.AppLifetime;
-using VContainer.Scope;
 using VContainer.Unity;
 
 
-namespace VContainer.Bootstrap
+namespace AES.Tools.VContainer
 {
     //  Namespace Properties ------------------------------
     [DefaultExecutionOrder(-100)]
     [DisallowMultipleComponent]
-    [RequireComponent(typeof(ApplicationLifetimeAdapter))]
     public sealed class AppBootstrapper : PersistentSingleton<AppBootstrapper>
     {
         [SerializeField] private AppLifetimeScope appLifetimeScopePrefab;

@@ -1,24 +1,36 @@
 using UnityEngine;
 
 
-namespace VContainer.AppLifetime
+namespace AES.Tools.VContainer.AppLifetime
 {
-    // Unity 메시지 수신용 어댑터 (루트에 1개)
     [DisallowMultipleComponent]
-    public class ApplicationLifetimeAdapter : MonoBehaviour
+    public class ApplicationLifetimeAdapter : PersistentSingleton<ApplicationLifetimeAdapter>
     {
-        //  Fields ----------------------------------------
-        private ApplicationLifetime _lifetime;
-
-        //  Initialization  -------------------------------
-        public void Construct(ApplicationLifetime lifetime)
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+        private static void Bootstrap()
         {
-            _lifetime = lifetime;
+            _ = Instance;
+        }
+        
+        private void OnApplicationFocus(bool focus)
+        {
+            EventBus<ApplicationFocusChangedEvent>.Raise(
+                new ApplicationFocusChangedEvent { Focused = focus }
+            );
         }
 
-        //  Unity Methods   -------------------------------
-        private void OnApplicationFocus(bool focus) => _lifetime?.RaiseFocus(focus);
-        private void OnApplicationPause(bool paused) => _lifetime?.RaisePause(paused);
-        private void OnApplicationQuit() => _lifetime?.RaiseQuit();
+        private void OnApplicationPause(bool paused)
+        {
+            EventBus<ApplicationPauseChangedEvent>.Raise(
+                new ApplicationPauseChangedEvent { Paused = paused }
+            );
+        }
+
+        private void OnApplicationQuit()
+        {
+            EventBus<ApplicationQuitEvent>.Raise(
+                new ApplicationQuitEvent()
+            );
+        }
     }
 }

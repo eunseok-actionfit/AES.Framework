@@ -1,11 +1,13 @@
 using System.Linq;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using VContainer;
 using VContainer.Unity;
 
-namespace MyGame
+
+namespace AES.Tools.VContainer
 {
-    [CreateAssetMenu(menuName = "MyGame/Bootstrap Settings", fileName = "BootstrapSettings")]
+    [CreateAssetMenu(menuName = "Game/Bootstrap Settings", fileName = "BootstrapSettings")]
     public sealed class BootstrapSettings : ScriptableObject
     {
         public static BootstrapSettings Instance { get; private set; }
@@ -23,9 +25,7 @@ namespace MyGame
 
         [Header("선택: 첫 씬 이름 (비워두면 그대로 현재 씬 사용)")]
         [SerializeField] string firstSceneName;
-
-        [Header("부트스트랩 모듈 (세이브/로거/SDK 등)")]
-        [SerializeField] BootstrapModule[] modules;
+        
 
         #region Static reset
 
@@ -39,7 +39,7 @@ namespace MyGame
         #endregion
 
 #if UNITY_EDITOR
-        [UnityEditor.MenuItem("Assets/Create/MyGame/Bootstrap Settings (Preloaded)")]
+        [UnityEditor.MenuItem("Assets/Create/Game/Bootstrap Settings (Preloaded)")]
         public static void CreateAssetAsPreloaded()
         {
             var path = UnityEditor.EditorUtility.SaveFilePanelInProject(
@@ -160,10 +160,13 @@ namespace MyGame
 
         void InitializeModules()
         {
+            var root = rootLifetimeScopeInstance; // null일 수도 있음
+
+            var modules = root.Container.Resolve<AppConfig>().modules;
             if (modules == null)
                 return;
-
-            var root = rootLifetimeScopeInstance; // null일 수도 있음
+            
+            
             for (int i = 0; i < modules.Length; i++)
             {
                 var m = modules[i];

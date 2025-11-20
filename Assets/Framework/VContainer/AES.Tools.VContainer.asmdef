@@ -1,6 +1,6 @@
 {
   "name": "AES.Tools.VContainer",
-  "rootNamespace": "",
+  "rootNamespace": "AES.Tools.VContainer",
   "references": [
     "VContainer",
     "UniTask",

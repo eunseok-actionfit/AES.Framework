@@ -1,8 +1,8 @@
 using System.Collections.Generic;
-using AES.Tools.Core.View;
+using AES.Tools.View;
 
 
-namespace AES.Tools.Services.Registry
+namespace AES.Tools
 {
     public interface IUIWindowRegistry
     {

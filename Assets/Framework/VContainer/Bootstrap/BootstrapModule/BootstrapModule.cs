@@ -2,7 +2,8 @@ using Cysharp.Threading.Tasks;
 using UnityEngine;
 using VContainer.Unity;
 
-namespace MyGame
+
+namespace AES.Tools.VContainer
 {
     /// <summary>
     /// 부트스트랩 모듈 베이스.

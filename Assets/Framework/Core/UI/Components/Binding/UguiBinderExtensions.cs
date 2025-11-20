@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 // ----------------- 확장/도우미 -----------------
 
-namespace AES.Tools.Binding
+namespace AES.Tools
 {
     /// <summary>
     /// UguiBinderExtensions 클래스는 Unity UI 컴포넌트를 구독 및 처리하기 위한 확장을 제공합니다.

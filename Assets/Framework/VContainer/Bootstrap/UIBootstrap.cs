@@ -1,12 +1,9 @@
-using AES.Tools.Core;
-using AES.Tools.Core.Controller;
-using AES.Tools.Core.Root;
-using AES.Tools.Services.Guards;
-using AES.Tools.Services.Infrastructure;
+using AES.Tools.Controller;
+using AES.Tools.Root;
 using VContainer.Unity;
 
 
-namespace VContainer.Bootstrap
+namespace AES.Tools.VContainer
 {
     public class UIBootstrap : IStartable
     {

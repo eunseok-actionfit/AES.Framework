@@ -1,11 +1,10 @@
 using System.Threading;
-using AES.Tools.Core.View;
-using AES.Tools.Services.Registry;
+using AES.Tools.View;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 
-namespace AES.Tools.Services.Factory
+namespace AES.Tools
 {
     public interface IUIFactory
     {

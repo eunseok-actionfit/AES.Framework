@@ -1,25 +1,22 @@
 using System;
 using System.Collections.Generic;
-using AES.Tools.Core.View;
 using AES.Tools.SerializedDictionary;
-using Sirenix.OdinInspector;
+using AES.Tools.View;
 using UnityEngine;
 
-
 #if ODIN_INSPECTOR
-
-
+using Sirenix.OdinInspector;
 #else
 using AYellowpaper.SerializedCollections;
 #endif
 
 
-namespace AES.Tools.Services.Registry
+namespace AES.Tools
 {
 #if ODIN_INSPECTOR
     public abstract class UIRegistrySO : SerializedScriptableObject, IUIWindowRegistry 
 #else
-    public abstract class UIWindowRegistrySO : ScriptableObject, IUIWindowRegistry
+    public abstract class UIRegistrySO : ScriptableObject, IUIWindowRegistry
 #endif
     {
         public abstract bool TryGet(UIWindowKey key, out UIRegistryEntry entry);

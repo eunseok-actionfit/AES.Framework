@@ -1,7 +1,8 @@
+using VContainer;
 using VContainer.Unity;
 
 
-namespace VContainer.Installer.App
+namespace AES.Tools.VContainer.Installer.App
 {
     /// 컴포지션 루트에서: new AssetSystemInstaller(assetsConfig).Install(builder);
     public sealed class AssetSystemInstaller : IInstaller

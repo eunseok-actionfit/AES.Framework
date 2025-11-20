@@ -1,4 +1,4 @@
-namespace AES.Tools.Services.Guards
+namespace AES.Tools
 {
     public interface IUiLockService
     {

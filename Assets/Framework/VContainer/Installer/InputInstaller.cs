@@ -1,10 +1,10 @@
 using AES.Tools.Core;
 using AES.Tools.Platform;
-using VContainer.Bootstrap;
+using VContainer;
 using VContainer.Unity;
 
 
-namespace VContainer.Installer
+namespace AES.Tools.VContainer.Installer
 {
     public sealed class InputInstaller : IInstaller
     {

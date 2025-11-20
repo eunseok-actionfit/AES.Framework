@@ -1,14 +1,12 @@
-using AES.Tools.Core;
-using AES.Tools.Core.Controller;
-using AES.Tools.Core.Root;
-using AES.Tools.Services.Factory;
-using AES.Tools.Services.Guards;
-using AES.Tools.Services.Registry;
-using VContainer.Bootstrap;
+using System;
+using AES.Tools.Controller;
+using AES.Tools.Root;
+using UnityEngine;
+using VContainer;
 using VContainer.Unity;
 
 
-namespace VContainer.Installer
+namespace AES.Tools.VContainer.Installer
 {
     public sealed class UIInstaller : IInstaller
     {
@@ -18,7 +16,7 @@ namespace VContainer.Installer
         public void Install(IContainerBuilder builder)
         {
             builder.Register<UIRootProvider>(Lifetime.Singleton).As<IUIRootProvider>();
-            builder.Register<InputGuardService>(Lifetime.Singleton).As<IInputGuard>();
+            builder.Register<InputGuardService>(Lifetime.Singleton).WithParameter<Func<float>>(() => Time.unscaledTime).As<IInputGuard>();
             builder.Register<UiLockService>(Lifetime.Singleton).As<IUiLockService>();
 
             builder.Register<UIFactory>(Lifetime.Singleton);

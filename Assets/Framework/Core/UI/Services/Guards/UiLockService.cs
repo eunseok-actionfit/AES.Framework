@@ -1,7 +1,7 @@
 using System;
 
 
-namespace AES.Tools.Services.Guards
+namespace AES.Tools
 {
     /// <summary>
     /// 화면 전환/로딩 등 동안 전체 UI 입력을 잠그는 전역 락.

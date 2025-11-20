@@ -1,7 +1,8 @@
+using VContainer;
 using VContainer.Unity;
 
 
-namespace VContainer.Installer.App
+namespace AES.Tools.VContainer.Installer.App
 {
     public sealed class UXServicesInstaller : IInstaller
     {

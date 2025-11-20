@@ -1,10 +1,10 @@
 // Assets/Framework/Systems/UI/Core/UIViewHints.cs
 using System;
-using AES.Tools.Core.Policies;
+using AES.Tools.Policies;
 using UnityEngine;
 
 
-namespace AES.Tools.Core.View
+namespace AES.Tools.View
 {
     /// <summary>bool 기반 UI 힌트 (enabled일 때만 value 사용)</summary>
     [Serializable]

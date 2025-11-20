@@ -1,7 +1,8 @@
+using VContainer;
 using VContainer.Unity;
 
 
-namespace VContainer
+namespace AES.Tools.VContainer
 {
     public static class ContainerBuilderExtensions
     {

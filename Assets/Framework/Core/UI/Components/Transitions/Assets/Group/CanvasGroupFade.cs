@@ -1,14 +1,14 @@
 using System.Threading;
-using AES.Tools.Core.View;
+using AES.Tools.View;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 
-namespace AES.Tools.Transitions.Assets.Group
+namespace AES.Tools.Assets.Group
 {
     //  Namespace Properties ------------------------------
 
-    public class CanvasGroupFade : ITransition
+    public class CanvasGroupFade : IUITransition
     {
         private readonly float _duration;
         public CanvasGroupFade(float duration = 0.15f) => _duration = duration;

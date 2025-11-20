@@ -1,12 +1,11 @@
-using AES.Tools.Core.Layer;
-using AES.Tools.Core.Policies;
-using AES.Tools.Core.Root;
-using AES.Tools.Core.View;
-using AES.Tools.Services.Registry;
+using AES.Tools.Layer;
+using AES.Tools.Policies;
+using AES.Tools.Root;
+using AES.Tools.View;
 using UnityEngine;
 
 
-namespace AES.Tools.Core.Controller
+namespace AES.Tools.Controller
 {
     public sealed partial class UIController
     {
@@ -31,7 +30,7 @@ namespace AES.Tools.Core.Controller
         }
 
 
-        private Transitions.ITransition GetFxFor(UIRoot root, Transform parent, UIRegistryEntry _)
+        private IUITransition GetFxFor(UIRoot root, Transform parent, UIRegistryEntry _)
         {
             if (parent == root.WindowLayer.transform) return _winFx;
             if (parent == root.HudLayer.transform) return _hudFx;
@@ -39,14 +38,14 @@ namespace AES.Tools.Core.Controller
             return _ovlFx;
         }
 
-        private Transitions.ITransition CreateLayerBaseFx(Transform parent)
+        private IUITransition CreateLayerBaseFx(Transform parent)
         {
             var layer = parent ? parent.GetComponent<UILayer>() : null;
             var asset = layer?.Policy?.BaseTransitionAsset;
             return asset ? asset : null;
         }
 
-        private Transitions.ITransition PickFx(UIRoot root, Transform parent, UIRegistryEntry entry)
+        private IUITransition PickFx(UIRoot root, Transform parent, UIRegistryEntry entry)
         {
             var layerFx = CreateLayerBaseFx(parent);   // Layer 기본 FX
             return layerFx ?? GetFxFor(root, parent, entry); // 레이어 종류별 기본

@@ -1,9 +1,8 @@
 using AES.Tools.Core;
-using AES.Tools.Services.Registry;
 using UnityEngine;
 
 
-namespace AES.Tools.Config
+namespace AES.Tools.VContainer
 {
     [CreateAssetMenu(menuName = "App/AppConfig")]
     public class AppConfig : ScriptableObject
@@ -13,5 +12,9 @@ namespace AES.Tools.Config
 
         [Header("UI Registry")]
         public UIRegistrySO uiRegistrySO;
+
+        [Header("부트스트랩 모듈 (세이브/로거/SDK 등)")]
+        [SerializeField]
+        public BootstrapModule[] modules;
     }
 }

@@ -1,7 +1,7 @@
 using UnityEngine;
 
 
-namespace AES.Tools.Utils
+namespace AES.Tools
 {
     [RequireComponent(typeof(Canvas))]
     public sealed class CanvasCameraBinder : MonoBehaviour

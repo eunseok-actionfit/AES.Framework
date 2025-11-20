@@ -1,11 +1,11 @@
 using System.Threading;
-using AES.Tools.Core.View;
+using AES.Tools.View;
 using Cysharp.Threading.Tasks;
 
 
-namespace AES.Tools.Transitions
+namespace AES.Tools
 {
-    public interface ITransition
+    public interface IUITransition
     {
         UniTask In(IUIView view, CancellationToken ct);
         UniTask Out(IUIView view, CancellationToken ct);

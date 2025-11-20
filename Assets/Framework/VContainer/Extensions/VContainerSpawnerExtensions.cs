@@ -1,7 +1,7 @@
 
 
 
-namespace VContainer
+namespace AES.Tools.VContainer
 {
     public static class VContainerSpawnerExtensions
     {

@@ -1,10 +1,9 @@
 using System;
-using AES.Tools.Core.Controller;
-using AES.Tools.Core.Root;
-using AES.Tools.Services.Guards;
+using AES.Tools.Controller;
+using AES.Tools.Root;
 
 
-namespace AES.Tools.Services.Infrastructure
+namespace AES.Tools
 {
     public static class UiServiceLocator
     {

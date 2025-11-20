@@ -3,13 +3,14 @@ using System.Collections.Generic;
 using UnityEngine;
 
 
-namespace AES.Tools.Services.Guards
+namespace AES.Tools
 {
     public sealed class InputGuardService : IInputGuard
     {
         private readonly Dictionary<string, float> _last = new();
         private readonly HashSet<string> _active = new();
         private readonly Func<float> _time;
+        
 
         public InputGuardService(Func<float> timeProvider = null)
         {

@@ -1,12 +1,10 @@
 using System;
 using System.Threading;
-using AES.Tools.Binding;
-using AES.Tools.Transitions;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 
-namespace AES.Tools.Core.View
+namespace AES.Tools.View
 {
     [RequireComponent(typeof(UIViewHints))]
     [RequireComponent(typeof(CanvasGroup))]
@@ -68,7 +66,7 @@ namespace AES.Tools.Core.View
         }
 
         // ---- 표준 Show/Hide ----
-        public async UniTask ShowAsync(object model, Transitions.ITransition transition, CancellationToken ct)
+        public async UniTask ShowAsync(object model, IUITransition transition, CancellationToken ct)
         {
             using (await _transitionLock.LockAsync(ct))
             {
@@ -115,7 +113,7 @@ namespace AES.Tools.Core.View
 
 
 
-        public async UniTask HideAsync(Transitions.ITransition transition, CancellationToken ct)
+        public async UniTask HideAsync(IUITransition transition, CancellationToken ct)
         {
             using (await _transitionLock.LockAsync(ct))
             {
