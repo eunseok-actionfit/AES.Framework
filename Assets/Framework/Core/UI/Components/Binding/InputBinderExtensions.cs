@@ -4,11 +4,6 @@ using TMPro;
 using UnityEngine.UI;
 
 
-// 프로젝트에 이미 있는 것으로 가정:
-// - UguiBinder
-// - Bindable<T>
-// - OnEndEditAsDisposable / OnValueChangedAsDisposable
-// - CompositeDisposable
 namespace AES.Tools.Components.Binding
 {
     public static class InputBinderExtensions
