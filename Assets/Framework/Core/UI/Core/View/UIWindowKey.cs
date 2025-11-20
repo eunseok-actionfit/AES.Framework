@@ -1,7 +1,7 @@
 using System;
 
 
-namespace AES.Tools.Core
+namespace AES.Tools.Core.View
 {
     [Serializable]
     public readonly struct UIWindowKey : IEquatable<UIWindowKey>

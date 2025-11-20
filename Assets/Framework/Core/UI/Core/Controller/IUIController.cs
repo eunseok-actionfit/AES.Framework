@@ -1,9 +1,11 @@
 using System;
 using System.Threading;
+using AES.Tools.Core.Root;
+using AES.Tools.Core.View;
 using Cysharp.Threading.Tasks;
 
 
-namespace AES.Tools.Core
+namespace AES.Tools.Core.Controller
 {
     public enum UILayerKind
     {

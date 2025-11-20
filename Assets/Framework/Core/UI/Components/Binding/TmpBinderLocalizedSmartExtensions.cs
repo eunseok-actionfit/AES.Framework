@@ -4,7 +4,7 @@ using TMPro;
 using UnityEngine.Localization;
 
 
-namespace AES.Tools.Components.Binding
+namespace AES.Tools.Binding
 {
     public static class TmpBinderLocalizedSmartExtensions
     {

@@ -1,11 +1,15 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using AES.Tools.Core.Layer;
+using AES.Tools.Core.Policies;
+using AES.Tools.Core.Root;
+using AES.Tools.Core.View;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 
-namespace AES.Tools.Core
+namespace AES.Tools.Core.Controller
 {
     public sealed partial class UIController
     {

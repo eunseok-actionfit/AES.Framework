@@ -1,7 +1,7 @@
 using UnityEngine;
 
 
-namespace AES.Tools.Core
+namespace AES.Tools.Core.Layer
 {
     public interface IExtraInsetsProvider
     {

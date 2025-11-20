@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 
-namespace AES.Tools.Guards
+namespace AES.Tools.Services.Guards
 {
     public sealed class InputGuardService : IInputGuard
     {

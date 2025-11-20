@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using AES.Tools.Core;
+using AES.Tools.Core.View;
 using AES.Tools.SerializedDictionary;
 using Sirenix.OdinInspector;
 using UnityEngine;
@@ -14,10 +14,10 @@ using AYellowpaper.SerializedCollections;
 #endif
 
 
-namespace AES.Tools.Registry
+namespace AES.Tools.Services.Registry
 {
 #if ODIN_INSPECTOR
-    public abstract class UIWindowRegistrySO : SerializedScriptableObject, IUIWindowRegistry 
+    public abstract class UIRegistrySO : SerializedScriptableObject, IUIWindowRegistry 
 #else
     public abstract class UIWindowRegistrySO : ScriptableObject, IUIWindowRegistry
 #endif
@@ -27,8 +27,8 @@ namespace AES.Tools.Registry
         public abstract IEnumerable<KeyValuePair<UIWindowKey, UIRegistryEntry>> GetAll();
     }
 
-    public abstract class UIWindowRegistryBase<TEnum>
-        : UIWindowRegistrySO
+    public abstract class UIRegistryBase<TEnum>
+        : UIRegistrySO
         where TEnum : Enum
 
     {

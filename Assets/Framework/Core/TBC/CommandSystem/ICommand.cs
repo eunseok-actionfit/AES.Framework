@@ -1,5 +1,5 @@
 using System.Threading;
-using System.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 
 
 namespace AES.Tools
@@ -7,7 +7,7 @@ namespace AES.Tools
     public interface ICommand
     {
         string Name { get; }
-        Task<Result> Execute(CancellationToken ct = default);
-        Task<Result> Undo(CancellationToken ct = default);
+        UniTask<Result> Execute(CancellationToken ct = default);
+        UniTask<Result> Undo(CancellationToken ct = default);
     }
 }

@@ -1,8 +1,10 @@
 using System;
-using AES.Tools.Registry;
+using AES.Tools.Core.Root;
+using AES.Tools.Core.View;
+using AES.Tools.Services.Registry;
 
 
-namespace AES.Tools.Core
+namespace AES.Tools.Core.Controller
 {
     public sealed partial class UIController
     {

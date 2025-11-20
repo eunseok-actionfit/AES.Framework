@@ -1,13 +1,13 @@
 using System.Collections.Generic;
 using System.Threading;
-using AES.Tools.Components.Transitions.TransitionAsset.Util;
-using AES.Tools.Core;
+using AES.Tools.Core.View;
+using AES.Tools.Transitions.Util;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
 
 
-namespace AES.Tools.Components.Transitions.TransitionAsset
+namespace AES.Tools.Transitions.Assets
 {
     [CreateAssetMenu(menuName = "UI/Transition/ColorTint")]
     public sealed class ColorTintTransitionAsset : TransitionAsset

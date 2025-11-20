@@ -1,12 +1,16 @@
 // File: UIManager.cs
 using System.Collections.Generic;
-using AES.Tools.Components.Transitions.TransitionAsset.Group;
-using AES.Tools.Factory;
-using AES.Tools.Registry;
+using AES.Tools.Core.Layer;
+using AES.Tools.Core.Policies;
+using AES.Tools.Core.Root;
+using AES.Tools.Core.View;
+using AES.Tools.Services.Factory;
+using AES.Tools.Services.Registry;
+using AES.Tools.Transitions.Assets.Group;
 using UnityEngine;
 
 
-namespace AES.Tools.Core
+namespace AES.Tools.Core.Controller
 {
     public sealed partial class UIController : IUIController
     {
@@ -22,10 +26,10 @@ namespace AES.Tools.Core
         private readonly Dictionary<UIWindowKey, (UIRegistryEntry entry, ObjectPool<UIView> pool)> _pooled = new();
         private readonly Dictionary<Transform, List<UIView>> _stackByParent = new();
 
-        private readonly Components.Transitions.ITransition _winFx = new CanvasGroupFade(0.12f);
-        private readonly Components.Transitions.ITransition _hudFx = new CanvasGroupFade(0.12f);
-        private readonly Components.Transitions.ITransition _popFx = new CanvasGroupFade(0.12f);
-        private readonly Components.Transitions.ITransition _ovlFx = new CanvasGroupFade(0.08f);
+        private readonly Transitions.ITransition _winFx = new CanvasGroupFade(0.12f);
+        private readonly Transitions.ITransition _hudFx = new CanvasGroupFade(0.12f);
+        private readonly Transitions.ITransition _popFx = new CanvasGroupFade(0.12f);
+        private readonly Transitions.ITransition _ovlFx = new CanvasGroupFade(0.08f);
 
         // runtime 정책 상태
         private readonly Dictionary<UIWindowKey, List<UIView>> _multiInstances = new();

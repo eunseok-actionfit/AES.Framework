@@ -1,14 +1,17 @@
 using System;
 using System.Threading;
-using AES.Tools.Core;
+using AES.Tools.Core.Controller;
+using AES.Tools.Core.Root;
+using AES.Tools.Core.View;
+using AES.Tools.Services.Infrastructure;
 using Cysharp.Threading.Tasks;
 
 
-namespace AES.Tools
+namespace AES.Tools.Services.Facade
 {
     public static class UI
     {
-        private static IUIController Controller => UiServices.UIController;
+        private static IUIController Controller => UiServiceLocator.UIController;
 
         public static UniTask<UIView> ShowAsync<TEnum>(TEnum id, object model = null, CancellationToken ct = default)
             where TEnum : Enum => Controller.ShowAsync(id, model, ct);

@@ -1,5 +1,5 @@
 #if UNITY_EDITOR && ODIN_INSPECTOR
-using AES.Tools.Registry;
+using AES.Tools.Services.Registry;
 using Sirenix.OdinInspector.Editor;
 using Sirenix.Utilities.Editor;
 using UnityEditor;

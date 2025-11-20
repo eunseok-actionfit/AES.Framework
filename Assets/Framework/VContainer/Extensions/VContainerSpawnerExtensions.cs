@@ -1,7 +1,7 @@
 
 
 
-namespace VContainer.Extensions
+namespace VContainer
 {
     public static class VContainerSpawnerExtensions
     {

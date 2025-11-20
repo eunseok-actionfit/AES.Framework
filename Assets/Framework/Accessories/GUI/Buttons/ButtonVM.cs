@@ -1,7 +1,7 @@
 using Cysharp.Threading.Tasks;
 
 
-namespace AES.Tools.Components.Buttons
+namespace AES.Tools
 {
     public sealed class ButtonVM
     {

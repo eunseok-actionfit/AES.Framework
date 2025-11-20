@@ -1,5 +1,6 @@
 using AES.Tools.Core;
 using AES.Tools.Platform;
+using VContainer.Bootstrap;
 using VContainer.Unity;
 
 
@@ -28,11 +29,6 @@ namespace VContainer.Installer
         }
     }
     
-    public sealed class InputBootstrap : ITickable
-    {
-        private readonly IInputService _input;
-        public InputBootstrap(IInputService input) => _input = input;
-        public void Tick() => _input.Tick(UnityEngine.Time.unscaledDeltaTime);
-    }
+
 }
 

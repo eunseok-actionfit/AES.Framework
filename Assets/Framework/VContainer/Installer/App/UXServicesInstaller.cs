@@ -1,0 +1,23 @@
+using VContainer.Unity;
+
+
+namespace VContainer.Installer.App
+{
+    public sealed class UXServicesInstaller : IInstaller
+    {
+        public void Install(IContainerBuilder b)
+        {
+            // b.Register<IToastService, ToastService>(Lifetime.Singleton);
+            // b.Register<IGlobalSpinner, GlobalSpinnerService>(Lifetime.Singleton);
+            // b.Register<LoadingBus>(Lifetime.Singleton)
+            //     .As<ILoadingBus>();
+            //
+            // b.RegisterBuildCallback(resolver =>
+            // {
+            //     LoadingBusFacade.Instance = resolver.Resolve<ILoadingBus>();
+            // });
+            //
+            // b.Register<ILoadingService, LoadingService>(Lifetime.Singleton);
+        }
+    }
+}

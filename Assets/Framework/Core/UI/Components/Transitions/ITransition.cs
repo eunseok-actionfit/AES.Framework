@@ -1,9 +1,9 @@
 using System.Threading;
-using AES.Tools.Core;
+using AES.Tools.Core.View;
 using Cysharp.Threading.Tasks;
 
 
-namespace AES.Tools.Components.Transitions
+namespace AES.Tools.Transitions
 {
     public interface ITransition
     {

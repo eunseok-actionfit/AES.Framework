@@ -1,9 +1,12 @@
 using System;
-using AES.Tools.Guards;
+using AES.Tools.Core.Controller;
+using AES.Tools.Core.Root;
+using AES.Tools.Services.Guards;
 
-namespace AES.Tools.Core
+
+namespace AES.Tools.Services.Infrastructure
 {
-    public static class UiServices
+    public static class UiServiceLocator
     {
         private static IInputGuard _inputGuard;
         public static IInputGuard InputGuard

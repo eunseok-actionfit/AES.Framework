@@ -1,16 +1,16 @@
 using System;
-using AES.Tools.Components.Binding;
-using AES.Tools.Core;
-using AES.Tools.Guards;
+using AES.Tools.Binding;
+using AES.Tools.Services.Guards;
+using AES.Tools.Services.Infrastructure;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
 
 
-namespace AES.Tools.Components.Buttons
+namespace AES.Tools
 {
-    public sealed class UIButtonWidget : Button
+    public sealed class AESButton : Button
     {
         [Header("Input")]
         [SerializeField, Min(0f)]
@@ -49,8 +49,8 @@ namespace AES.Tools.Components.Buttons
             _btnId = $"btn_{gameObject.GetInstanceID()}";
 
             // DI 대신 전역 서비스에서 주입
-            _guard ??= UiServices.InputGuard;
-            _uiLock ??= UiServices.UiLock;
+            _guard ??= UiServiceLocator.InputGuard;
+            _uiLock ??= UiServiceLocator.UiLock;
         }
 
         protected override void OnEnable()

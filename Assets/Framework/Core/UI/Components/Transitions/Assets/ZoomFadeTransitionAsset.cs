@@ -1,11 +1,11 @@
 using System.Threading;
-using AES.Tools.Components.Transitions.TransitionAsset.Util;
-using AES.Tools.Core;
+using AES.Tools.Core.View;
+using AES.Tools.Transitions.Util;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 
-namespace AES.Tools.Components.Transitions.TransitionAsset
+namespace AES.Tools.Transitions.Assets
 {
     [CreateAssetMenu(menuName="UI/Transition/ZoomFade")]
     public sealed class ZoomFadeTransitionAsset : TransitionAsset

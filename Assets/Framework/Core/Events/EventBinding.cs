@@ -8,7 +8,7 @@ namespace AES.Tools
         public Action OnEventNoArgs { get; set; }
     }
 
-    public class EventBinding<T> : IEventBinding<T> where T : IEvent {
+    public class EventBinding<T> : IEventBinding<T>, IDisposable where T : IEvent {
         Action<T> onEvent = _ => { };
         Action onEventNoArgs = () => { };
 
@@ -30,5 +30,20 @@ namespace AES.Tools
     
         public void Add(Action<T> onEvent) => this.onEvent += onEvent;
         public void Remove(Action<T> onEvent) => this.onEvent -= onEvent;
+        
+        public void Register()
+        {
+            EventBus<T>.Register(this);
+        }
+
+        public void Deregister()
+        {
+            EventBus<T>.Register(this);
+        }
+        
+        void IDisposable.Dispose()
+        {
+            EventBus<T>.Deregister(this);
+        }
     }
 }

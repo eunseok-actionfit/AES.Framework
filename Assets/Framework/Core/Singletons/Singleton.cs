@@ -31,7 +31,7 @@ namespace AES.Tools
         }
 
         protected virtual void InitializeSingleton() {
-            if (!Application.isPlaying) return;
+            if (Application.isPlaying) return;
 
             instance = this as T;
         }

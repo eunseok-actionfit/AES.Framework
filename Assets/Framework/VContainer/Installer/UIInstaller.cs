@@ -1,7 +1,10 @@
 using AES.Tools.Core;
-using AES.Tools.Factory;
-using AES.Tools.Guards;
-using AES.Tools.Registry;
+using AES.Tools.Core.Controller;
+using AES.Tools.Core.Root;
+using AES.Tools.Services.Factory;
+using AES.Tools.Services.Guards;
+using AES.Tools.Services.Registry;
+using VContainer.Bootstrap;
 using VContainer.Unity;
 
 
@@ -9,8 +12,8 @@ namespace VContainer.Installer
 {
     public sealed class UIInstaller : IInstaller
     {
-        private readonly UIWindowRegistrySO registry;
-        public UIInstaller(UIWindowRegistrySO registry) => this.registry = registry;
+        private readonly UIRegistrySO registry;
+        public UIInstaller(UIRegistrySO registry) => this.registry = registry;
 
         public void Install(IContainerBuilder builder)
         {
@@ -24,8 +27,8 @@ namespace VContainer.Installer
             builder.RegisterInstance(registry).As<IUIWindowRegistry>();
 
             builder.Register<IUIController, UIController>(Lifetime.Singleton);
-            
-            builder.Register<UIBootstrap>(Lifetime.Singleton).As<IStartable>();
+
+            builder.RegisterEntryPoint<UIBootstrap>();
         }
     }
 }

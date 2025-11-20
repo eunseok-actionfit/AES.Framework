@@ -1,11 +1,11 @@
 using System;
 using System.Threading;
-using AES.Tools.Core;
+using AES.Tools.Core.View;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 
-namespace AES.Tools.Components.Transitions.TransitionAsset.Util
+namespace AES.Tools.Transitions.Util
 {
     internal static class TransitionUtil
     {

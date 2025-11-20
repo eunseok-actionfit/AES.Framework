@@ -38,7 +38,7 @@ namespace AES.Tools.Core
 
         private Vector2 _prevPos;
         private int _activeId = -999;
-
+        
         public InputService(InputConfig config, IPointerSource pointer)
         {
             this.config = config;
