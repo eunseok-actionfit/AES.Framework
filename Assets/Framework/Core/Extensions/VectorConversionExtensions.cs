@@ -1,7 +1,9 @@
 using System.Runtime.CompilerServices;
 using UnityEngine;
 
-namespace UnityUtils {
+
+namespace AES.Tools
+{
     public static class VectorConversionExtensions {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector2 ToUnityVector(this System.Numerics.Vector2 vector) {

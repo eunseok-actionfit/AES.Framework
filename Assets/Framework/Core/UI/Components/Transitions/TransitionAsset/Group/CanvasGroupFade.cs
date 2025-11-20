@@ -1,10 +1,10 @@
 using System.Threading;
-using Core.Systems.UI.Core.UIView;
+using AES.Tools.Core.UIView;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 
-namespace Core.Systems.UI.Components.Transitions.TransitionAsset.Group
+namespace AES.Tools.Components.Transitions.TransitionAsset.Group
 {
     //  Namespace Properties ------------------------------
 

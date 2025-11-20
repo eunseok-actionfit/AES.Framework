@@ -2,13 +2,13 @@ using System.Threading;
 using System.Threading.Tasks;
 
 
-namespace Core.Engine.Command
+namespace AES.Tools
 {
     public interface ICommandBus
     {
-        Task<Result.Result> Run(ICommand command, CancellationToken ct = default);
-        Task<Result.Result> Undo(CancellationToken ct = default);
-        Task<Result.Result> Redo(CancellationToken ct = default);
+        Task<Result> Run(ICommand command, CancellationToken ct = default);
+        Task<Result> Undo(CancellationToken ct = default);
+        Task<Result> Redo(CancellationToken ct = default);
         
         bool CanUndo { get; }
         bool CanRedo { get; }

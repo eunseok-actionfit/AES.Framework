@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 
-namespace UnityUtils.Observables
+namespace AES.Tools
 {
     public interface IObservableArray<T> {
         event Action<T[]> AnyValueChanged;

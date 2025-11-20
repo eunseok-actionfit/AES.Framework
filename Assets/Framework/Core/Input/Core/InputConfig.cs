@@ -1,7 +1,7 @@
 using UnityEngine;
 
 
-namespace Core.Systems.Input
+namespace AES.Tools.Core
 {
     [CreateAssetMenu(menuName="Game/Input Settings")]
     public sealed class InputConfig : ScriptableObject

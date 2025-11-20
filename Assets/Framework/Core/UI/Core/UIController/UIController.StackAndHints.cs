@@ -1,11 +1,11 @@
 // Assets/Framework/Systems/UI/Core/UIManager.StackAndHints.cs
 using System.Collections.Generic;
-using Core.Systems.UI.Core.UILayer;
-using Core.Systems.UI.Core.UIView;
+using AES.Tools.Core.UILayer;
+using AES.Tools.Core.UIView;
 using UnityEngine;
 
 
-namespace Core.Systems.UI.Core.UIManager
+namespace AES.Tools.Core.UIController
 {
     public sealed partial class UIController
     {

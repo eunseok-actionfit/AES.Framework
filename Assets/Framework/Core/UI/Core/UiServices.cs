@@ -1,9 +1,9 @@
-using Core.Systems.UI.Core.UIManager;
-using Core.Systems.UI.Core.UIRoot;
-using Core.Systems.UI.Guards;
+using AES.Tools.Core.UIController;
+using AES.Tools.Core.UIRoot;
+using AES.Tools.Guards;
 
 
-namespace Core.Systems.UI
+namespace AES.Tools.Core
 {
     public static class UiServices
     {

@@ -2,7 +2,7 @@ using System;
 using UnityEngine;
 
 
-namespace UnityUtils.Serializable
+namespace AES.Tools
 {
     /// <summary>
     /// Represents a globally unique identifier (GUID) that is serializable with Unity and usable in game scripts.

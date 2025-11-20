@@ -1,9 +1,8 @@
 using UnityEngine;
 
 
-namespace Core.Systems.Pooling
+namespace AES.Tools
 {
-
     /// <summary>
     /// 소유 풀 참조를 게임오브젝트에 부착한다.<br/>
     /// `ReturnToOwner`가 안전하게 반환할 수 있게 한다.

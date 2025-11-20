@@ -1,6 +1,8 @@
 using UnityEngine;
 
-namespace UnityUtils {
+
+namespace AES.Tools
+{
     public static class RigidbodyExtensions {
         /// <summary>
         /// Changes the direction of the Rigidbody's velocity while maintaining its speed.

@@ -1,11 +1,10 @@
 using System;
 using TMPro;
 using UnityEngine;
-using UnityUtils.Bindable;
 
 
 // TMP_Text 바인딩 (단방향)
-namespace Core.Systems.UI.Components.Binding
+namespace AES.Tools.Components.Binding
 {
     public static class TmpBinderExtensions
     {

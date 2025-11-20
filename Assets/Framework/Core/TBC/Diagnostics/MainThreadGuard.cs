@@ -1,7 +1,7 @@
 using System;
 
 
-namespace Core.Engine.Diagnostics
+namespace AES.Tools
 {
     /// <summary>
     /// 유니티 메인 스레드 실행을 보장하기 위한 가드.<br/>

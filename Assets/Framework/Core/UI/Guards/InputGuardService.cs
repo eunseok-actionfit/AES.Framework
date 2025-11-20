@@ -2,7 +2,8 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace Core.Systems.UI.Guards
+
+namespace AES.Tools.Guards
 {
     public sealed class InputGuardService : IInputGuard
     {

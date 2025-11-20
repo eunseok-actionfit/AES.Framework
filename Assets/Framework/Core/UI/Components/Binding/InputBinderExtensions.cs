@@ -2,7 +2,6 @@ using System;
 using System.Globalization;
 using TMPro;
 using UnityEngine.UI;
-using UnityUtils.Bindable;
 
 
 // 프로젝트에 이미 있는 것으로 가정:
@@ -10,7 +9,7 @@ using UnityUtils.Bindable;
 // - Bindable<T>
 // - OnEndEditAsDisposable / OnValueChangedAsDisposable
 // - CompositeDisposable
-namespace Core.Systems.UI.Components.Binding
+namespace AES.Tools.Components.Binding
 {
     public static class InputBinderExtensions
     {

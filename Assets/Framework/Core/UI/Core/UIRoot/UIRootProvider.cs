@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 
 
-namespace Core.Systems.UI.Core.UIRoot
+namespace AES.Tools.Core.UIRoot
 {
 
     public interface IUIRootProvider

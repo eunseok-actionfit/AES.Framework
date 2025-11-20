@@ -1,12 +1,11 @@
 using System;
 using UnityEngine;
 using UnityEngine.UI;
-using UnityUtils.Bindable;
 
 
 // ----------------- 확장/도우미 -----------------
 
-namespace Core.Systems.UI.Components.Binding
+namespace AES.Tools.Components.Binding
 {
     /// <summary>
     /// UguiBinderExtensions 클래스는 Unity UI 컴포넌트를 구독 및 처리하기 위한 확장을 제공합니다.

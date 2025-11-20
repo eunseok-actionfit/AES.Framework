@@ -1,22 +1,23 @@
 using System;
 using System.Collections.Generic;
-using Core.Systems.UI.Core;
-
+using AES.Tools.Core;
+using AES.Tools.SerializedDictionary;
+using Sirenix.OdinInspector;
 using UnityEngine;
-using UnityUtils.Serializable;
+
 
 #if ODIN_INSPECTOR
-using Sirenix.Serialization;
-using Sirenix.OdinInspector;
+
+
 #else
 using AYellowpaper.SerializedCollections;
 #endif
 
 
-namespace Core.Systems.UI.Registry
+namespace AES.Tools.Registry
 {
 #if ODIN_INSPECTOR
-    public abstract class UIWindowRegistrySO : SerializedScriptableObject, IUIWindowRegistry { }
+    public abstract class UIWindowRegistrySO : SerializedScriptableObject, IUIWindowRegistry 
 #else
     public abstract class UIWindowRegistrySO : ScriptableObject, IUIWindowRegistry
 #endif

@@ -1,10 +1,9 @@
 using System;
-using Core.Systems.Pooling;
-using Core.Systems.UI.Core.UIRoot;
-using Core.Systems.UI.Registry;
-using UnityUtils.Core.UnityUtils.Extensions;
+using AES.Tools.Core.UIRoot;
+using AES.Tools.Registry;
 
-namespace Core.Systems.UI.Core.UIManager
+
+namespace AES.Tools.Core.UIController
 {
     public sealed partial class UIController
     {

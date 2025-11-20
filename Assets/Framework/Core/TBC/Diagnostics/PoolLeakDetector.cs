@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
-namespace Core.Engine.Diagnostics
+namespace AES.Tools
 {
 #if UNITY_EDITOR
     /// <summary>

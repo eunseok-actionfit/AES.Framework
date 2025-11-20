@@ -3,7 +3,7 @@ using System;
 using UnityEngine;
 
 
-namespace Core.Systems.UI.Core.UIView
+namespace AES.Tools.Core.UIView
 {
     /// <summary>bool 기반 UI 힌트 (enabled일 때만 value 사용)</summary>
     [Serializable]

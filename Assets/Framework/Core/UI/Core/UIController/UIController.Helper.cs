@@ -1,10 +1,9 @@
-using Core.Systems.UI.Components.Transitions;
-using Core.Systems.UI.Core.UILayer;
-using Core.Systems.UI.Core.UIRoot;
-using Core.Systems.UI.Registry;
+using AES.Tools.Core.UIRoot;
+using AES.Tools.Registry;
 using UnityEngine;
 
-namespace Core.Systems.UI.Core.UIManager
+
+namespace AES.Tools.Core.UIController
 {
     public sealed partial class UIController
     {
@@ -29,7 +28,7 @@ namespace Core.Systems.UI.Core.UIManager
         }
 
 
-        private ITransition GetFxFor(UIRoot.UIRoot root, Transform parent, UIRegistryEntry _)
+        private Components.Transitions.ITransition GetFxFor(UIRoot.UIRoot root, Transform parent, UIRegistryEntry _)
         {
             if (parent == root.WindowLayer.transform) return _winFx;
             if (parent == root.HudLayer.transform) return _hudFx;
@@ -37,14 +36,14 @@ namespace Core.Systems.UI.Core.UIManager
             return _ovlFx;
         }
 
-        private ITransition CreateLayerBaseFx(Transform parent)
+        private Components.Transitions.ITransition CreateLayerBaseFx(Transform parent)
         {
             var layer = parent ? parent.GetComponent<UILayer.UILayer>() : null;
             var asset = layer?.Policy?.BaseTransitionAsset;
             return asset ? asset : null;
         }
 
-        private ITransition PickFx(UIRoot.UIRoot root, Transform parent, UIRegistryEntry entry)
+        private Components.Transitions.ITransition PickFx(UIRoot.UIRoot root, Transform parent, UIRegistryEntry entry)
         {
             var layerFx = CreateLayerBaseFx(parent);   // Layer 기본 FX
             return layerFx ?? GetFxFor(root, parent, entry); // 레이어 종류별 기본

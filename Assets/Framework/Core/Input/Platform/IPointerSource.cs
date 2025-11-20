@@ -1,7 +1,7 @@
 using UnityEngine;
 
 
-namespace Core.Systems.Input.Platform
+namespace AES.Tools.Platform
 {
     public interface IPointerSource
     {

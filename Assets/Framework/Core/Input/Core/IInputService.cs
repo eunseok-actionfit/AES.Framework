@@ -2,7 +2,7 @@ using System;
 using UnityEngine;
 
 
-namespace Core.Systems.Input
+namespace AES.Tools.Core
 {
     public interface IInputService
     {

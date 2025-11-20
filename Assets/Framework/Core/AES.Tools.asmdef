@@ -1,6 +1,6 @@
 {
   "name": "AES.Tools",
-  "rootNamespace": "",
+  "rootNamespace": "AES.Tools",
   "references": [
     "UniTask",
     "Unity.Addressables",

@@ -1,6 +1,6 @@
 {
   "name": "AES.Tools.Editor",
-  "rootNamespace": "",
+  "rootNamespace": "AES.Tools.Editor",
   "references": [
     "AES.Tools"
   ],

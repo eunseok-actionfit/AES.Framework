@@ -1,10 +1,10 @@
 using System.IO;
-using Core.Systems.Storage.Core;
+using AES.Tools.Core;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 
-namespace Core.Systems.Storage.Impl
+namespace AES.Tools.Impl
 {
     public class FileBlobStore : ILocalBlobStore
     {

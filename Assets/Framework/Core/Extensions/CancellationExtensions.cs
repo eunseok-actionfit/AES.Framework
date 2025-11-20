@@ -1,7 +1,8 @@
 using System;
 using System.Threading;
 
-namespace Extensions
+
+namespace AES.Tools
 {
     public static class CtsEx
     {

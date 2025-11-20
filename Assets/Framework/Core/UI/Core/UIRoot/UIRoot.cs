@@ -1,8 +1,10 @@
 using UnityEngine;
-using Core.Systems.UI;              // UiServices
+
+
+// UiServices
 // using VContainer;                // 제거
 
-namespace Core.Systems.UI.Core.UIRoot
+namespace AES.Tools.Core.UIRoot
 {
     public sealed class UIRoot : MonoBehaviour
     {

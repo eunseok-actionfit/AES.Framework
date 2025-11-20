@@ -1,4 +1,4 @@
-namespace Core.Engine.Command
+namespace AES.Tools
 {
     public interface ICommandHistory
     {

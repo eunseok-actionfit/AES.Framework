@@ -1,4 +1,4 @@
-namespace Core.Systems.Storage.Core
+namespace AES.Tools.Core
 {
     public interface ISlotService
     {

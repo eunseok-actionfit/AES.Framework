@@ -1,7 +1,7 @@
 using UnityEngine.InputSystem;
 
 
-namespace Core.Systems.Input.Platform
+namespace AES.Tools.Platform
 {
     public sealed class MousePointerSource : IPointerSource
     {

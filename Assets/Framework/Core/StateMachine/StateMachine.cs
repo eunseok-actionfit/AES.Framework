@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 
-namespace Framework.Runtime.Core.FiniteStateMachine 
+namespace AES.Tools
 {
     public class StateMachine {
         StateNode currentNode;

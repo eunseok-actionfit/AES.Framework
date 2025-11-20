@@ -1,9 +1,9 @@
-using Core.Systems.Storage.Core;
+using AES.Tools.Core;
 using Cysharp.Threading.Tasks;
 
 
 // TODO GPGS, FirebaseStorge 등 클라우드 서비스 구현
-namespace Core.Systems.Storage.Impl
+namespace AES.Tools.Impl
 {
     public class NullCloudBlobStore : ICloudBlobStore
     {

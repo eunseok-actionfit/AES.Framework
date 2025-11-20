@@ -1,32 +1,35 @@
 using UnityEngine;
 
 
-public interface IFactory<T>
+namespace AES.Tools
 {
-    T Create();
-    void Destroy(T item);
-}
-
-public sealed class PrefabFactory<T> : IFactory<T> where T : Component
-{
-    private readonly T _prefab;
-    private readonly Transform _parent;
-
-    public PrefabFactory(T prefab, Transform parent = null)
+    public interface IFactory<T>
     {
-        _prefab = prefab;
-        _parent = parent;
+        T Create();
+        void Destroy(T item);
     }
 
-    public T Create()
+    public sealed class PrefabFactory<T> : IFactory<T> where T : Component
     {
-        var inst = Object.Instantiate(_prefab, _parent);
-        return inst;
-    }
+        private readonly T _prefab;
+        private readonly Transform _parent;
 
-    public void Destroy(T item)
-    {
-        if (!item) return;
-        Object.Destroy(item.gameObject);
+        public PrefabFactory(T prefab, Transform parent = null)
+        {
+            _prefab = prefab;
+            _parent = parent;
+        }
+
+        public T Create()
+        {
+            var inst = Object.Instantiate(_prefab, _parent);
+            return inst;
+        }
+
+        public void Destroy(T item)
+        {
+            if (!item) return;
+            Object.Destroy(item.gameObject);
+        }
     }
 }

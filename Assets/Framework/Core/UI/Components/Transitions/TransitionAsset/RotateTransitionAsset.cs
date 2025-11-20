@@ -1,11 +1,11 @@
 using System.Threading;
-using Core.Systems.UI.Components.Transitions.TransitionAsset.Util;
-using Core.Systems.UI.Core.UIView;
+using AES.Tools.Components.Transitions.TransitionAsset.Util;
+using AES.Tools.Core.UIView;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 
-namespace Core.Systems.UI.Components.Transitions.TransitionAsset
+namespace AES.Tools.Components.Transitions.TransitionAsset
 {
     [CreateAssetMenu(menuName = "UI/Transition/Rotate")]
     public sealed class RotateTransitionAsset : TransitionAsset

@@ -1,15 +1,7 @@
-#if AESFW_UNITASK
-using Cysharp.Threading.Tasks;
-using Awaitable = Cysharp.Threading.Tasks.UniTask;
-#elif UNITY_2023_1_OR_NEWER
-using Awaitable = UnityEngine.Awaitable;
-#else
-using Awaitable = System.Threading.Tasks.Task;
-#endif
-
 using UnityEngine;
 
-namespace Core.Systems.Spawning
+
+namespace AES.Tools
 {
     public interface IViewSpawner<T> where T : Component
     {

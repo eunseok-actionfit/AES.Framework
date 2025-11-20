@@ -1,6 +1,8 @@
 using UnityEngine;
 
-namespace UnityUtils {
+
+namespace AES.Tools
+{
     public static class LayerMaskExtensions {
         /// <summary>
         /// Checks if the given layer number is contained in the LayerMask.

@@ -1,4 +1,4 @@
-namespace Core.Systems.UI.Guards
+namespace AES.Tools.Guards
 {
     public interface IInputGuard
     {

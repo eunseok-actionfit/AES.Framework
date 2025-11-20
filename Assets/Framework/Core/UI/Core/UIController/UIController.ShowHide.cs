@@ -1,13 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using Core.Systems.UI.Core.UILayer;
-using Core.Systems.UI.Core.UIRoot;
+using AES.Tools.Core.UIRoot;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 
-namespace Core.Systems.UI.Core.UIManager
+namespace AES.Tools.Core.UIController
 {
     public sealed partial class UIController
     {

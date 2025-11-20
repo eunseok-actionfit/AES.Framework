@@ -1,7 +1,7 @@
 using System;
 
 
-namespace UnityUtils.Serializable
+namespace AES.Tools.SerializedDictionary
 {
     [Serializable]
     public class StringIntDictionary : UnitySerializedDictionary<string, int> {}

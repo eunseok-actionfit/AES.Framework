@@ -1,10 +1,9 @@
 using System;
-using UnityUtils.Observables;
 
 
 // Observable<T>
 
-namespace UnityUtils.Bindable
+namespace AES.Tools
 {
     public static class EventBindExtensions
     {

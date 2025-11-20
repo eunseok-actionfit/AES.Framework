@@ -2,9 +2,7 @@
 using System.Collections.Generic;
 
 
-namespace UnityUtils.Observables
-{
-    // 외부에 내보낼 읽기 전용 인터페이스
+namespace AES.Tools { // 외부에 내보낼 읽기 전용 인터페이스
     /// <summary>
     /// 읽기 전용으로 관찰 가능한 데이터 인터페이스.
     /// 값 변경 시 구독자에게 알림을 제공하며 이벤트를 통해 현재 상태를 수신 가능.

@@ -1,7 +1,7 @@
 using System;
 
 
-namespace Core.Systems.UI.Core
+namespace AES.Tools.Core
 {
     /// <summary>
     /// 동일 UI ID의 인스턴스 생성 정책

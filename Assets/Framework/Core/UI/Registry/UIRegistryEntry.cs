@@ -1,13 +1,12 @@
 // Assets/Framework/Systems/UI/Core/Registry/UIRegistryEntry.cs
 using System;
-using Core.Systems.UI.Core;
-using Core.Systems.UI.Core.UILayer;
-using Core.Systems.UI.Core.UIManager;
-using Core.Systems.UI.Core.UIRoot;
+using AES.Tools.Core;
+using AES.Tools.Core.UIController;
+using AES.Tools.Core.UIRoot;
 using UnityEngine;
 
 
-namespace Core.Systems.UI.Registry
+namespace AES.Tools.Registry
 {
     /// Show 전에 필요한 정보만 보관
     [Serializable]

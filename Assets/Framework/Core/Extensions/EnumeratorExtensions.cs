@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
 
-namespace UnityUtils {
+
+namespace AES.Tools
+{
     public static class EnumeratorExtensions {
         /// <summary>
         /// Converts an IEnumerator<T> to an IEnumerable<T>.

@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 
 
-namespace Core.Engine.Command
+namespace AES.Tools
 {
     public sealed class CommandHistory : ICommandHistory
     {

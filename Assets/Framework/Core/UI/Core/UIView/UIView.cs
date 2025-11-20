@@ -1,14 +1,12 @@
 using System;
 using System.Threading;
-using Core.Systems.Pooling;
-using Core.Systems.UI.Components.Binding;
-using Core.Systems.UI.Components.Transitions;
-using Core.Systems.UI.Components.Transitions.TransitionAsset;
+using AES.Tools.Components.Binding;
+using AES.Tools.Components.Transitions.TransitionAsset;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 
-namespace Core.Systems.UI.Core.UIView
+namespace AES.Tools.Core.UIView
 {
     [RequireComponent(typeof(UIViewHints))]
     [RequireComponent(typeof(CanvasGroup))]
@@ -70,7 +68,7 @@ namespace Core.Systems.UI.Core.UIView
         }
 
         // ---- 표준 Show/Hide ----
-        public async UniTask ShowAsync(object model, ITransition transition, CancellationToken ct)
+        public async UniTask ShowAsync(object model, Components.Transitions.ITransition transition, CancellationToken ct)
         {
             using (await _transitionLock.LockAsync(ct))
             {
@@ -117,7 +115,7 @@ namespace Core.Systems.UI.Core.UIView
 
 
 
-        public async UniTask HideAsync(ITransition transition, CancellationToken ct)
+        public async UniTask HideAsync(Components.Transitions.ITransition transition, CancellationToken ct)
         {
             using (await _transitionLock.LockAsync(ct))
             {

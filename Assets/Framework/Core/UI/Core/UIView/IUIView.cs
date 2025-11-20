@@ -1,7 +1,7 @@
 using UnityEngine;
 
 
-namespace Core.Systems.UI.Core.UIView
+namespace AES.Tools.Core.UIView
 {
     public interface IUIView
     {

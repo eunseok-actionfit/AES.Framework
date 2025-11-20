@@ -1,12 +1,15 @@
 using System.Threading;
-using Core.Systems.UI.Core.UIView;
-using Core.Systems.UI.Registry;
+using AES.Tools.Core.UIView;
+using AES.Tools.Registry;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 
-public interface IUIFactory
+namespace AES.Tools.Factory
 {
-    UniTask<UIView> CreateAsync(UIRegistryEntry entry, Transform parent, CancellationToken ct = default);
-    void Destroy(UIRegistryEntry entry, UIView view);
+    public interface IUIFactory
+    {
+        UniTask<UIView> CreateAsync(UIRegistryEntry entry, Transform parent, CancellationToken ct = default);
+        void Destroy(UIRegistryEntry entry, UIView view);
+    }
 }

@@ -1,7 +1,8 @@
 using System.Collections.Generic;
-using Core.Systems.UI.Core;
+using AES.Tools.Core;
 
-namespace Core.Systems.UI.Registry
+
+namespace AES.Tools.Registry
 {
     public interface IUIWindowRegistry
     {

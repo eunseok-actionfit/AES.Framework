@@ -1,7 +1,7 @@
 using System;
 
 
-namespace UnityUtils.Bindable
+namespace AES.Tools
 {
     public interface IReadableSource<T>
     {

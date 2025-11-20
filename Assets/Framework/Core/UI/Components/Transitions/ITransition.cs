@@ -1,9 +1,9 @@
 using System.Threading;
-using Core.Systems.UI.Core.UIView;
+using AES.Tools.Core.UIView;
 using Cysharp.Threading.Tasks;
 
 
-namespace Core.Systems.UI.Components.Transitions
+namespace AES.Tools.Components.Transitions
 {
     public interface ITransition
     {

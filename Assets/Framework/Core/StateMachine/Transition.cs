@@ -1,7 +1,7 @@
 ﻿using System;
 
 
-namespace Framework.Runtime.Core.FiniteStateMachine 
+namespace AES.Tools
 {
     public abstract class Transition {
         public IState To { get; protected set; }

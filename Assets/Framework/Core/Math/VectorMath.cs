@@ -1,6 +1,8 @@
 using UnityEngine;
 
-namespace UnityUtils {
+
+namespace AES.Tools
+{
     public class VectorMath {
         /// <summary>
         /// Calculates the signed angle between two vectors on a plane defined by a normal vector.
@@ -86,7 +88,7 @@ namespace UnityUtils {
         /// <param name="targetVector">The target vector to approach.</param>
         /// <returns>The new vector incremented toward the target vector by the specified speed and time interval.</returns>
         public static Vector3 IncrementVectorTowardTargetVector(Vector3 currentVector, float speed, float deltaTime,
-            Vector3 targetVector) {
+                                                                Vector3 targetVector) {
             return Vector3.MoveTowards(currentVector, targetVector, speed * deltaTime);
         }
     }

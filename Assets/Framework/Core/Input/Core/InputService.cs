@@ -1,11 +1,11 @@
 using System;
-using Core.Systems.Input.Core.Utils.Systems.Input.Utils;
-using Core.Systems.Input.Gesture;
-using Core.Systems.Input.Platform;
+using AES.Tools.Core.Utils.Systems.Input.Utils;
+using AES.Tools.Gesture;
+using AES.Tools.Platform;
 using UnityEngine;
 
 
-namespace Core.Systems.Input.Core
+namespace AES.Tools.Core
 {
     public sealed class InputService : IInputService
     {

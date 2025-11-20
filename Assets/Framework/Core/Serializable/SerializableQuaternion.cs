@@ -2,7 +2,7 @@ using System;
 using UnityEngine;
 
 
-namespace UnityUtils.Serializable
+namespace AES.Tools
 {
     /// <summary>
     /// Represents a serializable version of the Unity Quaternion struct.

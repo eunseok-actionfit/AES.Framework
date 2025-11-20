@@ -1,7 +1,7 @@
 using UnityEngine;
 
 
-namespace Core.Systems.Input.Gesture
+namespace AES.Tools.Gesture
 {
     public sealed class DoubleTapGesture
     {

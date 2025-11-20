@@ -1,6 +1,8 @@
-
 using System;
-namespace Core.Systems.UI.Core
+using AES.Tools.Core.Utility;
+
+
+namespace AES.Tools.Core
 {
     [Serializable]
     public readonly struct UIWindowKey : IEquatable<UIWindowKey>

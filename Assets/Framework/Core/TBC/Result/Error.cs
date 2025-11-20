@@ -1,7 +1,7 @@
 using System;
 
 
-namespace Core.Engine.Result
+namespace AES.Tools
 {
     /// <summary>
     /// 에러 정보 구조체 <br/>

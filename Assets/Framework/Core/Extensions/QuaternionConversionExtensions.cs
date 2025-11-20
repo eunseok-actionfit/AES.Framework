@@ -1,7 +1,9 @@
 using System.Runtime.CompilerServices;
 using UnityEngine;
 
-namespace UnityUtils {
+
+namespace AES.Tools
+{
     public static class QuaternionConversionExtensions {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Quaternion ToUnityQuaternion(this System.Numerics.Quaternion quaternion) {

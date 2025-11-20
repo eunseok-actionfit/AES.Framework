@@ -2,10 +2,9 @@ using System;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine.Localization;
-using UnityUtils.Bindable;
 
 
-namespace Core.Systems.UI.Components.Binding
+namespace AES.Tools.Components.Binding
 {
     public static class TmpBinderLocalizedSmartExtensions
     {

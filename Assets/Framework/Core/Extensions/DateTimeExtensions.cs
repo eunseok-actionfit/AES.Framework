@@ -1,6 +1,8 @@
 using System;
 
-namespace UnityUtils {
+
+namespace AES.Tools
+{
     public static class DateTimeExtensions {
         /// <summary>
         /// Thanks, Adam, for refactoring this code

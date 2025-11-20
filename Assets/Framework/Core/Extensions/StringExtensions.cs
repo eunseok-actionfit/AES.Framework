@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace UnityUtils {
+
+namespace AES.Tools
+{
     public static class StringExtensions {
         /// <summary>Checks if a string is Null or white space</summary>
         public static bool IsNullOrWhiteSpace(this string val) => string.IsNullOrWhiteSpace(val);
@@ -64,9 +66,9 @@ namespace UnityUtils {
 
             // Iterate over the input string, filtering and determining valid start/end indices
             foreach (char character in input
-                         .Where(character => char
-                             .IsLetterOrDigit(character) || character == '_' || (allowPeriods && character == '.'))
-                         .Where(character => filteredChars.Count != 0 || (!char.IsDigit(character) && character != '.'))) {
+                .Where(character => char
+                    .IsLetterOrDigit(character) || character == '_' || (allowPeriods && character == '.'))
+                .Where(character => filteredChars.Count != 0 || (!char.IsDigit(character) && character != '.'))) {
 
                 filteredChars.Add(character);
                 lastValidIndex = filteredChars.Count - 1; // Update lastValidIndex for valid characters

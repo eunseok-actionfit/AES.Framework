@@ -1,4 +1,4 @@
-namespace Core.Systems.Pooling
+namespace AES.Tools
 {
     /// <summary>
     /// 풀링 가능한 객체 인터페이스

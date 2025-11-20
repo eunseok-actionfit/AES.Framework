@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
-using UnityUtils.Bindable;
 
 
 // 사용 예:
@@ -11,7 +10,7 @@ using UnityUtils.Bindable;
 // binder.BindText(hpText, vm.Health);              // 모델→UI
 // binder.BindSliderValue(hpSlider, vm.Health, 0, 100); // 양방향
 // binder.BindInputFieldText(nameInput, vm.Name);   // 양방향
-namespace Core.Systems.UI.Components.Binding
+namespace AES.Tools.Components.Binding
 {
     /// <summary>
     /// UguiBinder는 Unity UI와 ViewModel 사이의 데이터 바인딩을 간편하게 구현하기 위한 헬퍼 클래스입니다.

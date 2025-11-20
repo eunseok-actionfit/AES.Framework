@@ -2,7 +2,8 @@ using System.IO;
 using UnityEditor;
 using UnityEngine;
 
-namespace UnityUtils {
+
+namespace AES.Tools.Editor {
     /// <summary>
     /// Provides extension methods for various editor functionalities.
     /// </summary>

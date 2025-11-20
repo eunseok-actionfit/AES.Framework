@@ -1,12 +1,11 @@
 using System.Threading;
-using Core.Engine.Factory;
-using Core.Systems.UI.Core.UIView;
-using Core.Systems.UI.Factory;
+using AES.Tools.Core.UIView;
+using AES.Tools.Factory;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 
-namespace Core.Systems.UI.Registry
+namespace AES.Tools.Registry
 {
     //  Namespace Properties ------------------------------
 

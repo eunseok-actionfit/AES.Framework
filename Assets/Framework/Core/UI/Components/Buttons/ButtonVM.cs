@@ -1,8 +1,7 @@
 using Cysharp.Threading.Tasks;
-using UnityUtils.Bindable;
 
 
-namespace Core.Systems.UI.Components.Buttons
+namespace AES.Tools.Components.Buttons
 {
     public sealed class ButtonVM
     {

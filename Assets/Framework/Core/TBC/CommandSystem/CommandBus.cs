@@ -2,7 +2,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 
-namespace Core.Engine.Command
+namespace AES.Tools
 {
     public sealed class CommandBus : ICommandBus
     {
@@ -13,7 +13,7 @@ namespace Core.Engine.Command
         public bool CanUndo => _hist.UndoCount > 0;
         public bool CanRedo => _hist.RedoCount > 0;
 
-        public async Task<Result.Result> Run(ICommand command, CancellationToken ct = default)
+        public async Task<Result> Run(ICommand command, CancellationToken ct = default)
         {
             var r = await command.Execute(ct);
 
@@ -26,17 +26,17 @@ namespace Core.Engine.Command
             return r;
         }
 
-        public async Task<Result.Result> Undo(CancellationToken ct = default)
+        public async Task<Result> Undo(CancellationToken ct = default)
         {
-            if (!_hist.TryPopUndo(out var cmd)) return Result.Result.Fail(new("UNDO_EMPTY", "no command"));
+            if (!_hist.TryPopUndo(out var cmd)) return Result.Fail(new("UNDO_EMPTY", "no command"));
             var r = await cmd.Undo(ct);
             if (r.IsSuccess) _hist.PushUndone(cmd);
             return r;
         }
 
-        public async Task<Result.Result> Redo(CancellationToken ct = default)
+        public async Task<Result> Redo(CancellationToken ct = default)
         {
-            if (!_hist.TryPopRedo(out var cmd)) return Result.Result.Fail(new("REDO_EMPTY", "no command"));
+            if (!_hist.TryPopRedo(out var cmd)) return Result.Fail(new("REDO_EMPTY", "no command"));
             var r = await cmd.Execute(ct);
             if (r.IsSuccess) _hist.PushDone(cmd);
             return r;

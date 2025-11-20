@@ -2,7 +2,8 @@
 using UnityEditor;
 using UnityEngine;
 
-namespace _Project.Scripts.Core.Editor
+
+namespace AES.Tools.Editor
 {
     /// <summary>
     /// Bootstrapper 씬 설정 전용 에디터 윈도우.

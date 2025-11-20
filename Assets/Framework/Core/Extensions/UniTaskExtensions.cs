@@ -1,11 +1,11 @@
 #if AESFW_UNITASK
-using Cysharp.Threading.Tasks;
 using System;
-using System.Collections.Generic;
 using System.Threading;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 
-namespace UnityUtils.Core.UnityUtils.Extensions
+
+namespace AES.Tools
 {
     public static class UniTaskExtensions
     {
@@ -50,4 +50,5 @@ namespace UnityUtils.Core.UnityUtils.Extensions
         }
     }
 }
+
 #endif

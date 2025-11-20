@@ -2,7 +2,8 @@
 using Unity.Mathematics;
 #endif
 
-namespace UnityUtils {
+namespace AES.Tools
+{
     public static class MathfExtension {
         #region Min
 

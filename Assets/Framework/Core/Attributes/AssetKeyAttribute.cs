@@ -1,7 +1,7 @@
 using System;
 
 
-namespace Core.Engine.Factory
+namespace AES.Tools
 {
     [AttributeUsage(AttributeTargets.Class, Inherited = false)]
     public sealed class AssetKeyAttribute : Attribute

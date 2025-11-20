@@ -3,7 +3,8 @@
 using Unity.Mathematics;
 #endif
 
-namespace UnityUtils {
+namespace AES.Tools
+{
     public static class NumberExtensions {
         public static float PercentageOf(this int part, int whole) {
             if (whole == 0) return 0; // Handling division by zero

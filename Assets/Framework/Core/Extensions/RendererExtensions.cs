@@ -1,6 +1,8 @@
 ﻿using UnityEngine;
 
-namespace UnityUtils {
+
+namespace AES.Tools
+{
     public static class RendererExtensions {
         /// <summary>
         /// Enables ZWrite for materials in this Renderer that have a '_Color' property. This will allow the materials 

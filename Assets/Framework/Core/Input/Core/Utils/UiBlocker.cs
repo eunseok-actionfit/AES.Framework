@@ -1,7 +1,7 @@
 using UnityEngine.EventSystems;
 
 
-namespace Core.Systems.Input.Core.Utils
+namespace AES.Tools.Core.Utils
 {
 
     namespace Systems.Input.Utils

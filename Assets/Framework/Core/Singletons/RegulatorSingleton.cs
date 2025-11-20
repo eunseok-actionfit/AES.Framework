@@ -1,7 +1,8 @@
 ﻿using UnityEngine;
 
 
-namespace UnityUtils.Singleton {
+namespace AES.Tools
+{
     /// <summary>
     /// Persistent Regulator singleton, will destroy any other older components of the same type it finds on awake
     /// </summary>

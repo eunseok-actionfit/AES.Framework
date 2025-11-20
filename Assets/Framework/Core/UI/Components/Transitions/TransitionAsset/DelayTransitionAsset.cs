@@ -1,10 +1,10 @@
 using System.Threading;
-using Core.Systems.UI.Core.UIView;
+using AES.Tools.Core.UIView;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 
-namespace Core.Systems.UI.Components.Transitions.TransitionAsset
+namespace AES.Tools.Components.Transitions.TransitionAsset
 {
     [CreateAssetMenu(menuName="UI/Transition/Delay")]
     public sealed class DelayTransitionAsset : TransitionAsset

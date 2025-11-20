@@ -1,6 +1,7 @@
 using System;
 
-namespace Core.Systems.UI.Core
+
+namespace AES.Tools.Core.Utility
 {
     public static class UIEnumKeyUtility
     {

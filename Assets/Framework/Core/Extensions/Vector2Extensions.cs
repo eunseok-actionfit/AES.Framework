@@ -1,6 +1,8 @@
 using UnityEngine;
 
-namespace UnityUtils {
+
+namespace AES.Tools
+{
     public static class Vector2Extensions {
         /// <summary>
         /// Adds to any x y values of a Vector2

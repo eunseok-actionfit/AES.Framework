@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 
 
-namespace Core.Engine.EventBus
+namespace AES.Tools
 {
     /// <summary>
     /// 여러 IDisposable을 묶어서 한 번에 해제하는 컨테이너.

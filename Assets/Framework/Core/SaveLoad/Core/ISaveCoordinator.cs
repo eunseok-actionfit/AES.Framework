@@ -2,7 +2,7 @@ using System.Threading;
 using Cysharp.Threading.Tasks;
 
 
-namespace Core.Systems.Storage.Core
+namespace AES.Tools.Core
 {
     public interface ISaveCoordinator
     {

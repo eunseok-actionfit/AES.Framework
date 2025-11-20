@@ -1,13 +1,13 @@
 using System;
 using System.Threading;
-using Core.Systems.UI.Core.UIView;
-using Core.Systems.UI.Registry;
+using AES.Tools.Core.UIView;
+using AES.Tools.Registry;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using Object = UnityEngine.Object;
 
-namespace Core.Systems.UI.Factory
+namespace AES.Tools.Factory
 {
     public class UIFactory : IUIFactory
     {

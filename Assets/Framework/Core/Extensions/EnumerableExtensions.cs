@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 
-namespace UnityUtils {
+
+namespace AES.Tools
+{
     public static class EnumerableExtensions {
         /// <summary>
         /// Performs an action on each element in the sequence.

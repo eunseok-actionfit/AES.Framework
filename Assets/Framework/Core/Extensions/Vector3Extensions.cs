@@ -1,6 +1,8 @@
 ﻿using UnityEngine;
 
-namespace UnityUtils {
+
+namespace AES.Tools
+{
     public static class Vector3Extensions {
         /// <summary>
         /// Sets any x y z values of a Vector3

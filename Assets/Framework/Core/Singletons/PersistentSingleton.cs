@@ -1,13 +1,10 @@
-﻿using UnityEngine;
+﻿using Sirenix.OdinInspector;
+using UnityEngine;
+
 
 #if ODIN_INSPECTOR
-using Sirenix.OdinInspector;
-#endif
-
-
-namespace UnityUtils.Singleton
+namespace AES.Tools
 {
-#if ODIN_INSPECTOR
     public class PersistentSingleton<T> : SerializedMonoBehaviour where T : Component
 #else
     public class PersistentSingleton<T> : MonoBehaviour where T : Component

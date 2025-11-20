@@ -1,7 +1,7 @@
 using UnityEngine;
 
 
-namespace Core.Systems.Pooling
+namespace AES.Tools
 {
     /// <summary>
     /// `GameObject`를 풀로 반환하기 위한 인터페이스.<br/>

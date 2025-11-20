@@ -1,8 +1,8 @@
-using Core.Systems.Storage.Core;
+using AES.Tools.Core;
 using UnityEngine;
 
 
-namespace Core.Systems.Storage.Impl {
+namespace AES.Tools.Impl {
     public class JsonSerializer : IJsonSerializer {
         public string Serialize<T>(T obj) {
             return JsonUtility.ToJson(obj, true);

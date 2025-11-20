@@ -1,16 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using Core.Engine.Diagnostics;
-using Core.Engine.Factory;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
-using UnityUtils;
 using Object = UnityEngine.Object;
 
 #if AESFW_UNITASK
-using Cysharp.Threading.Tasks;
-using Awaitable = Cysharp.Threading.Tasks.UniTask;
-using AwaitableVoid = Cysharp.Threading.Tasks.UniTaskVoid;
+
+
 #elif UNITY_2023_1_OR_NEWER
 using Awaitable = UnityEngine.Awaitable;
 using AwaitableVoid = UnityEngine.Awaitable;
@@ -21,7 +18,7 @@ using Awaitable = System.Threading.Tasks.Task;
 using AwaitableVoid = System.Threading.Tasks.Task;
 #endif
 
-namespace Core.Systems.Pooling
+namespace AES.Tools
 {
     /// <summary>
     /// 유니티 오브젝트용 범용 풀 구현.
@@ -101,7 +98,7 @@ namespace Core.Systems.Pooling
         /// <summary>
         /// 지정 수량만큼 미리 생성한다.
         /// </summary>
-        public async Awaitable WarmupAsync(int warmUp, CancellationToken ct = default)
+        public async UniTask WarmupAsync(int warmUp, CancellationToken ct = default)
         {
             ThrowIfDisposed();
 
@@ -342,7 +339,7 @@ namespace Core.Systems.Pooling
             _ = DestroyOnMainAsync(obj);
         }
 
-        private async AwaitableVoid DestroyOnMainAsync(Object obj)
+        private async UniTaskVoid DestroyOnMainAsync(Object obj)
         {
 #if AESFW_UNITASK
             await UniTask.SwitchToMainThread();

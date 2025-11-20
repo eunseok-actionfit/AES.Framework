@@ -1,12 +1,10 @@
 using System;
 using System.ComponentModel;
 using System.Threading;
-using UnityUtils.Observables;
 
 
-namespace UnityUtils.Bindable
+namespace AES.Tools
 {
-
     /// <summary>
     /// 데이터 바인딩을 위한 클래스. 단방향 및 양방향 바인딩을 제공하며, 값 변경 시 알림 이벤트를 발생시킵니다.
     /// </summary>

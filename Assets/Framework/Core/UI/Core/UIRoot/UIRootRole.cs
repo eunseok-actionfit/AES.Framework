@@ -1,4 +1,4 @@
-namespace Core.Systems.UI.Core.UIRoot
+namespace AES.Tools.Core.UIRoot
 {
     public enum UIRootRole { Global, Local }
 }

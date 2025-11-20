@@ -1,7 +1,9 @@
-﻿using UnityEngine;
-using System.Linq;
+﻿using System.Linq;
+using UnityEngine;
 
-namespace UnityUtils {
+
+namespace AES.Tools
+{
     public static class GameObjectExtensions {
         /// <summary>
         /// This method is used to hide the GameObject in the Hierarchy view.
