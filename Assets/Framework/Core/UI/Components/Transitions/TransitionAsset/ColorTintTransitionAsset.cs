@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Threading;
 using AES.Tools.Components.Transitions.TransitionAsset.Util;
-using AES.Tools.Core.UIView;
+using AES.Tools.Core;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;

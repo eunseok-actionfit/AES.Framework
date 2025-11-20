@@ -6,7 +6,7 @@ using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 
-namespace AES.Tools.Core.UIView
+namespace AES.Tools.Core
 {
     [RequireComponent(typeof(UIViewHints))]
     [RequireComponent(typeof(CanvasGroup))]

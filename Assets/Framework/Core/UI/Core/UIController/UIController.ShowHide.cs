@@ -1,16 +1,15 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using AES.Tools.Core.UIRoot;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 
-namespace AES.Tools.Core.UIController
+namespace AES.Tools.Core
 {
     public sealed partial class UIController
     {
-        public async UniTask<UIView.UIView> ShowAsync<TEnum>(TEnum id, object model = null, CancellationToken ct = default)
+        public async UniTask<UIView> ShowAsync<TEnum>(TEnum id, object model = null, CancellationToken ct = default)
             where TEnum : Enum
         {
             var key = UIWindowKey.FromEnum(id);
@@ -24,7 +23,7 @@ namespace AES.Tools.Core.UIController
                 var policy = entry.Concurrency;
 
                 if (policy == UIConcurrency.Ignore)
-                    return GetOpen<UIView.UIView, TEnum>(id);
+                    return GetOpen<UIView, TEnum>(id);
 
                 if (policy == UIConcurrency.UpdateModel && _open.TryGetValue(key, out var v))
                 {
@@ -79,7 +78,7 @@ namespace AES.Tools.Core.UIController
             }
 
             // 인스턴스 확보
-            UIView.UIView inst;
+            UIView inst;
 
             if (entry.UsePool)
             {
@@ -141,7 +140,7 @@ namespace AES.Tools.Core.UIController
                 if (entry.ExclusiveGroup != UIExclusiveGroup.None)
                 {
                     if (!_openByGroup.TryGetValue(entry.ExclusiveGroup, out var list))
-                        _openByGroup[entry.ExclusiveGroup] = list = new List<UIView.UIView>(4);
+                        _openByGroup[entry.ExclusiveGroup] = list = new List<UIView>(4);
 
                     list.Add(inst);
                 }
@@ -164,7 +163,7 @@ namespace AES.Tools.Core.UIController
             await HideInstanceCore(view, key, ct);
         }
 
-        public async UniTask<UIView.UIView> ShowInstanceAsync<TEnum>(TEnum id, object model = null, CancellationToken ct = default)
+        public async UniTask<UIView> ShowInstanceAsync<TEnum>(TEnum id, object model = null, CancellationToken ct = default)
             where TEnum : Enum
         {
             var key = UIWindowKey.FromEnum(id);
@@ -205,7 +204,7 @@ namespace AES.Tools.Core.UIController
                 }
             }
 
-            UIView.UIView inst;
+            UIView inst;
 
             if (entry.UsePool)
             {
@@ -225,7 +224,7 @@ namespace AES.Tools.Core.UIController
 
             // Multi 인스턴스 추적
             if (!_multiInstances.TryGetValue(key, out var list))
-                _multiInstances[key] = list = new List<UIView.UIView>(4);
+                _multiInstances[key] = list = new List<UIView>(4);
             list.Add(inst);
 
             var hints = GetHints(inst);
@@ -265,7 +264,7 @@ namespace AES.Tools.Core.UIController
                 if (entry.ExclusiveGroup != UIExclusiveGroup.None)
                 {
                     if (!_openByGroup.TryGetValue(entry.ExclusiveGroup, out var egList))
-                        _openByGroup[entry.ExclusiveGroup] = egList = new List<UIView.UIView>(4);
+                        _openByGroup[entry.ExclusiveGroup] = egList = new List<UIView>(4);
 
                     egList.Add(inst);
                 }
@@ -278,7 +277,7 @@ namespace AES.Tools.Core.UIController
             return inst;
         }
 
-        public async UniTask HideInstanceAsync(UIView.UIView view, CancellationToken ct = default)
+        public async UniTask HideInstanceAsync(UIView view, CancellationToken ct = default)
         {
             if (view == null) return;
             if (!view.gameObject) return;
@@ -288,7 +287,7 @@ namespace AES.Tools.Core.UIController
             await HideInstanceCore(view, key, ct);
         }
 
-        private async UniTask HideInstanceCore(UIView.UIView view, UIWindowKey key, CancellationToken ct)
+        private async UniTask HideInstanceCore(UIView view, UIWindowKey key, CancellationToken ct)
         {
             if (view == null) return;  // ← 이미 있음
             
@@ -316,7 +315,7 @@ namespace AES.Tools.Core.UIController
             }
 
             var role = RoleOf(entry.Scope);
-            var root = _provider.Get(role) ?? _provider.Get(UIRoot.UIRootRole.Local) ?? _provider.Get(UIRoot.UIRootRole.Global);
+            var root = _provider.Get(role) ?? _provider.Get(UIRootRole.Local) ?? _provider.Get(UIRootRole.Global);
             var parent = (root != null) ? ResolveParent(root, entry, out _) : null;
             var fx = (root != null) ? PickFx(root, parent, entry) : null;
 
@@ -399,9 +398,9 @@ namespace AES.Tools.Core.UIController
             if (root == null) 
                 return;
 
-            var toClose = new List<(UIView.UIView view, UIWindowKey key)>();
+            var toClose = new List<(UIView view, UIWindowKey key)>();
 
-            void Collect(UILayer.UILayer layer)
+            void Collect(UILayer layer)
             {
                 if (layer == null) 
                     return;

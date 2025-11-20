@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 
-namespace AES.Tools.Core.UILayer
+namespace AES.Tools.Core
 {
     public enum LayerSortingPolicy { ByZPriority, ByTime }
 

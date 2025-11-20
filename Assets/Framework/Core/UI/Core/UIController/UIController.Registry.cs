@@ -1,9 +1,8 @@
 using System;
-using AES.Tools.Core.UIRoot;
 using AES.Tools.Registry;
 
 
-namespace AES.Tools.Core.UIController
+namespace AES.Tools.Core
 {
     public sealed partial class UIController
     {
@@ -50,7 +49,7 @@ namespace AES.Tools.Core.UIController
             PrepareLayer(layer);
             
             var factory = new UIPoolFactory(_factory, entry, parent);
-            var pool    = new ObjectPool<UIView.UIView>(factory, capacity, ui => ui.gameObject.SetActive(false) );
+            var pool    = new ObjectPool<UIView>(factory, capacity, ui => ui.gameObject.SetActive(false) );
             pool.WarmupAsync(warmUp).ForgetWithLog("[UIManager] EnsurePool:");
             _pooled[key] = (entry, pool);
         }
@@ -67,7 +66,7 @@ namespace AES.Tools.Core.UIController
         }
 
         public T GetOpen<T, TEnum>(TEnum id)
-            where T : UIView.UIView
+            where T : UIView
             where TEnum : Enum
         {
             var key = UIWindowKey.FromEnum(id);

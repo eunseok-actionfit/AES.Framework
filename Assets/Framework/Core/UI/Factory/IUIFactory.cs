@@ -1,5 +1,5 @@
 using System.Threading;
-using AES.Tools.Core.UIView;
+using AES.Tools.Core;
 using AES.Tools.Registry;
 using Cysharp.Threading.Tasks;
 using UnityEngine;

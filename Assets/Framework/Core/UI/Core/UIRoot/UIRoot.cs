@@ -4,15 +4,15 @@ using UnityEngine;
 // UiServices
 // using VContainer;                // 제거
 
-namespace AES.Tools.Core.UIRoot
+namespace AES.Tools.Core
 {
     public sealed class UIRoot : MonoBehaviour
     {
         [Header("Layers (top = last draws on top)")]
-        public UILayer.UILayer WindowLayer;
-        public UILayer.UILayer HudLayer;
-        public UILayer.UILayer PopupLayer;
-        public UILayer.UILayer OverlayLayer;
+        public UILayer WindowLayer;
+        public UILayer HudLayer;
+        public UILayer PopupLayer;
+        public UILayer OverlayLayer;
 
         [SerializeField, HideInInspector]
         private UIRootRole role = UIRootRole.Local;

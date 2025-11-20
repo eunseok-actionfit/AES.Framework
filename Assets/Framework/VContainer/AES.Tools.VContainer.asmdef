@@ -1,11 +1,9 @@
 {
-  "name": "AES.Framework.Integrations.VContainer",
+  "name": "AES.Tools.VContainer",
   "rootNamespace": "",
   "references": [
-    "AES.Framework.Core",
-    "AES.Framework.Systems",
     "VContainer",
-    "VContainer.Unity"
+    "AES.Tools"
   ],
   "includePlatforms": [],
   "excludePlatforms": [],

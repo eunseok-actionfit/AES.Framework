@@ -1,17 +1,16 @@
-using AES.Tools.Core.UIRoot;
 using AES.Tools.Registry;
 using UnityEngine;
 
 
-namespace AES.Tools.Core.UIController
+namespace AES.Tools.Core
 {
     public sealed partial class UIController
     {
-        private static UIRoot.UIRootRole RoleOf(UIRootRole scope) =>
-            scope == UIRootRole.Global ? UIRoot.UIRootRole.Global : UIRoot.UIRootRole.Local;
+        private static UIRootRole RoleOf(UIRootRole scope) =>
+            scope == UIRootRole.Global ? UIRootRole.Global : UIRootRole.Local;
 
  
-        private Transform ResolveParent(UIRoot.UIRoot root, UIRegistryEntry entry, out UILayer.UILayer layer)
+        private Transform ResolveParent(UIRoot root, UIRegistryEntry entry, out UILayer layer)
         {
             var kind = entry?.Kind ?? UILayerKind.Overlay;
 
@@ -28,7 +27,7 @@ namespace AES.Tools.Core.UIController
         }
 
 
-        private Components.Transitions.ITransition GetFxFor(UIRoot.UIRoot root, Transform parent, UIRegistryEntry _)
+        private Components.Transitions.ITransition GetFxFor(UIRoot root, Transform parent, UIRegistryEntry _)
         {
             if (parent == root.WindowLayer.transform) return _winFx;
             if (parent == root.HudLayer.transform) return _hudFx;
@@ -38,20 +37,20 @@ namespace AES.Tools.Core.UIController
 
         private Components.Transitions.ITransition CreateLayerBaseFx(Transform parent)
         {
-            var layer = parent ? parent.GetComponent<UILayer.UILayer>() : null;
+            var layer = parent ? parent.GetComponent<UILayer>() : null;
             var asset = layer?.Policy?.BaseTransitionAsset;
             return asset ? asset : null;
         }
 
-        private Components.Transitions.ITransition PickFx(UIRoot.UIRoot root, Transform parent, UIRegistryEntry entry)
+        private Components.Transitions.ITransition PickFx(UIRoot root, Transform parent, UIRegistryEntry entry)
         {
             var layerFx = CreateLayerBaseFx(parent);   // Layer 기본 FX
             return layerFx ?? GetFxFor(root, parent, entry); // 레이어 종류별 기본
         }
 
-        private static UILayer.UILayer AsLayer(Transform parent) => parent ? parent.GetComponent<UILayer.UILayer>() : null;
+        private static UILayer AsLayer(Transform parent) => parent ? parent.GetComponent<UILayer>() : null;
 
-        private void PrepareLayer(UILayer.UILayer layer)
+        private void PrepareLayer(UILayer layer)
         {
             if (layer == null) return;
             layer.EnsureCameraBound();
@@ -64,7 +63,7 @@ namespace AES.Tools.Core.UIController
             }
         }
 
-        private void OnLayerOutsideClicked(UILayer.UILayer layer)
+        private void OnLayerOutsideClicked(UILayer layer)
         {
             if (layer == null) return;
 
@@ -102,7 +101,7 @@ namespace AES.Tools.Core.UIController
         }
         public void OnBackKey()
         {
-            UIView.UIView candidate = null;
+            UIView candidate = null;
             foreach (var kv in _stackByParent) {
                 var list = kv.Value;
                 if (list.Count == 0) continue;
@@ -120,7 +119,7 @@ namespace AES.Tools.Core.UIController
             if (candidate != null) _ = HideInstanceAsync(candidate);
         }
 
-        private bool TryGetEntry(UIView.UIView v, out UIRegistryEntry entry)
+        private bool TryGetEntry(UIView v, out UIRegistryEntry entry)
         {
             entry = null;
             
@@ -140,7 +139,7 @@ namespace AES.Tools.Core.UIController
             return !Equals(key, default(UIWindowKey)) && _registry.TryGet(key, out entry);
         }
 
-        private UIWindowKey GetKeyOf(UIView.UIView v)
+        private UIWindowKey GetKeyOf(UIView v)
         {
             if (_instToKey.TryGetValue(v, out var key))
                 return key;

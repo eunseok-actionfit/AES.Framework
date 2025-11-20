@@ -1,11 +1,9 @@
 // Assets/Framework/Systems/UI/Core/UIManager.StackAndHints.cs
 using System.Collections.Generic;
-using AES.Tools.Core.UILayer;
-using AES.Tools.Core.UIView;
 using UnityEngine;
 
 
-namespace AES.Tools.Core.UIController
+namespace AES.Tools.Core
 {
     public sealed partial class UIController
     {
@@ -21,12 +19,12 @@ namespace AES.Tools.Core.UIController
 
         // ─────────────────────────────────────────────────────────────
         // Stack 관리 (Layer별 UI 정렬)
-        private void PushStack(Transform parent, UIView.UIView view)
+        private void PushStack(Transform parent, UIView view)
         {
             if (parent == null || view == null) return;
 
             if (!_stackByParent.TryGetValue(parent, out var list))
-                _stackByParent[parent] = list = new List<UIView.UIView>(8);
+                _stackByParent[parent] = list = new List<UIView>(8);
 
             var layer = AsLayer(parent);
 
@@ -58,7 +56,7 @@ namespace AES.Tools.Core.UIController
             }
         }
 
-        private void PopStack(Transform parent, UIView.UIView view)
+        private void PopStack(Transform parent, UIView view)
         {
             if (parent == null || view == null) return;
             if (!_stackByParent.TryGetValue(parent, out var list)) return;
@@ -87,11 +85,11 @@ namespace AES.Tools.Core.UIController
 
         // ─────────────────────────────────────────────────────────────
         // UIViewHints 연동
-        private static UIViewHints GetHints(UIView.UIView v)
+        private static UIViewHints GetHints(UIView v)
             => v ? v.GetComponent<UIViewHints>() : null;
 
         /// <summary> SafeArea 적용 여부 결정 (Entry > Hints > Layer 기본) </summary>
-        private bool GetEffectiveUseSafe(UILayer.UILayer layer, UIViewHints policy)
+        private bool GetEffectiveUseSafe(UILayer layer, UIViewHints policy)
         {
             if (policy != null && policy.useSafeArea.enabled)
                 return policy.useSafeArea.value;
@@ -121,7 +119,7 @@ namespace AES.Tools.Core.UIController
         /// UIViewHints 기준으로 앵커/오프셋을 조정한다.
         /// (SafeArea 미적용 + 전체 확장, 추가 여백 픽셀 적용)
         /// </summary>
-        private void ApplyViewSafeAreaOverrides(UIView.UIView view, UIViewHints policy)
+        private void ApplyViewSafeAreaOverrides(UIView view, UIViewHints policy)
         {
             if (!view) return;
             var rt = view.transform as RectTransform;
@@ -169,7 +167,7 @@ namespace AES.Tools.Core.UIController
         /// <summary>
         /// 풀 반납/재표시 대비 RectTransform을 원상 복구.
         /// </summary>
-        private void RestoreViewRect(UIView.UIView view)
+        private void RestoreViewRect(UIView view)
         {
             if (!view) return;
             var rt = view.transform as RectTransform;

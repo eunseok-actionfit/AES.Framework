@@ -2,7 +2,8 @@
   "name": "AES.Tools.Editor",
   "rootNamespace": "AES.Tools.Editor",
   "references": [
-    "AES.Tools"
+    "AES.Tools",
+    "Unity.Addressables.Editor"
   ],
   "includePlatforms": [
     "Editor"

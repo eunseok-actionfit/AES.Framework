@@ -1,19 +1,37 @@
-using AES.Tools.Core.UIController;
-using AES.Tools.Core.UIRoot;
+using System;
 using AES.Tools.Guards;
-
 
 namespace AES.Tools.Core
 {
     public static class UiServices
     {
-        public static IInputGuard InputGuard { get; set; } = new InputGuardService();
+        private static IInputGuard _inputGuard;
+        public static IInputGuard InputGuard
+        {
+            get => _inputGuard ??= new InputGuardService();
+            internal set => _inputGuard = value;
+        }
 
-        public static IUiLockService UiLock { get; set; } = new UiLockService();
+        private static IUiLockService _uiLock;
+        public static IUiLockService UiLock
+        {
+            get => _uiLock ??= new UiLockService();
+            internal set => _uiLock = value;
+        }
 
-        public static IUIRootProvider UIRootProvider { get; set; } = new UIRootProvider();
-        
-        public static IUIController UIController { get; set; } 
+        private static IUIRootProvider _root;
+        public static IUIRootProvider UIRootProvider
+        {
+            get => _root ??= new UIRootProvider();
+            internal set => _root = value;
+        }
 
+        private static IUIController _controller;
+        public static IUIController UIController
+        {
+            get => _controller 
+                   ?? throw new InvalidOperationException("UIController not initialized.");
+            internal set => _controller = value;
+        }
     }
 }

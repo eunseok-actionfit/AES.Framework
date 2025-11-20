@@ -1,10 +1,9 @@
 using System;
 using System.Threading;
-using AES.Tools.Core.UIRoot;
 using Cysharp.Threading.Tasks;
 
 
-namespace AES.Tools.Core.UIController
+namespace AES.Tools.Core
 {
     public enum UILayerKind
     {
@@ -17,12 +16,12 @@ namespace AES.Tools.Core.UIController
         void EnsurePool<TEnum>(TEnum id, int capacity = 8, int warmUp = 0)
             where TEnum : Enum;
 
-        void EnsureAllPools(UIRootRole fallbackRole = UIRoot.UIRootRole.Global);
+        void EnsureAllPools(UIRootRole fallbackRole = UIRootRole.Global);
 
         // 런타임 정책 수정
 
         // 기본 Show/Hide
-        UniTask<UIView.UIView> ShowAsync<TEnum>(TEnum id, object model = null, CancellationToken ct = default)
+        UniTask<UIView> ShowAsync<TEnum>(TEnum id, object model = null, CancellationToken ct = default)
             where TEnum : Enum;
 
         UniTask HideAsync<TEnum>(TEnum id, CancellationToken ct = default)
@@ -34,10 +33,10 @@ namespace AES.Tools.Core.UIController
             where TEnum : Enum;
 
         // 인스턴스 단위 Show/Hide
-        UniTask<UIView.UIView> ShowInstanceAsync<TEnum>(TEnum id, object model = null, CancellationToken ct = default)
+        UniTask<UIView> ShowInstanceAsync<TEnum>(TEnum id, object model = null, CancellationToken ct = default)
             where TEnum : Enum;
 
-        UniTask HideInstanceAsync(UIView.UIView view, CancellationToken ct = default);
+        UniTask HideInstanceAsync(UIView view, CancellationToken ct = default);
 
         // Back 키 처리
         void OnBackKey();
