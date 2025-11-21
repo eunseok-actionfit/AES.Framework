@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace AES.Tools.SerializedDictionary
 {
-    public abstract class UnitySerializedDictionary<TKey, TValue> : Dictionary<TKey, TValue>, ISerializationCallbackReceiver
+    public class UnitySerializedDictionary<TKey, TValue> : Dictionary<TKey, TValue>, ISerializationCallbackReceiver
     {
         [SerializeField, HideInInspector]
         private List<TKey> keyData = new();
