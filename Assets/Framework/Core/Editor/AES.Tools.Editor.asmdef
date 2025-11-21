@@ -3,7 +3,8 @@
   "rootNamespace": "AES.Tools.Editor",
   "references": [
     "AES.Tools",
-    "Unity.Addressables.Editor"
+    "Unity.Addressables.Editor",
+    "UniTask"
   ],
   "includePlatforms": [
     "Editor"
