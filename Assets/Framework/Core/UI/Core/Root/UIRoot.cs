@@ -2,9 +2,6 @@ using AES.Tools.Layer;
 using UnityEngine;
 
 
-// UiServices
-// using VContainer;                // 제거
-
 namespace AES.Tools.Root
 {
     public sealed class UIRoot : MonoBehaviour

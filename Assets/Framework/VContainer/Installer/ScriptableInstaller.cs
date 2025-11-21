@@ -1,7 +1,11 @@
 using UnityEngine;
 using VContainer;
 
-public abstract class ScriptableInstaller : ScriptableObject
+
+namespace AES.Tools.VContainer.Installer
 {
-    public abstract void Install(IContainerBuilder builder);
+    public abstract class ScriptableInstaller : ScriptableObject
+    {
+        public abstract void Install(IContainerBuilder builder);
+    }
 }

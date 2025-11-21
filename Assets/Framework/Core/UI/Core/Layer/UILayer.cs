@@ -1,4 +1,4 @@
-// Systems/UI/Core/UILayer.cs
+
 using UnityEngine;
 using UnityEngine.UI;
 

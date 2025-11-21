@@ -26,7 +26,7 @@ namespace AES.Tools.VContainer
 
         public void Start()
         {
-            UiServiceLocator.UIRootProvider = _root;
+           // UiServiceLocator.UIRootProvider = _root;
             UiServiceLocator.UIController = _controller;
             UiServiceLocator.InputGuard = _guard;
             UiServiceLocator.UiLock = _lock;

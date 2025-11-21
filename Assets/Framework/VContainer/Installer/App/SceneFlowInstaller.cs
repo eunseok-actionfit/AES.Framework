@@ -8,7 +8,7 @@ namespace AES.Tools.VContainer.Installer.App
     {
         public void Install(IContainerBuilder b)
         {
-           // b.Register<ISceneFlow, SceneFlowService>(Lifetime.Singleton);
+            b.Register<ISceneFlow, SceneFlowService>(Lifetime.Singleton);
         }
     }
 }

@@ -10,15 +10,15 @@ namespace AES.Tools.VContainer.Installer.App
         {
             // b.Register<IToastService, ToastService>(Lifetime.Singleton);
             // b.Register<IGlobalSpinner, GlobalSpinnerService>(Lifetime.Singleton);
-            // b.Register<LoadingBus>(Lifetime.Singleton)
-            //     .As<ILoadingBus>();
+             b.Register<LoadingBus>(Lifetime.Singleton)
+                 .As<ILoadingBus>();
             //
             // b.RegisterBuildCallback(resolver =>
             // {
             //     LoadingBusFacade.Instance = resolver.Resolve<ILoadingBus>();
             // });
             //
-            // b.Register<ILoadingService, LoadingService>(Lifetime.Singleton);
+             b.Register<ILoadingService, LoadingService>(Lifetime.Singleton);
         }
     }
 }

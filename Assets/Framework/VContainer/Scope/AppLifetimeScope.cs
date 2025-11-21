@@ -36,7 +36,7 @@ namespace AES.Tools.VContainer.Scope
             new SceneFlowInstaller().Install(builder);
 
             // Assets (엔진)
-            //new AssetSystemInstaller(config.assets).Install(builder);
+            new AssetSystemInstaller().Install(builder);
             
             // Save / Load (앱)
             new SaveAndLoadInstaller(config.storageProfile).Install(builder);

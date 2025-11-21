@@ -1,9 +1,9 @@
-using AES.Tools.SceneLoading.Models;
+using AES.Tools.Models;
 using Cysharp.Threading.Tasks;
 using UnityEngine.SceneManagement;
 
 
-namespace AES.Tools.SceneLoading
+namespace AES.Tools
 {
     public interface ISceneLoader
     {

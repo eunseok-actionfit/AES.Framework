@@ -106,6 +106,9 @@ namespace AES.Tools.VContainer
 
             // 2. 모듈 초기화 (세이브/로거/SDK 등)
             Instance.InitializeModules();
+            
+            var root = _rootLifetimeScopeInstance; //
+            var sceneFlow = root.Container.Resolve<ISceneFlow>();
 
             // 3. 첫 씬 로드
             if (!string.IsNullOrEmpty(Instance.firstSceneName))
@@ -113,7 +116,9 @@ namespace AES.Tools.VContainer
                 var active = SceneManager.GetActiveScene();
                 if (active.name != Instance.firstSceneName)
                 {
-                    SceneManager.LoadScene(Instance.firstSceneName, LoadSceneMode.Single);
+                    sceneFlow.LoadWithArgsAsync<object>(Instance.firstSceneName, "Home.Load", null);
+
+                    //SceneManager.LoadScene(Instance.firstSceneName, LoadSceneMode.Single);
                 }
             }
         }
@@ -122,7 +127,7 @@ namespace AES.Tools.VContainer
 
         #region Root LifetimeScope 관리
 
-        public LifetimeScope GetOrCreateRootLifetimeScopeInstance()
+        private LifetimeScope GetOrCreateRootLifetimeScopeInstance()
         {
             if (_rootLifetimeScopeInstance != null &&
                 _rootLifetimeScopeInstance.Container != null)
@@ -171,9 +176,8 @@ namespace AES.Tools.VContainer
                 return;
             
             
-            for (int i = 0; i < modules.Length; i++)
+            foreach (var m in modules)
             {
-                var m = modules[i];
                 if (m == null) continue;
 
                 try

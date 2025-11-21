@@ -15,7 +15,8 @@ namespace AES.Tools.VContainer.Installer.App
             // // 구현 등록
             // builder.Register<AddressablesAssetLoader>(Lifetime.Singleton);
             // builder.Register<ResourcesAssetLoader>(Lifetime.Singleton);
-            // builder.Register<ISceneLoader, AddressablesSceneLoader>(Lifetime.Singleton);
+             builder.Register<IAssetProvider, AddressablesAssetProvider>(Lifetime.Singleton);
+             builder.Register<ISceneLoader, AddressablesSceneLoader>(Lifetime.Singleton);
             //
             // // 파사드 등록
             // builder.Register(r => new AssetProviderFacade(

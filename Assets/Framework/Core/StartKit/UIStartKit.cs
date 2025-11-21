@@ -10,7 +10,7 @@ namespace AES.Tools.StartKit
         {
             var root = new UIRootProvider();
             var factory = new UIFactory();
-            var controller = new UIController(root, factory, registry);
+            var controller = new UIController(factory, registry);
 
             UiServiceLocator.UIRootProvider = root;
             UiServiceLocator.InputGuard = new InputGuardService();

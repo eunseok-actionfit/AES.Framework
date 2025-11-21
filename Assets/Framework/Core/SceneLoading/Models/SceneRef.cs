@@ -1,4 +1,4 @@
-namespace AES.Tools.SceneLoading.Models
+namespace AES.Tools.Models
 {
     // 이름 기반 로딩(비어 있지 않은 sceneName) 또는 Addressables 키 기반 로딩(비어 있지 않은 addressKey)
     public readonly struct SceneRef

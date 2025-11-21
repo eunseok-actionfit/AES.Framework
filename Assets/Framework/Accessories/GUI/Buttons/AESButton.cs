@@ -13,7 +13,6 @@ namespace AES.Tools
         [SerializeField, Min(0f)]
         private float throttleSeconds = 0.4f;
 
-
         [Header("Unity Events - Feedback / Animations")]
         [SerializeField]
         private UnityEvent onPressed;

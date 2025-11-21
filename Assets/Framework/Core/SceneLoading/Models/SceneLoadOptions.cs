@@ -2,7 +2,7 @@ using System;
 using System.Threading;
 
 
-namespace AES.Tools.SceneLoading.Models
+namespace AES.Tools.Models
 {
     public enum SceneLoadMode { Single, Additive }
 

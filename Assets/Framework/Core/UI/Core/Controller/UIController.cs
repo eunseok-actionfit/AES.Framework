@@ -34,9 +34,9 @@ namespace AES.Tools.Controller
         private readonly HashSet<UIWindowKey> _animating = new();
         private readonly HashSet<UILayer> _subscribedLayers = new();
 
-        public UIController(IUIRootProvider provider, IUIFactory factory, IUIWindowRegistry registry)
+        public UIController(IUIFactory factory, IUIWindowRegistry registry)
         {
-            _provider  = provider;
+            _provider  = UiServiceLocator.UIRootProvider;
             _factory   = factory;
             _registry  = registry;
             EnsureAllPools();

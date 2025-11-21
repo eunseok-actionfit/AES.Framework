@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using AES.Tools.SceneLoading.Models;
+using AES.Tools.Models;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.ResourceManagement.AsyncOperations;
@@ -9,7 +9,7 @@ using UnityEngine.ResourceManagement.ResourceProviders;
 using UnityEngine.SceneManagement;
 
 
-namespace AES.Tools.SceneLoading
+namespace AES.Tools
 {
     using Addressables = UnityEngine.AddressableAssets.Addressables;
 
