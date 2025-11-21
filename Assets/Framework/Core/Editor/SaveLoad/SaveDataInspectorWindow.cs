@@ -39,9 +39,9 @@ namespace AES.Tools.Editor
 
         private void OnEnable()
         {
-            _local = new FileBlobStore();          
-            _cloud = new NullCloudBlobStore();    
-            _serializer = new NewtonsoftJsonSerializer();   
+            _local = new FileBlobStore();
+            _cloud = new NullCloudBlobStore();
+            _serializer = new NewtonsoftJsonSerializer();
         }
 
         private void OnGUI()
@@ -64,10 +64,7 @@ namespace AES.Tools.Editor
 
             using (new EditorGUI.DisabledScope(_loaded.Count == 0))
             {
-                if (GUILayout.Button("변경내용 모두 저장"))
-                {
-                    _ = SaveAllAsync();
-                }
+                if (GUILayout.Button("변경내용 모두 저장")) { _ = SaveAllAsync(); }
             }
 
             EditorGUILayout.Space();
@@ -84,14 +81,8 @@ namespace AES.Tools.Editor
                 EditorGUILayout.BeginVertical("box");
                 EditorGUILayout.LabelField($"ID: {id} (Type: {info.Type.Name})", EditorStyles.boldLabel);
 
-                if (data == null)
-                {
-                    EditorGUILayout.LabelField("데이터 없음 (null)");
-                }
-                else
-                {
-                    DrawObjectFields(data, info.Type);
-                }
+                if (data == null) { EditorGUILayout.LabelField("데이터 없음 (null)"); }
+                else { DrawObjectFields(data, info.Type); }
 
                 EditorGUILayout.EndVertical();
                 EditorGUILayout.Space();
@@ -118,6 +109,7 @@ namespace AES.Tools.Editor
                     continue;
 
                 var info = SaveDataRegistry.All.FirstOrDefault(i => i.Id == entry.id);
+
                 if (info == null)
                 {
                     Debug.LogWarning($"[SaveDataInspector] SaveDataRegistry 에 id='{entry.id}' 타입이 없습니다.");
@@ -135,23 +127,14 @@ namespace AES.Tools.Editor
                 // CloudFirst
                 if (backend == SaveBackend.CloudFirst && _cloud != null)
                 {
-                    try
-                    {
-                        bytes = await _cloud.LoadOrNullAsync(key, ct);
-                    }
-                    catch (Exception ex)
-                    {
-                        Debug.LogError($"[SaveDataInspector] Cloud load fail id={entry.id}, key={key}\n{ex}");
-                    }
+                    try { bytes = await _cloud.LoadOrNullAsync(key, ct); }
+                    catch (Exception ex) { Debug.LogError($"[SaveDataInspector] Cloud load fail id={entry.id}, key={key}\n{ex}"); }
                 }
 
                 // Local fallback / LocalOnly
                 if (bytes == null)
                 {
-                    try
-                    {
-                        bytes = await _local.LoadOrNullAsync(key, ct);
-                    }
+                    try { bytes = await _local.LoadOrNullAsync(key, ct); }
                     catch (Exception ex)
                     {
                         Debug.LogError($"[SaveDataInspector] Local load fail id={entry.id}, key={key}\n{ex}");
@@ -160,6 +143,7 @@ namespace AES.Tools.Editor
                 }
 
                 object dataObj = null;
+
                 if (bytes != null)
                 {
                     try
@@ -171,23 +155,14 @@ namespace AES.Tools.Editor
 
                         if (method != null) dataObj = method.Invoke(_serializer, new object[] { jsonStr });
                     }
-                    catch (Exception ex)
-                    {
-                        Debug.LogError($"[SaveDataInspector] Deserialize fail id={entry.id}\n{ex}");
-                    }
+                    catch (Exception ex) { Debug.LogError($"[SaveDataInspector] Deserialize fail id={entry.id}\n{ex}"); }
                 }
 
                 // 데이터가 없으면 새 인스턴스라도 만든다 (편집해서 저장 가능)
                 if (dataObj == null)
                 {
-                    try
-                    {
-                        dataObj = Activator.CreateInstance(info.Type);
-                    }
-                    catch (Exception ex)
-                    {
-                        Debug.LogError($"[SaveDataInspector] CreateInstance fail type={info.Type}\n{ex}");
-                    }
+                    try { dataObj = Activator.CreateInstance(info.Type); }
+                    catch (Exception ex) { Debug.LogError($"[SaveDataInspector] CreateInstance fail type={info.Type}\n{ex}"); }
                 }
 
                 _loaded[entry.id] = (info, dataObj);
@@ -229,6 +204,7 @@ namespace AES.Tools.Editor
 
                         // 항상 Local 저장
                         var rLocal = await _local.SaveAsync(key, bytes, ct);
+
                         if (rLocal.IsFail)
                         {
                             Debug.LogError($"[SaveDataInspector] Local save fail id={id}, key={key}, err={rLocal.Error}");
@@ -239,25 +215,18 @@ namespace AES.Tools.Editor
                         if (backend == SaveBackend.CloudFirst && _cloud != null)
                         {
                             var rCloud = await _cloud.SaveAsync(key, bytes, ct);
-                            if (rCloud.IsFail)
-                            {
-                                Debug.LogError($"[SaveDataInspector] Cloud save fail id={id}, key={key}, err={rCloud.Error}");
-                            }
+
+                            if (rCloud.IsFail) { Debug.LogError($"[SaveDataInspector] Cloud save fail id={id}, key={key}, err={rCloud.Error}"); }
                         }
                     }
 
                 }
-                catch (Exception ex)
-                {
-                    Debug.LogError($"[SaveDataInspector] Save serialize fail id={id}\n{ex}");
-                }
+                catch (Exception ex) { Debug.LogError($"[SaveDataInspector] Save serialize fail id={id}\n{ex}"); }
             }
 
             Debug.Log("[SaveDataInspector] 변경 내용 저장 완료");
         }
 
-        // 아주 단순한 Reflection 기반 필드 에디터
-        // (필요하면 List/Dictionary 등 확장)
         void DrawObjectFields(object obj, Type type)
         {
             if (obj == null)
@@ -274,12 +243,9 @@ namespace AES.Tools.Editor
 
             foreach (var field in type.GetFields(flags))
             {
-                // private [SerializeField] 이거나 public 필드만 편집 대상으로 본다
+                // private [SerializeField] 이거나 public 필드만 편집 대상으로
                 if (!field.IsPublic &&
-                    field.GetCustomAttributes(typeof(SerializeField), true).Length == 0)
-                {
-                    continue;
-                }
+                    field.GetCustomAttributes(typeof(SerializeField), true).Length == 0) { continue; }
 
                 var fieldType = field.FieldType;
                 var label = ObjectNames.NicifyVariableName(field.Name);
@@ -289,44 +255,279 @@ namespace AES.Tools.Editor
 
                 object newValue = value;
 
-                if (fieldType == typeof(int))
-                    newValue = EditorGUILayout.IntField(label, value != null ? (int)value : 0);
-                else if (fieldType == typeof(float))
-                    newValue = EditorGUILayout.FloatField(label, value != null ? (float)value : 0f);
-                else if (fieldType == typeof(bool))
-                    newValue = EditorGUILayout.Toggle(label, value != null && (bool)value);
-                else if (fieldType == typeof(string))
-                    newValue = EditorGUILayout.TextField(label, value as string ?? "");
-                else if (fieldType.IsEnum)
-                    newValue = EditorGUILayout.EnumPopup(label, (Enum)(value ?? Activator.CreateInstance(fieldType)));
+                // 기본 타입 처리
+                if (IsSimpleType(fieldType)) { newValue = DrawSimpleField(label, fieldType, value); }
+                else if (IsListType(fieldType)) { newValue = DrawListField(label, fieldType, value); }
+                else if (IsDictionaryType(fieldType)) { newValue = DrawDictionaryField(label, fieldType, value); }
                 else if (fieldType.IsClass || (fieldType.IsValueType && !fieldType.IsPrimitive))
                 {
-                    // 중첩 타입은 폴드아웃 형식으로 재귀
+                    // 중첩 복합 타입
                     EditorGUILayout.LabelField(label, EditorStyles.boldLabel);
+
                     if (value == null)
                     {
                         try { value = Activator.CreateInstance(fieldType); }
-                        catch
-                        { // ignored
-                        }
+                        catch { }
                     }
+
                     DrawObjectFields(value, fieldType);
                     newValue = value;
                 }
                 else
                 {
-                    // 지원 안 하는 타입은 텍스트로만 표시
+                    // 지원 안 하는 타입은 일단 읽기 전용
                     EditorGUILayout.LabelField(label, value != null ? value.ToString() : "(null)");
                 }
 
-                if (EditorGUI.EndChangeCheck())
-                {
-                    field.SetValue(obj, newValue);
-                }
+                if (EditorGUI.EndChangeCheck()) { field.SetValue(obj, newValue); }
             }
 
             EditorGUI.indentLevel--;
         }
+
+        object DrawSimpleField(string label, Type fieldType, object value)
+        {
+            if (fieldType == typeof(int))
+                return EditorGUILayout.IntField(label, value != null ? (int)value : 0);
+
+            if (fieldType == typeof(float))
+                return EditorGUILayout.FloatField(label, value != null ? (float)value : 0f);
+
+            if (fieldType == typeof(bool))
+                return EditorGUILayout.Toggle(label, value != null && (bool)value);
+
+            if (fieldType == typeof(string))
+                return EditorGUILayout.TextField(label, value as string ?? "");
+
+            if (fieldType.IsEnum)
+                return EditorGUILayout.EnumPopup(label, (Enum)(value ?? Activator.CreateInstance(fieldType)));
+
+            if (fieldType == typeof(decimal))
+            {
+                var dec = value != null ? (decimal)value : 0m;
+                var dbl = (double)dec;
+                dbl = EditorGUILayout.DoubleField(label, dbl);
+                return (decimal)dbl;
+            }
+
+
+            // fallback
+            EditorGUILayout.LabelField(label, value != null ? value.ToString() : "(null)");
+            return value;
+        }
+
+        object DrawListField(string label, Type listType, object value)
+        {
+            var list = value as System.Collections.IList;
+
+            // null이면 새 인스턴스 생성 시도
+            if (list == null)
+            {
+                try { list = (System.Collections.IList)Activator.CreateInstance(listType); }
+                catch
+                {
+                    EditorGUILayout.LabelField(label, "(리스트 생성 실패)");
+                    return value;
+                }
+            }
+
+            // 요소 타입 추출 (List<T> 또는 배열 등)
+            Type elementType = null;
+
+            if (listType.IsArray) { elementType = listType.GetElementType(); }
+            else if (listType.IsGenericType) { elementType = listType.GetGenericArguments()[0]; }
+            else
+            {
+                // 비제네릭 IList는 타입 알기 애매하니 string 정도로 가정하거나 읽기만
+                EditorGUILayout.LabelField(label, "(비제네릭 IList, 편집 미지원)");
+                return list;
+            }
+
+            var foldoutKey = label + "_" + list.GetHashCode();
+            EditorGUILayout.LabelField(label, EditorStyles.boldLabel);
+
+            EditorGUI.indentLevel++;
+
+            int count = list.Count;
+            EditorGUILayout.LabelField($"Size: {count}");
+
+            // Add/Remove 버튼
+            EditorGUILayout.BeginHorizontal();
+
+            if (GUILayout.Button("+", GUILayout.Width(30))) { list.Add(CreateDefault(elementType)); }
+
+            if (GUILayout.Button("-", GUILayout.Width(30)) && list.Count > 0) { list.RemoveAt(list.Count - 1); }
+
+            EditorGUILayout.EndHorizontal();
+
+            // 요소들 렌더링
+            for (int i = 0; i < list.Count; i++)
+            {
+                var elem = list[i];
+                var elemLabel = $"[{i}]";
+
+                EditorGUI.BeginChangeCheck();
+
+                if (IsSimpleType(elementType))
+                {
+                    var newElem = DrawSimpleField(elemLabel, elementType, elem);
+                    if (EditorGUI.EndChangeCheck())
+                        list[i] = newElem;
+                }
+                else
+                {
+                    EditorGUILayout.LabelField(elemLabel, EditorStyles.boldLabel);
+
+                    if (elem == null)
+                    {
+                        elem = CreateDefault(elementType);
+                        list[i] = elem;
+                    }
+
+                    DrawObjectFields(elem, elementType);
+                    EditorGUI.EndChangeCheck();
+                }
+            }
+
+            EditorGUI.indentLevel--;
+
+            return list;
+        }
+
+        object CreateDefault(Type t)
+        {
+            if (t == typeof(string)) return "";
+            if (t.IsValueType) return Activator.CreateInstance(t);
+
+            try { return Activator.CreateInstance(t); }
+            catch { return null; }
+        }
+
+        object DrawDictionaryField(string label, Type dictType, object value)
+        {
+            var dict = value as System.Collections.IDictionary;
+
+            if (dict == null)
+            {
+                try { dict = (System.Collections.IDictionary)Activator.CreateInstance(dictType); }
+                catch
+                {
+                    EditorGUILayout.LabelField(label, "(Dictionary 생성 실패)");
+                    return value;
+                }
+            }
+
+            Type keyType = null;
+            Type valueType = null;
+
+            if (dictType.IsGenericType)
+            {
+                var args = dictType.GetGenericArguments();
+                keyType = args[0];
+                valueType = args[1];
+            }
+            else
+            {
+                EditorGUILayout.LabelField(label, "(비제네릭 IDictionary, 편집 제한)");
+                return dict;
+            }
+
+            EditorGUILayout.LabelField(label, EditorStyles.boldLabel);
+            EditorGUI.indentLevel++;
+
+            EditorGUILayout.LabelField($"Count: {dict.Count}");
+
+            // 새 엔트리 추가용 입력 필드 (간단하게 string/int 키만 지원)
+            object newKey = null;
+
+            if (keyType == typeof(string))
+            {
+                var keyStr = EditorGUILayout.TextField("New Key (string)", "");
+
+                if (!string.IsNullOrEmpty(keyStr) && GUILayout.Button("Add Entry")) { newKey = keyStr; }
+            }
+            else if (keyType == typeof(int))
+            {
+                int keyInt = 0;
+                keyInt = EditorGUILayout.IntField("New Key (int)", keyInt);
+
+                if (GUILayout.Button("Add Entry")) { newKey = keyInt; }
+            }
+            else { EditorGUILayout.HelpBox("Dictionary 키 타입이 string/int 가 아니므로 Add UI는 생략됩니다.", MessageType.Info); }
+
+            if (newKey != null && !dict.Contains(newKey)) { dict[newKey] = CreateDefault(valueType); }
+
+            // 기존 엔트리 렌더링
+            var removeKeys = new List<object>();
+
+            foreach (System.Collections.DictionaryEntry entry in dict)
+            {
+                EditorGUILayout.BeginVertical("box");
+
+                var k = entry.Key;
+                var v = entry.Value;
+
+                EditorGUILayout.BeginHorizontal();
+                EditorGUILayout.LabelField($"Key: {k}", EditorStyles.boldLabel);
+
+                if (GUILayout.Button("X", GUILayout.Width(20))) { removeKeys.Add(k); }
+
+                EditorGUILayout.EndHorizontal();
+
+                EditorGUI.BeginChangeCheck();
+
+                if (IsSimpleType(valueType))
+                {
+                    var newVal = DrawSimpleField("Value", valueType, v);
+                    if (EditorGUI.EndChangeCheck())
+                        dict[k] = newVal;
+                }
+                else
+                {
+                    if (v == null)
+                    {
+                        v = CreateDefault(valueType);
+                        dict[k] = v;
+                    }
+
+                    DrawObjectFields(v, valueType);
+                    EditorGUI.EndChangeCheck();
+                }
+
+                EditorGUILayout.EndVertical();
+            }
+
+            // 삭제 버튼 누른 항목 제거
+            foreach (var k in removeKeys)
+                dict.Remove(k);
+
+            EditorGUI.indentLevel--;
+
+            return dict;
+        }
+
+
+
+
+
+        static bool IsSimpleType(Type t)
+        {
+            return t.IsPrimitive
+                   || t.IsEnum
+                   || t == typeof(string)
+                   || t == typeof(decimal);
+        }
+
+        static bool IsListType(Type t)
+        {
+            return typeof(System.Collections.IList).IsAssignableFrom(t);
+        }
+
+        static bool IsDictionaryType(Type t)
+        {
+            return typeof(System.Collections.IDictionary).IsAssignableFrom(t);
+        }
+
     }
 }
 #endif
