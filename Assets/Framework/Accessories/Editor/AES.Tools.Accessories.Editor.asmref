@@ -1,7 +1,0 @@
-{
-    "references": [
-        "AES.Tools",
-        "AES.Tools.Accessories"
-    ],
-    "noEngineReferences": false
-}
