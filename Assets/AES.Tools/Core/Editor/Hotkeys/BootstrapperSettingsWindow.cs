@@ -14,7 +14,7 @@ namespace AES.Tools.Editor
     {
         private Object _sceneAsset;
 
-        [MenuItem("Tools/Bootstrapper Settings")]
+        [MenuItem("AES/Bootstrapper Settings")]
         public static void Open()
             => GetWindow<BootstrapperSettingsWindow>("Bootstrapper Settings");
 
@@ -30,7 +30,7 @@ namespace AES.Tools.Editor
         {
             GUILayout.Label("Bootstrap Scene", EditorStyles.boldLabel);
             EditorGUILayout.HelpBox(
-                "Play 버튼을 누르면 이 씬부터 시작합니다.\n(메뉴: Tools > Play From Bootstrapper (Auto))",
+                "Play 버튼을 누르면 이 씬부터 시작합니다.\n(메뉴: AES > Play From Bootstrapper (Auto))",
                 MessageType.Info
             );
 

@@ -34,7 +34,7 @@ namespace AES.Tools.Editor
     [InitializeOnLoad]
     public static class AutoBootstrapPlay
     {
-        private const string MENU_PATH = "Tools/Play From Bootstrapper (Auto)";
+        private const string MENU_PATH = "AES/Play From Bootstrapper (Auto)";
 
         // 초기화 시 에디터 이벤트 등록
         static AutoBootstrapPlay()

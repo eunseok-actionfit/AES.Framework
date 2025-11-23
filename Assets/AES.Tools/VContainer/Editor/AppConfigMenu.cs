@@ -6,7 +6,7 @@ namespace AES.Tools.VContainer
 {
     static class AppConfigMenu
     {
-        [MenuItem("Tools/Game/Open AppConfig")]
+        [MenuItem("AES/Game/Open AppConfig")]
         static void OpenAppConfig()
         {
             var config = FindAppConfigAsset();

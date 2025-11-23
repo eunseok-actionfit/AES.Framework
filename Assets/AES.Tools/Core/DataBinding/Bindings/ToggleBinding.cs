@@ -3,7 +3,7 @@ using AES.Tools;
 using UnityEngine;
 using UnityEngine.UI;
 
-
+[RequireComponent(typeof(Toggle))]
 public class ToggleBinding : ContextBindingBase
 {
     [SerializeField] Toggle toggle;
@@ -14,6 +14,11 @@ public class ToggleBinding : ContextBindingBase
     [SerializeField] string converterParameter;
 
     IObservableProperty _property; // 원래 타입 유지
+    
+    private void OnValidate()
+    {
+        toggle ??= GetComponent<Toggle>();
+    }
 
     protected override void Subscribe()
     {

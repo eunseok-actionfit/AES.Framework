@@ -4,6 +4,7 @@ using UnityEngine;
 
 namespace AES.Tools.Bindings
 {
+
     public class StringVirtualizedItem : MonoBehaviour, IVirtualizedItemBinder
     {
         [SerializeField] private TMP_Text label;

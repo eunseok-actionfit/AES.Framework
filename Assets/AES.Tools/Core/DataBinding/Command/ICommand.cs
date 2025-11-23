@@ -1,13 +1,9 @@
-using System;
-
-
 namespace AES.Tools
 {
     public interface ICommand
     {
         bool CanExecute(object parameter = null);
         void Execute(object parameter = null);
-        event Action CanExecuteChanged;
     }
 
     public interface ICommand<in T> : ICommand
@@ -18,8 +14,6 @@ namespace AES.Tools
 
     public abstract class CommandBase<T> : ICommand<T>
     {
-        public event Action CanExecuteChanged;
-
         public abstract bool CanExecute(T parameter);
         public abstract void Execute(T parameter);
 
@@ -40,8 +34,6 @@ namespace AES.Tools
             else
                 Execute(default);
         }
-
-        public void RaiseCanExecuteChanged()
-            => CanExecuteChanged?.Invoke();
+        
     }
 }

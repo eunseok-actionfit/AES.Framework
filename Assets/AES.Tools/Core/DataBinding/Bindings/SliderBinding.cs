@@ -12,7 +12,10 @@ namespace AES.Tools.Bindings
         private ObservableProperty<float> _prop;
         private bool _isUpdatingFromUI;
         
-        private void Reset() => target = GetComponent<Slider>();
+        private void OnValidate()
+        {
+            target ??= GetComponent<Slider>();
+        }
 
         protected override void Subscribe()
         {

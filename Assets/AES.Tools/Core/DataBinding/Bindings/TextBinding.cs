@@ -1,60 +1,51 @@
 using System.Globalization;
 using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
-
-
-// using TMPro;
 
 namespace AES.Tools
 {
-    public class GenericTextBinding<T> : ContextBindingBase
+    [RequireComponent(typeof(TMP_Text))]
+    public class TextBinding : ContextBindingBase
     {
         [SerializeField] TMP_Text tmpText;
 
         [Header("Formatting")]
         [SerializeField] bool useFormat;
-        [SerializeField] string format;
-        [SerializeField] bool useInvariantCulture = true;
+        [SerializeField, ShowIf(nameof(useFormat))] string format;
+        [SerializeField, ShowIf(nameof(useFormat))] bool useInvariantCulture = true;
 
         [Header("Value Converter")]
         [SerializeField] bool useConverter;
-        [SerializeField] ValueConverterSOBase converter;
-        [SerializeField] string converterParameter; // string 으로 넘기고, 컨버터에서 해석
+        [SerializeField, ShowIf(nameof(useConverter))] ValueConverterSOBase converter;
+        [SerializeField, ShowIf(nameof(useConverter))] string converterParameter; // string 으로 넘기고, 컨버터에서 해석
 
-        ObservableProperty<T> _property;
+        IObservableProperty _property;
 
-        private void Reset()
+        private void OnValidate()
         {
-            tmpText = GetComponent<TMP_Text>();
+            tmpText ??= GetComponent<TMP_Text>();
         }
 
         protected override void Subscribe()
         {
-            var boxed = ResolveObservablePropertyBoxed();
+            _property = ResolveObservablePropertyBoxed();
             if (_property == null || tmpText == null)
                 return;
 
-            if (boxed is ObservableProperty<T> typed)
-            {
-                _property = typed;
-                _property.OnValueChanged += OnValueChanged;
-                // 초기값 반영
-                OnValueChanged(_property.Value);
-            }
-            else { LogBindingError($"멤버 '{memberPath}' 는 IObservableProperty<{typeof(T).Name}> 가 아닙니다. 실제 타입: {boxed.GetType().Name}"); }
+            _property.OnValueChangedBoxed += OnValueChanged;
+            OnValueChanged(_property.Value);
         }
 
         protected override void Unsubscribe()
         {
             if (_property != null)
             {
-                _property.OnValueChanged -= OnValueChanged;
+                _property.OnValueChangedBoxed -= OnValueChanged;
                 _property = null;
             }
         }
 
-        void OnValueChanged(T newValue)
+        void OnValueChanged(object newValue)
         {
             var culture = useInvariantCulture ? CultureInfo.InvariantCulture : CultureInfo.CurrentCulture;
             string text;
@@ -69,6 +60,10 @@ namespace AES.Tools
 
 
             tmpText.text = text;
+            
+#if UNITY_EDITOR
+            Debug_SetLastValue(text); 
+#endif
         }
     }
 }

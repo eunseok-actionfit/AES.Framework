@@ -75,7 +75,7 @@ public sealed class StorageProfileEditor : Editor
         }
     }
 
-    [MenuItem("Tools/Save System/Create StorageProfile")]
+    [MenuItem("AES/Save System/Create StorageProfile")]
     static void CreateProfile()
     {
         var asset = ScriptableObject.CreateInstance<StorageProfile>();

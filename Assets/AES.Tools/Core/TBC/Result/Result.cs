@@ -7,8 +7,6 @@ namespace AES.Tools
     /// 성공/실패만 표현하는 결과 타입
     /// - 실패 시 Error 포함
     /// </summary>
-
-
     public readonly struct Result
     {
         public readonly bool IsSuccess;

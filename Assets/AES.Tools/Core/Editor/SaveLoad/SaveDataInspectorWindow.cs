@@ -30,7 +30,7 @@ public sealed class SaveDataInspectorWindow : EditorWindow
     private ICloudBlobStore _cloud;
     private IJsonSerializer _serializer;
 
-    [MenuItem("Tools/Save System/Save Data Inspector")]
+    [MenuItem("AES/Save System/Save Data Inspector")]
     public static void Open()
     {
         var win = GetWindow<SaveDataInspectorWindow>();

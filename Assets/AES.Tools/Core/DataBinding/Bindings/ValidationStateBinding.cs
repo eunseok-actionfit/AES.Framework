@@ -8,6 +8,7 @@ namespace AES.Tools
         [SerializeField] bool activeWhenError = true;
 
         IValidatableProperty _validatable;
+        
 
         protected override void Subscribe()
         {

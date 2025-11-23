@@ -23,9 +23,7 @@ namespace AES.Tools.Commands
             if (CanExecute(Unit.Default))
                 _execute();
         }
-
-        public void RaiseCanExecuteChangedPublic()
-            => RaiseCanExecuteChanged();
+        
     }
 
     /// <summary>

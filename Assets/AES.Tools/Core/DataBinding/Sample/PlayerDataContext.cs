@@ -1,15 +1,18 @@
+using System;
 using UnityEngine;
 
 
 namespace AES.Tools.Sample
 {
- 
-    public class PlayerDataContext: DataContextBase
+    public class PlayerDataContext : DataContextBase
     {
-        [SerializeField] private PlayerConfig playerConfig;
-        
-        protected override object CreateViewModel() => new PlayerViewModel(playerConfig);
+        [SerializeField] PlayerConfig config;
+
+        public override Type ViewModelType => typeof(PlayerViewModel);
+
+        protected override object CreateViewModel()
+        {
+            return new PlayerViewModel(config);
+        }
     }
 }
-
-

@@ -1,4 +1,3 @@
-// Assets/Whatever/Editor/UIWindowRegistryScriptCreator.cs
 using System.IO;
 using System.Text;
 using UnityEditor;

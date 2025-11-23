@@ -1,5 +1,6 @@
 using AES.Tools.Commands;
 using Cysharp.Threading.Tasks;
+using UnityEngine;
 
 
 namespace AES.Tools.Sample
@@ -13,6 +14,7 @@ namespace AES.Tools.Sample
         public ObservableList<string> Inventory { get; }
 
         public Command LevelUpCommand { get; }
+        public Command<string> AddItemCommand { get; }
         public Command<float> DamageCommand { get; }
         public AsyncCommand<string> AsyncEchoCommand { get; }
 
@@ -38,19 +40,19 @@ namespace AES.Tools.Sample
                 amount => IsAlive.Value && amount > 0
             );
 
+            AddItemCommand = new Command<string>(
+                AddItem,
+                item => !string.IsNullOrEmpty(item));
+
             AsyncEchoCommand = new AsyncCommand<string>(
                 async msg => {
                     await UniTask.Delay(1000);
-                    UnityEngine.Debug.Log(msg);
+                    Debug.Log(msg);
                 },
                 msg => !string.IsNullOrEmpty(msg)
             );
             
-            IsAlive.OnValueChangedBoxed += _ =>
-            {
-                LevelUpCommand.RaiseCanExecuteChanged();
-                DamageCommand.RaiseCanExecuteChanged();
-            };
+            Hp.OnValueChanged += hp => IsAlive.Value = hp > 0;
 
 
             if (config != null)
@@ -75,11 +77,7 @@ namespace AES.Tools.Sample
             if (amount <= 0) return;
             Hp.Value -= amount;
 
-            if (Hp.Value <= 0)
-            {
-                Hp.Value = 0;
-                IsAlive.Value = false;
-            }
+            Hp.Value = Mathf.Clamp(Hp.Value, 0, 100);
         }
 
         public void AddItem(string item)

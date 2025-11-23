@@ -1,96 +1,101 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
-using System.Reflection;
-
 
 namespace AES.Tools
 {
     public class MemberPath
     {
-        private readonly MemberInfo[] _members;
-        
-        public MemberPath(MemberInfo[] members)
+        public readonly List<PathToken> Tokens;
+
+        public MemberPath(List<PathToken> tokens)
         {
-            _members = members;
+            Tokens = tokens;
         }
 
         public object GetValue(object root)
         {
-            var current = root;
+            object current = root;
 
-            foreach (var m in _members)
+            foreach (var token in Tokens)
             {
-                if(current == null) return null;
-                
-                if(m is PropertyInfo pi)
-                    current = pi.GetValue(current);
-                else if(m is FieldInfo fi)
-                    current = fi.GetValue(current);
+                if (current == null)
+                    return null;
+
+                switch (token)
+                {
+                    case MemberToken m:
+                        current = GetMember(current, m.Name);
+                        break;
+
+                    case IndexToken idx:
+                        current = GetIndex(current, idx.Index);
+                        break;
+
+                    case KeyToken key:
+                        current = GetKey(current, key.Key);
+                        break;
+
+                    default:
+                        throw new NotSupportedException($"Unknown token {token.GetType()}");
+                }
             }
+
             return current;
         }
 
-        public void SetValue(object root, object value)
+        object GetMember(object obj, string name)
         {
-            if (_members.Length == 0) return;
-            
-            object current = root;
-            for (int i = 0; i < _members.Length - 1; i++)
+            var type = obj.GetType();
+
+            var prop = type.GetProperty(name);
+            if (prop != null) return prop.GetValue(obj);
+
+            var field = type.GetField(name);
+            if (field != null) return field.GetValue(obj);
+
+            return null;
+        }
+
+        object GetIndex(object obj, int index)
+        {
+            switch (obj)
             {
-                var m = _members[i];
-                if (m is PropertyInfo pi)
-                    current = pi.GetValue(current);
-                else if (m is FieldInfo fi)
-                    current = fi.GetValue(current);
-                
-                if (current == null) return;
+                case IList list:
+                    return index >= 0 && index < list.Count ? list[index] : null;
+
+                default:
+                    return null;
             }
-            
-            var last = _members[^1];
-            if(last is PropertyInfo lastPi)
-                lastPi.SetValue(current, value);
-            else if(last is FieldInfo lastFi)
-                lastFi.SetValue(current, value);
+        }
+
+        object GetKey(object obj, string key)
+        {
+            switch (obj)
+            {
+                case IDictionary dict:
+                    return dict.Contains(key) ? dict[key] : null;
+
+                default:
+                    return null;
+            }
         }
     }
 
     public static class MemberPathCache
     {
-        private static readonly Dictionary<(Type, string), MemberPath> Cache = new();
+        static readonly Dictionary<(Type, string), MemberPath> _cache = new();
 
         public static MemberPath Get(Type rootType, string path)
         {
             var key = (rootType, path);
-            if(Cache.TryGetValue(key, out var existing)) 
-                return existing;
-            
-            var parts = path.Split('.');
-            var members = new MemberInfo[parts.Length];
-            var currentType = rootType;
+            if (_cache.TryGetValue(key, out var mp))
+                return mp;
 
-            for (int i = 0; i < parts.Length; i++)
-            {
-                var part = parts[i];
-                var mi = (MemberInfo)currentType.GetProperty(part,
-                    BindingFlags.Instance | BindingFlags.Public) 
-                    ?? currentType.GetField(part,
-                        BindingFlags.Instance | BindingFlags.Public);
-
-                if (mi == null)
-                    throw new InvalidOperationException($"'{currentType.Name}'에 '{part}' 멤버가 없습니다.");
-                
-                members[i] = mi;
-                
-                if(mi is PropertyInfo pi)
-                    currentType = pi.PropertyType;
-                else if(mi is FieldInfo fi)
-                    currentType = fi.FieldType;
-            }
-            
-            var pathObj = new MemberPath(members);
-            Cache[key] = pathObj;
-            return pathObj;
-            
+            var tokens = MemberPathParser.Parse(path);
+            mp = new MemberPath(tokens);
+            _cache[key] = mp;
+            return mp;
         }
     }
 }
