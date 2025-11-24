@@ -4,16 +4,16 @@ using UnityEngine;
 
 namespace AES.Tools.Sample
 {
-    public class PlayerDataContext : DataContextBase
+    public class MasterDataContext : DataContextBase
     {
         [SerializeField] PlayerConfig config;
 
-        public override Type ViewModelType => typeof(PlayerViewModel);
+        public override Type ViewModelType => typeof(MasterViewModel);
         
         protected override object CreateViewModel()
         {
             if(ViewModel != null) return ViewModel;
-            return new PlayerViewModel(config);
+            return new MasterViewModel(config);
         }
     }
 }

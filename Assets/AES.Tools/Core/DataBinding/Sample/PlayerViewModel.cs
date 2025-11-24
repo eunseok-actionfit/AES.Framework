@@ -11,10 +11,8 @@ namespace AES.Tools.Sample
         public ObservableProperty<int> Level { get; }
         public ObservableProperty<float> Hp { get; }
         public ObservableProperty<bool> IsAlive { get; }
-        public ObservableList<string> Inventory { get; }
 
         public Command LevelUpCommand { get; }
-        public Command<string> AddItemCommand { get; }
         public Command<float> DamageCommand { get; }
         public AsyncCommand<string> AsyncEchoCommand { get; }
 
@@ -28,7 +26,6 @@ namespace AES.Tools.Sample
             Level = new ObservableProperty<int>(config != null ? config.defaultLevel : 1);
             Hp = new ObservableProperty<float>(config != null ? config.defaultHp : 100f);
             IsAlive = new ObservableProperty<bool>(true);
-            Inventory = new ObservableList<string>();
 
             LevelUpCommand = new Command(
                 LevelUp,
@@ -39,10 +36,7 @@ namespace AES.Tools.Sample
                 Damage,
                 amount => IsAlive.Value && amount > 0
             );
-
-            AddItemCommand = new Command<string>(
-                AddItem,
-                item => !string.IsNullOrEmpty(item));
+            
 
             AsyncEchoCommand = new AsyncCommand<string>(
                 async msg => {
@@ -53,18 +47,7 @@ namespace AES.Tools.Sample
             );
             
             Hp.OnValueChanged += hp => IsAlive.Value = hp > 0;
-
-
-            if (config != null)
-            {
-                foreach (var item in config.defaultItems)
-                    Inventory.Add(item);
-            }
-            else
-            {
-                Inventory.Add("Sword");
-                Inventory.Add("Shield");
-            }
+            
         }
 
         public void LevelUp()
@@ -78,12 +61,6 @@ namespace AES.Tools.Sample
             Hp.Value -= amount;
 
             Hp.Value = Mathf.Clamp(Hp.Value, 0, 100);
-        }
-
-        public void AddItem(string item)
-        {
-            if (!string.IsNullOrEmpty(item))
-                Inventory.Add(item);
         }
     }
 }
