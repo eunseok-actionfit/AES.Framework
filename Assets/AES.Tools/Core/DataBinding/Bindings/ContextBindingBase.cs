@@ -30,7 +30,7 @@ namespace AES.Tools
         ContextLookupMode lookupMode = ContextLookupMode.Nearest;
 
         [SerializeField]
-        [ShowIf("lookupMode", ContextLookupMode.Nearest, Condition = ShowIfCondition.NotEquals)]
+        [ShowIf(nameof(lookupMode), ContextLookupMode.Nearest, Condition = ShowIfCondition.NotEquals)]
         string contextName;
 
         [Header("Member Path")]
@@ -39,7 +39,7 @@ namespace AES.Tools
 
         // Custom 모드일 때만 인스펙터에 노출 (Dropdown 모드에선 에디터 스크립트가 채워줌)
         [SerializeField]
-        [ShowIf("memberPathMode", MemberPathMode.Custom, Condition = ShowIfCondition.Equals)]
+        [ShowIf(nameof(memberPathMode), MemberPathMode.Custom, Condition = ShowIfCondition.Equals)]
         protected string memberPath;
 
         DataContextBase _context;
@@ -156,13 +156,12 @@ namespace AES.Tools
 
             if (string.IsNullOrEmpty(memberPath))
             {
-                LogBindingError("memberPath 가 비어 있습니다.");
+                LogBindingWarning("memberPath 가 비어 있습니다.");
                 return false;
             }
 
             if (Path == null)
             {
-                // Path 프로퍼티 안에서 이미 에러 로그를 찍기 때문에 여기서는 false만 리턴
                 return false;
             }
 
