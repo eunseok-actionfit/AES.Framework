@@ -44,7 +44,7 @@ namespace AES.Tools
             return current;
         }
 
-        object GetMember(object obj, string name)
+        private object GetMember(object obj, string name)
         {
             var type = obj.GetType();
 
@@ -57,7 +57,7 @@ namespace AES.Tools
             return null;
         }
 
-        object GetIndex(object obj, int index)
+        private object GetIndex(object obj, int index)
         {
             switch (obj)
             {
@@ -69,7 +69,7 @@ namespace AES.Tools
             }
         }
 
-        object GetKey(object obj, string key)
+        private object GetKey(object obj, string key)
         {
             switch (obj)
             {
@@ -84,7 +84,7 @@ namespace AES.Tools
 
     public static class MemberPathCache
     {
-        static readonly Dictionary<(Type, string), MemberPath> _cache = new();
+        private static readonly Dictionary<(Type, string), MemberPath> _cache = new();
 
         public static MemberPath Get(Type rootType, string path)
         {

@@ -51,7 +51,7 @@ namespace AES.Tools
             return tokens;
         }
 
-        static string ReadIdentifier(string s, ref int i)
+        private static string ReadIdentifier(string s, ref int i)
         {
             var sb = new StringBuilder();
             while (i < s.Length && (char.IsLetterOrDigit(s[i]) || s[i] == '_'))
@@ -62,7 +62,7 @@ namespace AES.Tools
             return sb.ToString();
         }
 
-        static int ReadInt(string s, ref int i)
+        private static int ReadInt(string s, ref int i)
         {
             int start = i;
             while (i < s.Length && char.IsDigit(s[i]))
@@ -72,7 +72,7 @@ namespace AES.Tools
             return int.Parse(numStr);
         }
 
-        static string ReadStringLiteral(string s, ref int i)
+        private static string ReadStringLiteral(string s, ref int i)
         {
             char quote = s[i];
             i++; // skip quote
@@ -88,7 +88,7 @@ namespace AES.Tools
             return sb.ToString();
         }
 
-        static void SkipSpaces(string s, ref int i)
+        private static void SkipSpaces(string s, ref int i)
         {
             while (i < s.Length && char.IsWhiteSpace(s[i]))
                 i++;

@@ -9,9 +9,9 @@ namespace AES.Tools
     /// </summary>
     public sealed class NotifyPropertyChangedViewModelContext : ViewModelContext
     {
-        readonly INotifyPropertyChanged _inpc;
+        private readonly INotifyPropertyChanged _inpc;
 
-        readonly Dictionary<string, List<Action<object>>> _listeners = new();
+        private readonly Dictionary<string, List<Action<object>>> _listeners = new();
 
         public NotifyPropertyChangedViewModelContext(INotifyPropertyChanged root)
             : base(root)
@@ -20,7 +20,7 @@ namespace AES.Tools
             _inpc.PropertyChanged += OnPropertyChanged;
         }
 
-        void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
+        private void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             // 단순 구현: 어떤 프로퍼티가 바뀌든 모든 등록 path를 다시 계산해서 브로드캐스트
             foreach (var kvp in _listeners)

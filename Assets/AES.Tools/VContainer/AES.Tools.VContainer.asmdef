@@ -4,7 +4,9 @@
   "references": [
     "VContainer",
     "UniTask",
-    "AES.Tools"
+    "AES.Tools",
+    "Unity.Addressables",
+    "Unity.ResourceManager"
   ],
   "includePlatforms": [],
   "excludePlatforms": [],

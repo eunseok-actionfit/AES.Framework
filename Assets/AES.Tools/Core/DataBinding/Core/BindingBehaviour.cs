@@ -1,12 +1,11 @@
 using System;
 using UnityEngine;
 
-
 namespace AES.Tools
 {
     public abstract class BindingBehaviour : MonoBehaviour
     {
-        bool _isSubscribed;
+        private bool _isSubscribed;
 
         protected virtual void OnEnable()
         {
@@ -36,7 +35,6 @@ namespace AES.Tools
         // 공통 로그 헬퍼들
         protected void LogBindingError(string message)
         {
-            Debug.LogError($"[{GetType().Name}] {message}", this);
 #if UNITY_EDITOR
             _debugLastError = message;
 #endif
@@ -44,7 +42,6 @@ namespace AES.Tools
 
         protected void LogBindingWarning(string message)
         {
-            Debug.LogWarning($"[{GetType().Name}] {message}", this);
 #if UNITY_EDITOR
             _debugLastError = "WARN: " + message;
 #endif
@@ -61,29 +58,47 @@ namespace AES.Tools
         #region Debug
 
 #if UNITY_EDITOR
-        [SerializeField, HideInInspector] string _debugContextName;
-        [SerializeField, HideInInspector] string _debugMemberPath;
-        [SerializeField, HideInInspector] string _debugLastValue;
-        [SerializeField, HideInInspector] string _debugLastError;
-        [SerializeField, HideInInspector] int _debugUpdateCount;
+        [SerializeField, HideInInspector] private string _debugContextName;
+        [SerializeField, HideInInspector] private string _debugMemberPath;
+        [SerializeField, HideInInspector] private string _debugLastValue;
+        [SerializeField, HideInInspector] private string _debugLastError;
+        [SerializeField, HideInInspector] private int _debugUpdateCount;
 
-        // 디버그 정보 업데이트용 protected 헬퍼들
-        protected void Debug_SetContextAndPath(DataContextBase ctx, string memberPath)
+        // Provider(Object) 기반 버전
+        protected void Debug_SetContextAndPath(UnityEngine.Object ctxObject, string memberPath, string overrideName = null)
         {
-            _debugContextName = ctx != null ? ctx.ContextName : "NULL";
+            if (ctxObject == null)
+            {
+                _debugContextName = "NULL";
+            }
+            else
+            {
+                if (!string.IsNullOrEmpty(overrideName))
+                    _debugContextName = overrideName;
+                else
+                    _debugContextName = ctxObject.name;
+            }
+
             _debugMemberPath = memberPath ?? "";
+        }
+
+        // 이전 DataContextBase 호출부 호환용 (필요하면 남겨둠)
+        protected void Debug_SetContextAndPath(MonoContextHolder ctx, string memberPath)
+        {
+            string name = ctx != null ? ctx.ContextName : "NULL";
+            Debug_SetContextAndPath(ctx, memberPath, name);
         }
 
         protected void Debug_SetLastValue(object value)
         {
-            _debugLastValue = value != null ? value.ToString() : "null";
+            _debugLastValue  = value != null ? value.ToString() : "null";
             _debugUpdateCount++;
         }
 
         protected void Debug_ClearRuntimeInfo()
         {
-            _debugLastValue = "";
-            _debugLastError = "";
+            _debugLastValue   = "";
+            _debugLastError   = "";
             _debugUpdateCount = 0;
         }
 #endif

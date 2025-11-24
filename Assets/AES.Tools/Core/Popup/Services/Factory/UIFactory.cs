@@ -10,8 +10,6 @@ namespace AES.Tools
 {
     public class UIFactory : IUIFactory
     {
-        public static UIFactory CreateInstance() => new UIFactory();
-
         public async UniTask<UIView> CreateAsync(UIRegistryEntry entry, Transform parent, CancellationToken ct = default)
         {
             if (entry == null) throw new ArgumentNullException(nameof(entry));

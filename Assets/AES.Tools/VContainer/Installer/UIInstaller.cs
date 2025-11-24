@@ -22,9 +22,9 @@ namespace AES.Tools.VContainer.Installer
             builder.Register<UIFactory>(Lifetime.Singleton);
             builder.Register<IUIFactory, UIFactory>(Lifetime.Singleton);
 
-            builder.RegisterInstance(registry).As<IUIWindowRegistry>();
+            builder.RegisterInstance(registry).As<IURegistry>();
 
-            builder.Register<IUIController, UIController>(Lifetime.Singleton);
+         //   builder.Register<IUIController, UIController>(Lifetime.Singleton);
 
             builder.RegisterEntryPoint<UIBootstrap>();
         }

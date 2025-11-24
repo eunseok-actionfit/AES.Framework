@@ -49,6 +49,10 @@ namespace AES.Tools.Editor
             serializedObject.ApplyModifiedProperties();
         }
 
+        // --------------------------------------------------------------------
+        // Context 영역
+        // --------------------------------------------------------------------
+
         void DrawContextSection()
         {
             if (_lookupModeProp == null || _contextNameProp == null)
@@ -57,55 +61,57 @@ namespace AES.Tools.Editor
             EditorGUILayout.LabelField("Context", EditorStyles.boldLabel);
             EditorGUI.indentLevel++;
 
-            // lookupMode 먼저
             EditorGUILayout.PropertyField(_lookupModeProp);
             var mode = (ContextLookupMode)_lookupModeProp.enumValueIndex;
 
-            // Nearest면 contextName 필요 없음
             if (mode == ContextLookupMode.Nearest)
             {
-                EditorGUILayout.HelpBox("가장 가까운 상위 DataContextBase 를 사용합니다.", MessageType.Info);
+                EditorGUILayout.HelpBox("가장 가까운 상위 IBindingContextProvider 를 사용합니다.", MessageType.Info);
                 EditorGUI.indentLevel--;
                 return;
             }
 
-            // lookupMode가 ByName 계열일 때, 씬/부모에서 컨텍스트 목록 수집
-            var binding  = (ContextBindingBase)target;
-            DataContextBase[] contexts = Array.Empty<DataContextBase>();
+            var binding = (ContextBindingBase)target;
+            MonoBehaviour[] providers = Array.Empty<MonoBehaviour>();
 
             switch (mode)
             {
                 case ContextLookupMode.ByNameInParents:
-                    contexts = binding.GetComponentsInParent<DataContextBase>(includeInactive: true);
+                    providers = binding.GetComponentsInParent<MonoBehaviour>(includeInactive: true);
                     break;
 
                 case ContextLookupMode.ByNameInScene:
 #if UNITY_2022_2_OR_NEWER
-                    contexts = UnityEngine.Object.FindObjectsByType<DataContextBase>(
+                    providers = UnityEngine.Object.FindObjectsByType<MonoBehaviour>(
                         FindObjectsInactive.Include,
                         FindObjectsSortMode.None);
 #else
-                    contexts = UnityEngine.Object.FindObjectsOfType<DataContextBase>(true);
+                    providers = UnityEngine.Object.FindObjectsOfType<MonoBehaviour>(true);
 #endif
                     break;
             }
 
-            // ContextName 목록 만들기
             var nameList = new List<string>();
 
-            foreach (var ctx in contexts)
+            foreach (var mb in providers)
             {
-                if (ctx == null) continue;
-                var contextName = ctx.ContextName;
-                if (!string.IsNullOrEmpty(contextName) && !nameList.Contains(contextName))
-                    nameList.Add(contextName);
+                if (mb is IBindingContextProvider)
+                {
+                    string logicalName;
+
+                    if (mb is MonoContextHolder dc)
+                        logicalName = dc.ContextName;
+                    else
+                        logicalName = mb.gameObject.name;
+
+                    if (!string.IsNullOrEmpty(logicalName) && !nameList.Contains(logicalName))
+                        nameList.Add(logicalName);
+                }
             }
 
-            // 1) 항상 수동 입력 가능한 텍스트 필드
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.PropertyField(_contextNameProp, new GUIContent("Context Name"));
 
-            // 2) 선택 버튼 (후보가 없으면 비활성화)
             using (new EditorGUI.DisabledScope(nameList.Count == 0))
             {
                 if (GUILayout.Button("Select...", GUILayout.Width(70)))
@@ -114,11 +120,10 @@ namespace AES.Tools.Editor
 
             EditorGUILayout.EndHorizontal();
 
-            // 3) 후보가 하나도 없으면 경고만 표시 (그래도 수동 입력은 가능)
             if (nameList.Count == 0)
             {
                 EditorGUILayout.HelpBox(
-                    "현재 씬/부모 계층에서 사용할 수 있는 DataContextBase 를 찾지 못했습니다.\n" +
+                    "현재 씬/부모 계층에서 사용할 수 있는 IBindingContextProvider 를 찾지 못했습니다.\n" +
                     "ContextName 은 수동으로 문자열을 입력해서 사용할 수 있습니다.",
                     MessageType.Warning);
             }
@@ -147,19 +152,22 @@ namespace AES.Tools.Editor
             menu.ShowAsContext();
         }
 
+        // --------------------------------------------------------------------
+        // Member Path 영역
+        // --------------------------------------------------------------------
+
         void DrawMemberPathSection()
         {
             if (_memberPathModeProp == null || _memberPathProp == null)
                 return;
 
-            var binding = (ContextBindingBase)target;
-            var ctx     = ResolveContext(binding, out var mode, out var ctxNameForLookup);
+            var binding  = (ContextBindingBase)target;
+            var provider = ResolveProvider(binding, out var mode, out var ctxNameForLookup);
 
             EditorGUILayout.LabelField("Member Path", EditorStyles.boldLabel);
             EditorGUI.indentLevel++;
 
-            // 현재 어떤 Context를 기준으로 드롭다운이 구성되는지 표시
-            DrawContextInfo(ctx, mode, ctxNameForLookup);
+            DrawContextInfo(provider, mode, ctxNameForLookup);
 
             EditorGUILayout.PropertyField(_memberPathModeProp);
 
@@ -167,20 +175,18 @@ namespace AES.Tools.Editor
 
             if (pathMode == MemberPathMode.Custom)
             {
-                // 수동 입력 모드
                 EditorGUILayout.PropertyField(_memberPathProp);
             }
             else
             {
-                // Dropdown 모드
                 EditorGUILayout.BeginHorizontal();
 
                 EditorGUILayout.TextField("Path", _memberPathProp.stringValue);
 
-                using (new EditorGUI.DisabledScope(ctx == null))
+                using (new EditorGUI.DisabledScope(provider == null))
                 {
                     if (GUILayout.Button("Select...", GUILayout.Width(70)))
-                        ShowPathMenu(ctx);
+                        ShowPathMenu(provider);
                 }
 
                 EditorGUILayout.EndHorizontal();
@@ -189,14 +195,20 @@ namespace AES.Tools.Editor
             EditorGUI.indentLevel--;
         }
 
-        void DrawContextInfo(DataContextBase ctx, ContextLookupMode mode, string ctxNameForLookup)
+        void DrawContextInfo(IBindingContextProvider provider, ContextLookupMode mode, string ctxNameForLookup)
         {
-            if (ctx != null)
+            if (provider is MonoBehaviour mb)
             {
-                // 예: Context: PlayerDataContext (ContextName="Player", Lookup=ByNameInParents)
+                string ctxName;
+
+                if (mb is MonoContextHolder dc)
+                    ctxName = dc.ContextName;
+                else
+                    ctxName = mb.gameObject.name;
+
                 string label =
-                    $"Context: {ctx.GetType().Name}  " +
-                    $"(ContextName=\"{ctx.ContextName}\", Lookup={mode})";
+                    $"Provider: {mb.GetType().Name}  " +
+                    $"(Name=\"{ctxName}\", Lookup={mode})";
 
                 EditorGUILayout.HelpBox(label, MessageType.Info);
             }
@@ -212,22 +224,109 @@ namespace AES.Tools.Editor
             }
         }
 
-        void ShowPathMenu(DataContextBase ctx)
+        // --------------------------------------------------------------------
+        // Provider Lookup (에디터용)
+        // --------------------------------------------------------------------
+
+        IBindingContextProvider ResolveProvider(
+            ContextBindingBase binding,
+            out ContextLookupMode mode,
+            out string ctxNameForLookup)
         {
-            if (ctx == null)
+            mode             = ContextLookupMode.Nearest;
+            ctxNameForLookup = null;
+
+            if (_lookupModeProp != null)
+                mode = (ContextLookupMode)_lookupModeProp.enumValueIndex;
+
+            if (_contextNameProp != null)
+                ctxNameForLookup = _contextNameProp.stringValue;
+
+            switch (mode)
             {
-                EditorUtility.DisplayDialog("DataContext 없음",
-                    "lookupMode 설정에 따라 DataContextBase 를 찾지 못했습니다.", "확인");
+                case ContextLookupMode.Nearest:
+                    return binding.GetComponentInParent<IBindingContextProvider>();
+
+                case ContextLookupMode.ByNameInParents:
+                    return FindProviderInParentsByName(binding, ctxNameForLookup);
+
+                case ContextLookupMode.ByNameInScene:
+                    return FindProviderInSceneByName(ctxNameForLookup);
+
+                default:
+                    return binding.GetComponentInParent<IBindingContextProvider>();
+            }
+        }
+
+        IBindingContextProvider FindProviderInParentsByName(ContextBindingBase binding, string name)
+        {
+            if (string.IsNullOrEmpty(name))
+                return null;
+
+            var all = binding.GetComponentsInParent<MonoBehaviour>(includeInactive: true);
+
+            foreach (var mb in all)
+            {
+                if (mb is IBindingContextProvider p)
+                {
+                    if (mb is MonoContextHolder dc && dc.ContextName == name)
+                        return p;
+
+                    if (mb.gameObject.name == name)
+                        return p;
+                }
+            }
+
+            return null;
+        }
+
+        IBindingContextProvider FindProviderInSceneByName(string name)
+        {
+            if (string.IsNullOrEmpty(name))
+                return null;
+
+#if UNITY_2022_2_OR_NEWER
+            var all = UnityEngine.Object.FindObjectsByType<MonoBehaviour>(
+                FindObjectsInactive.Include,
+                FindObjectsSortMode.None);
+#else
+            var all = UnityEngine.Object.FindObjectsOfType<MonoBehaviour>(true);
+#endif
+            foreach (var mb in all)
+            {
+                if (mb is IBindingContextProvider p)
+                {
+                    if (mb is MonoContextHolder dc && dc.ContextName == name)
+                        return p;
+
+                    if (mb.gameObject.name == name)
+                        return p;
+                }
+            }
+
+            return null;
+        }
+
+        // --------------------------------------------------------------------
+        // Path 후보 빌드 (기존 로직 재사용)
+        // --------------------------------------------------------------------
+
+        void ShowPathMenu(IBindingContextProvider provider)
+        {
+            if (provider == null)
+            {
+                EditorUtility.DisplayDialog("Context 없음",
+                    "lookupMode 설정에 따라 IBindingContextProvider 를 찾지 못했습니다.", "확인");
                 return;
             }
 
-            var vmType     = ctx.GetViewModelType();
-            var vmInstance = ctx.GetDesignTimeViewModel();
+            var vmType     = provider.DesignTimeViewModelType;
+            var vmInstance = provider.GetDesignTimeViewModel();
 
             if (vmType == null)
             {
                 EditorUtility.DisplayDialog("ViewModel 타입 없음",
-                    "Design-time ViewModel 이나 런타임 ViewModel 타입을 알 수 없습니다.", "확인");
+                    "Design-time ViewModel 타입을 알 수 없습니다.", "확인");
                 return;
             }
 
@@ -245,7 +344,7 @@ namespace AES.Tools.Editor
 
             foreach (var c in candidates)
             {
-                string label   = c.DisplayLabel; // ex) "Health (ObservableProperty<int>)" 또는 "Stats/HP"
+                string label   = c.DisplayLabel;
                 bool selected  = _memberPathProp.stringValue == c.Path;
 
                 menu.AddItem(new GUIContent(label), selected, () =>
@@ -260,88 +359,13 @@ namespace AES.Tools.Editor
 
         class PathCandidate
         {
-            public string Path;         // 실제 memberPath 문자열
-            public string DisplayLabel; // 메뉴에 보여줄 라벨
+            public string Path;
+            public string DisplayLabel;
         }
-
-        // ==============
-        // Context Lookup (에디터용) – runtime과 동일한 정책을 사용
-        // ==============
-
-        DataContextBase ResolveContext(
-            ContextBindingBase binding,
-            out ContextLookupMode mode,
-            out string ctxNameForLookup)
-        {
-            mode            = ContextLookupMode.Nearest;
-            ctxNameForLookup = null;
-
-            if (_lookupModeProp != null)
-                mode = (ContextLookupMode)_lookupModeProp.enumValueIndex;
-
-            if (_contextNameProp != null)
-                ctxNameForLookup = _contextNameProp.stringValue;
-
-            switch (mode)
-            {
-                case ContextLookupMode.Nearest:
-                    return binding.GetComponentInParent<DataContextBase>();
-
-                case ContextLookupMode.ByNameInParents:
-                    return FindContextInParentsByName(binding, ctxNameForLookup);
-
-                case ContextLookupMode.ByNameInScene:
-                    return FindContextInSceneByName(ctxNameForLookup);
-
-                default:
-                    return binding.GetComponentInParent<DataContextBase>();
-            }
-        }
-
-        DataContextBase FindContextInParentsByName(ContextBindingBase binding, string name)
-        {
-            if (string.IsNullOrEmpty(name))
-                return null;
-
-            var all = binding.GetComponentsInParent<DataContextBase>(includeInactive: true);
-
-            foreach (var ctx in all)
-            {
-                if (ctx != null && ctx.ContextName == name)
-                    return ctx;
-            }
-
-            return null;
-        }
-
-        DataContextBase FindContextInSceneByName(string name)
-        {
-            if (string.IsNullOrEmpty(name))
-                return null;
-
-#if UNITY_2022_2_OR_NEWER
-            var all = UnityEngine.Object.FindObjectsByType<DataContextBase>(
-                FindObjectsInactive.Include,
-                FindObjectsSortMode.None);
-#else
-            var all = UnityEngine.Object.FindObjectsOfType<DataContextBase>(true);
-#endif
-            foreach (var ctx in all)
-            {
-                if (ctx != null && ctx.ContextName == name)
-                    return ctx;
-            }
-
-            return null;
-        }
-
-        // ==============
-        // Path 후보 빌드
-        // ==============
 
         void BuildCandidates(Type type, object instance, string basePath, int depth, List<PathCandidate> acc)
         {
-            if (depth > 4) // 너무 깊게 안 내려가도록
+            if (depth > 4)
                 return;
 
             const BindingFlags flags =
@@ -370,7 +394,7 @@ namespace AES.Tools.Editor
             int depth,
             List<PathCandidate> acc)
         {
-            string memberName        = m.Name;
+            string memberName  = m.Name;
             string currentPath = string.IsNullOrEmpty(basePath) ? memberName : $"{basePath}.{memberName}";
 
             bool isObsProp  = typeof(IObservableProperty).IsAssignableFrom(memberType);
@@ -381,11 +405,10 @@ namespace AES.Tools.Editor
             bool hasBindingAttr =
                 m.IsDefined(typeof(BindableAttribute), inherit: true);
 
-            // 1) 바인딩 가능한 타입이거나 [Bindable] 이면 후보로 추가
             if (isObsProp || isObsList || isCommand || isAsyncCmd || hasBindingAttr)
             {
                 string typeName = GetFriendlyTypeName(memberType);
-                string label    = BuildDisplayLabel(currentPath, typeName, basePath);
+                string label    = BuildDisplayLabel(currentPath, typeName);
 
                 acc.Add(new PathCandidate
                 {
@@ -394,10 +417,8 @@ namespace AES.Tools.Editor
                 });
             }
 
-            // 2) 딕셔너리(string 키)면 Stats["HP"] 같은 리프 추가 시도
             if (typeof(IDictionary).IsAssignableFrom(memberType))
             {
-                // design-time instance가 있으면 실제 키들로 Stats["HP"] 형태 후보 추가
                 if (ownerInstance != null)
                 {
                     var ownerVal = ownerInstance;
@@ -423,7 +444,6 @@ namespace AES.Tools.Editor
                 }
             }
 
-            // 3) 복합 타입은 컨테이너로 보고 재귀 (단, UnityEngine.Object, primitive, string은 제외)
             if (!isObsProp && !isObsList && !isCommand && !isAsyncCmd)
             {
                 if (IsContainerType(memberType))
@@ -463,29 +483,26 @@ namespace AES.Tools.Editor
             catch { return null; }
         }
 
-        string BuildDisplayLabel(string fullPath, string typeName, string basePath)
+        string BuildDisplayLabel(string fullPath, string typeName)
         {
-            // fullPath: "Stats.HP" → 메뉴 라벨을 "Stats/HP (ObservableProperty<int>)" 형태로
             string pathForMenu = fullPath.Replace('.', '/');
             return $"{pathForMenu} ({typeName})";
         }
-        
+
         string GetFriendlyTypeName(Type t)
         {
             if (t == null)
                 return "null";
 
-            // 제네릭이 아니면 그냥 Name
             if (!t.IsGenericType)
                 return t.Name;
 
-            // "ObservableProperty`1" → "ObservableProperty"
             string genericName = t.Name;
-            int backtickIndex = genericName.IndexOf('`');
+            int backtickIndex  = genericName.IndexOf('`');
             if (backtickIndex >= 0)
                 genericName = genericName.Substring(0, backtickIndex);
 
-            var args = t.GetGenericArguments();
+            var args     = t.GetGenericArguments();
             var argNames = new string[args.Length];
 
             for (int i = 0; i < args.Length; i++)

@@ -8,14 +8,14 @@ namespace AES.Tools
     /// </summary>
     public sealed class ObservableViewModelContext : ViewModelContext
     {
-        class ListenerEntry
+        private class ListenerEntry
         {
             public Action<object> Callback;
             public object Source;         // IObservableProperty / IObservableList
             public Delegate Subscription; // 해제용 델리게이트
         }
 
-        readonly Dictionary<string, List<ListenerEntry>> _listeners = new();
+        private readonly Dictionary<string, List<ListenerEntry>> _listeners = new();
 
         public ObservableViewModelContext(object root) : base(root) { }
 
@@ -30,7 +30,7 @@ namespace AES.Tools
             // ObservableProperty
             if (value is IObservableProperty op)
             {
-                Action<object> handler = v => onValueChanged(v);
+                Action<object> handler = onValueChanged;
                 op.OnValueChangedBoxed += handler;
 
                 AddListener(path, onValueChanged, op, handler);
@@ -82,7 +82,7 @@ namespace AES.Tools
                 _listeners.Remove(path);
         }
 
-        void AddListener(string path, Action<object> cb, object source, Delegate sub)
+        private void AddListener(string path, Action<object> cb, object source, Delegate sub)
         {
             if (!_listeners.TryGetValue(path, out var list))
             {
@@ -142,7 +142,6 @@ namespace AES.Tools
 
                 //  그 외는 기존 로직대로 일반 멤버 세팅
                 SetMember(current, lm.Name, value);
-                return;
             }
 
             // todo 인덱서/딕셔너리 셋터가 필요하면 여기서 확장
