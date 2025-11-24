@@ -1,8 +1,15 @@
 using System;
+using System.ComponentModel;
 using UnityEngine;
 
 namespace AES.Tools
 {
+    public enum ViewModelSourceMode
+    {
+        AutoCreate,     // CreateViewModel() 에서 생성 (기존 방식)
+        External        // 외부에서 SetViewModel()로 주입
+    }
+    
     public enum ContextNameMode
     {
         TypeName,
@@ -13,13 +20,21 @@ namespace AES.Tools
     [DefaultExecutionOrder(-1)]
     public abstract class DataContextBase : MonoBehaviour
     {
+        [Header("Context Name")]
         [SerializeField]
-        [Tooltip("ContextName을 어떤 방식으로 결정할지 선택")]
-        private ContextNameMode nameMode = ContextNameMode.TypeName;
+        ContextNameMode nameMode = ContextNameMode.TypeName;
 
         [SerializeField]
         [ShowIf(nameof(nameMode), ContextNameMode.Custom)]
-        private string customName;
+        string customName;
+
+        [Header("ViewModel 생성 방식")]
+        [SerializeField]
+        ViewModelSourceMode viewModelSource = ViewModelSourceMode.AutoCreate;
+
+        // ============================================================
+        //  Public Properties
+        // ============================================================
 
         public string ContextName
         {
@@ -27,9 +42,6 @@ namespace AES.Tools
             {
                 switch (nameMode)
                 {
-                    case ContextNameMode.GameObjectName:
-                        return gameObject.name;
-
                     case ContextNameMode.TypeName:
                         return GetType().Name;
 
@@ -37,50 +49,112 @@ namespace AES.Tools
                         return string.IsNullOrEmpty(customName)
                             ? gameObject.name
                             : customName;
-
                     default:
                         return gameObject.name;
                 }
+              
             }
         }
 
-        /// <summary>
-        /// 이 Context가 다루는 ViewModel의 타입.
-        /// 에디터/런타임 공통으로 사용.
-        /// </summary>
+        /// <summary>이 Context가 다루는 ViewModel 타입 (Editor/Runtime 공용)</summary>
         public abstract Type ViewModelType { get; }
 
-        public object ViewModel { get; protected set; }
+        /// <summary>실제 ViewModel 인스턴스</summary>
+        public object ViewModel { get; private set; }
+
+        /// <summary>순수 C# 계층의 Context (Observable or INPC)</summary>
+        public ViewModelContext ViewModelContext { get; private set; }
+
+        /// <summary>바인딩에서 실제 사용되는 추상화된 컨텍스트</summary>
+        public IBindingContext BindingContext => ViewModelContext;
+
+        // ============================================================
+        //  Lifecycle
+        // ============================================================
 
         protected virtual void Awake()
         {
-            ViewModel ??= CreateViewModel();
+            EnsureViewModelCreated();
+            EnsureContextCreated();
         }
 
+        // ------------------------------------------------------------
+
+        protected void EnsureViewModelCreated()
+        {
+            if (ViewModel != null)
+                return;
+
+            if (viewModelSource == ViewModelSourceMode.AutoCreate)
+            {
+                ViewModel = CreateViewModel();
+            }
+            // External 모드는 외부에서 SetViewModel로 들어옴
+        }
+
+        protected void EnsureContextCreated()
+        {
+            if (ViewModel == null)
+                return;
+
+            if (ViewModelContext == null)
+                ViewModelContext = CreateViewModelContext(ViewModel);
+        }
+
+        // ============================================================
+        //  Public API
+        // ============================================================
+
         /// <summary>
-        /// 런타임용 ViewModel 생성.
+        /// 외부에서 ViewModel을 주입할 때 호출.
+        /// (예: DI / GameManager / ScriptableInstaller)
         /// </summary>
+        public void SetViewModel(object viewModel, bool recreateContext = true)
+        {
+            ViewModel = viewModel;
+
+            if (recreateContext)
+            {
+                ViewModelContext = (viewModel != null)
+                    ? CreateViewModelContext(viewModel)
+                    : null;
+            }
+        }
+
+        // ============================================================
+        //  Abstract
+        // ============================================================
+
+        /// <summary>AutoCreate 모드일 경우 ViewModel 생성</summary>
         protected abstract object CreateViewModel();
 
-#if UNITY_EDITOR
-        /// <summary>
-        /// 에디터에서 Path 드롭다운을 만들 때 사용할 ViewModel 타입.
-        /// 기본 구현은 ViewModelType 그대로 사용.
-        /// (Editor 스크립트에서 ctx.GetViewModelType() 으로 사용)
-        /// </summary>
-        public virtual Type GetViewModelType()
-        {
-            return ViewModelType;
-        }
+        // ============================================================
+        //  Context Factory
+        // ============================================================
 
         /// <summary>
-        /// 에디터에서 딕셔너리 키 등 인스턴스 정보가 필요할 때 사용할 디자인타임 ViewModel.
-        /// 기본은 null (== 인스턴스 없음, 타입 정보만 사용).
-        /// 필요하면 파생 클래스에서 override해서 new ViewModel(mockData) 리턴.
-        /// (Editor 스크립트에서 ctx.GetDesignTimeViewModel() 으로 사용)
+        /// ViewModel 타입에 따라 올바른 ViewModelContext를 생성
         /// </summary>
+        protected virtual ViewModelContext CreateViewModelContext(object viewModel)
+        {
+            // INPC 기반 ViewModel → NotifyPropertyChangedContext 사용
+            if (viewModel is INotifyPropertyChanged inpc)
+                return new NotifyPropertyChangedViewModelContext(inpc);
+
+            // 나머지는 네가 이미 만든 ObservableProperty 기반 컨텍스트 적용
+            return new ObservableViewModelContext(viewModel);
+        }
+
+        // ============================================================
+        //  Editor Helpers
+        // ============================================================
+
+#if UNITY_EDITOR
+        public virtual Type GetViewModelType() => ViewModelType;
+
         public virtual object GetDesignTimeViewModel()
         {
+            // 필요하면 디자인타임용 mock VM 생성
             return null;
         }
 #endif

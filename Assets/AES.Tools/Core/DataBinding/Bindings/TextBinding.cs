@@ -17,52 +17,65 @@ namespace AES.Tools
         [Header("Value Converter")]
         [SerializeField] bool useConverter;
         [SerializeField, ShowIf(nameof(useConverter))] ValueConverterSOBase converter;
-        [SerializeField, ShowIf(nameof(useConverter))] string converterParameter; // string 으로 넘기고, 컨버터에서 해석
+        [SerializeField, ShowIf(nameof(useConverter))] string converterParameter;
 
-        IObservableProperty _property;
+        object _listenerToken;
+        IBindingContext _ctx;
 
         private void OnValidate()
         {
             tmpText ??= GetComponent<TMP_Text>();
         }
 
-        protected override void Subscribe()
+        protected override void OnContextAvailable(IBindingContext context, string path)
         {
-            _property = ResolveObservablePropertyBoxed();
-            if (_property == null || tmpText == null)
-                return;
+            if (tmpText == null)
+                tmpText = GetComponent<TMP_Text>();
 
-            _property.OnValueChangedBoxed += OnValueChanged;
-            OnValueChanged(_property.Value);
+            _ctx = context;
+
+            _listenerToken = context.RegisterListener(path, OnValueChanged);
         }
 
-        protected override void Unsubscribe()
+        protected override void OnContextUnavailable()
         {
-            if (_property != null)
+            if (_ctx != null && _listenerToken != null)
             {
-                _property.OnValueChangedBoxed -= OnValueChanged;
-                _property = null;
+                _ctx.RemoveListener(ResolvedPath, OnValueChanged, _listenerToken);
             }
+
+            _listenerToken = null;
+            _ctx = null;
         }
 
-        void OnValueChanged(object newValue)
+        void OnValueChanged(object rawValue)
         {
-            var culture = useInvariantCulture ? CultureInfo.InvariantCulture : CultureInfo.CurrentCulture;
-            string text;
+            var culture = useInvariantCulture
+                ? CultureInfo.InvariantCulture
+                : CultureInfo.CurrentCulture;
+
+            object value = rawValue;
 
             if (useConverter && converter != null)
             {
-                var display = converter.Convert(newValue, typeof(string), converterParameter, culture);
-                text = display?.ToString() ?? string.Empty;
+                value = converter.Convert(value, typeof(string), converterParameter, culture);
             }
-            else if (useFormat) { text = TextFormatHelper.Format(newValue, true, format, culture); }
-            else { text = TextFormatHelper.ConvertToString(newValue, culture); }
 
+            string text;
+
+            if (useFormat)
+            {
+                text = TextFormatHelper.Format(value, true, format, culture);
+            }
+            else
+            {
+                text = TextFormatHelper.ConvertToString(value, culture);
+            }
 
             tmpText.text = text;
-            
+
 #if UNITY_EDITOR
-            Debug_SetLastValue(text); 
+            Debug_SetLastValue(text);
 #endif
         }
     }

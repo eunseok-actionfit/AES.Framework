@@ -3,11 +3,9 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
-using AES.Tools;
 using AES.Tools.Commands;
 using UnityEditor;
 using UnityEngine;
-
 
 namespace AES.Tools.Editor
 {
@@ -23,9 +21,9 @@ namespace AES.Tools.Editor
         void OnEnable()
         {
             _memberPathModeProp = serializedObject.FindProperty("memberPathMode");
-            _memberPathProp = serializedObject.FindProperty("memberPath");
+            _memberPathProp     = serializedObject.FindProperty("memberPath");
 
-            _lookupModeProp = serializedObject.FindProperty("lookupMode");
+            _lookupModeProp  = serializedObject.FindProperty("lookupMode");
             _contextNameProp = serializedObject.FindProperty("contextName");
         }
 
@@ -72,7 +70,7 @@ namespace AES.Tools.Editor
             }
 
             // lookupMode가 ByName 계열일 때, 씬/부모에서 컨텍스트 목록 수집
-            var binding = (ContextBindingBase)target;
+            var binding  = (ContextBindingBase)target;
             DataContextBase[] contexts = Array.Empty<DataContextBase>();
 
             switch (mode)
@@ -87,7 +85,7 @@ namespace AES.Tools.Editor
                         FindObjectsInactive.Include,
                         FindObjectsSortMode.None);
 #else
-            contexts = UnityEngine.Object.FindObjectsOfType<DataContextBase>(true);
+                    contexts = UnityEngine.Object.FindObjectsOfType<DataContextBase>(true);
 #endif
                     break;
             }
@@ -98,9 +96,9 @@ namespace AES.Tools.Editor
             foreach (var ctx in contexts)
             {
                 if (ctx == null) continue;
-                var name = ctx.ContextName;
-                if (!string.IsNullOrEmpty(name) && !nameList.Contains(name))
-                    nameList.Add(name);
+                var contextName = ctx.ContextName;
+                if (!string.IsNullOrEmpty(contextName) && !nameList.Contains(contextName))
+                    nameList.Add(contextName);
             }
 
             // 1) 항상 수동 입력 가능한 텍스트 필드
@@ -110,7 +108,8 @@ namespace AES.Tools.Editor
             // 2) 선택 버튼 (후보가 없으면 비활성화)
             using (new EditorGUI.DisabledScope(nameList.Count == 0))
             {
-                if (GUILayout.Button("Select...", GUILayout.Width(70))) { ShowContextNameMenu(nameList); }
+                if (GUILayout.Button("Select...", GUILayout.Width(70)))
+                    ShowContextNameMenu(nameList);
             }
 
             EditorGUILayout.EndHorizontal();
@@ -134,12 +133,13 @@ namespace AES.Tools.Editor
 
             var menu = new GenericMenu();
 
-            foreach (var name in nameList)
+            foreach (var contextName in nameList)
             {
-                bool selected = _contextNameProp.stringValue == name;
+                bool selected = _contextNameProp.stringValue == contextName;
 
-                menu.AddItem(new GUIContent(name), selected, () => {
-                    _contextNameProp.stringValue = name;
+                menu.AddItem(new GUIContent(contextName), selected, () =>
+                {
+                    _contextNameProp.stringValue = contextName;
                     serializedObject.ApplyModifiedProperties();
                 });
             }
@@ -147,14 +147,13 @@ namespace AES.Tools.Editor
             menu.ShowAsContext();
         }
 
-
         void DrawMemberPathSection()
         {
             if (_memberPathModeProp == null || _memberPathProp == null)
                 return;
 
             var binding = (ContextBindingBase)target;
-            var ctx = ResolveContext(binding, out var mode, out var ctxNameForLookup);
+            var ctx     = ResolveContext(binding, out var mode, out var ctxNameForLookup);
 
             EditorGUILayout.LabelField("Member Path", EditorStyles.boldLabel);
             EditorGUI.indentLevel++;
@@ -180,7 +179,8 @@ namespace AES.Tools.Editor
 
                 using (new EditorGUI.DisabledScope(ctx == null))
                 {
-                    if (GUILayout.Button("Select...", GUILayout.Width(70))) { ShowPathMenu(binding, ctx); }
+                    if (GUILayout.Button("Select...", GUILayout.Width(70)))
+                        ShowPathMenu(ctx);
                 }
 
                 EditorGUILayout.EndHorizontal();
@@ -212,24 +212,22 @@ namespace AES.Tools.Editor
             }
         }
 
-        void ShowPathMenu(ContextBindingBase binding, DataContextBase ctx)
+        void ShowPathMenu(DataContextBase ctx)
         {
             if (ctx == null)
             {
                 EditorUtility.DisplayDialog("DataContext 없음",
                     "lookupMode 설정에 따라 DataContextBase 를 찾지 못했습니다.", "확인");
-
                 return;
             }
 
-            var vmType = ctx.GetViewModelType();
+            var vmType     = ctx.GetViewModelType();
             var vmInstance = ctx.GetDesignTimeViewModel();
 
             if (vmType == null)
             {
                 EditorUtility.DisplayDialog("ViewModel 타입 없음",
                     "Design-time ViewModel 이나 런타임 ViewModel 타입을 알 수 없습니다.", "확인");
-
                 return;
             }
 
@@ -239,8 +237,7 @@ namespace AES.Tools.Editor
             if (candidates.Count == 0)
             {
                 EditorUtility.DisplayDialog("경로 없음",
-                    "IObservableProperty / IObservableList / ICommand 타입 멤버를 찾지 못했습니다.", "확인");
-
+                    "IObservableProperty / IObservableList / ICommand / [Bindable] 멤버를 찾지 못했습니다.", "확인");
                 return;
             }
 
@@ -248,10 +245,11 @@ namespace AES.Tools.Editor
 
             foreach (var c in candidates)
             {
-                string label = c.DisplayLabel; // ex) "Health (ObservableProperty<int>)" 또는 "Stats/HP"
-                bool selected = _memberPathProp.stringValue == c.Path;
+                string label   = c.DisplayLabel; // ex) "Health (ObservableProperty<int>)" 또는 "Stats/HP"
+                bool selected  = _memberPathProp.stringValue == c.Path;
 
-                menu.AddItem(new GUIContent(label), selected, () => {
+                menu.AddItem(new GUIContent(label), selected, () =>
+                {
                     _memberPathProp.stringValue = c.Path;
                     serializedObject.ApplyModifiedProperties();
                 });
@@ -262,7 +260,7 @@ namespace AES.Tools.Editor
 
         class PathCandidate
         {
-            public string Path; // 실제 memberPath 문자열
+            public string Path;         // 실제 memberPath 문자열
             public string DisplayLabel; // 메뉴에 보여줄 라벨
         }
 
@@ -275,7 +273,7 @@ namespace AES.Tools.Editor
             out ContextLookupMode mode,
             out string ctxNameForLookup)
         {
-            mode = ContextLookupMode.Nearest;
+            mode            = ContextLookupMode.Nearest;
             ctxNameForLookup = null;
 
             if (_lookupModeProp != null)
@@ -338,7 +336,7 @@ namespace AES.Tools.Editor
         }
 
         // ==============
-        // Path 후보 빌드 (기존 코드)
+        // Path 후보 빌드
         // ==============
 
         void BuildCandidates(Type type, object instance, string basePath, int depth, List<PathCandidate> acc)
@@ -354,14 +352,12 @@ namespace AES.Tools.Editor
                 if (p.GetIndexParameters().Length > 0)
                     continue;
 
-                ProcessMember(p, p.PropertyType, mInstGetter: obj => SafeGet(() => p.GetValue(obj)),
-                    type, instance, basePath, depth, acc);
+                ProcessMember(p, p.PropertyType, obj => SafeGet(() => p.GetValue(obj)), instance, basePath, depth, acc);
             }
 
             foreach (var f in type.GetFields(flags))
             {
-                ProcessMember(f, f.FieldType, mInstGetter: obj => SafeGet(() => f.GetValue(obj)),
-                    type, instance, basePath, depth, acc);
+                ProcessMember(f, f.FieldType, obj => SafeGet(() => f.GetValue(obj)), instance, basePath, depth, acc);
             }
         }
 
@@ -369,28 +365,31 @@ namespace AES.Tools.Editor
             MemberInfo m,
             Type memberType,
             Func<object, object> mInstGetter,
-            Type ownerType,
             object ownerInstance,
             string basePath,
             int depth,
             List<PathCandidate> acc)
         {
-            string name = m.Name;
-            string currentPath = string.IsNullOrEmpty(basePath) ? name : $"{basePath}.{name}";
+            string memberName        = m.Name;
+            string currentPath = string.IsNullOrEmpty(basePath) ? memberName : $"{basePath}.{memberName}";
 
-            bool isObsProp = typeof(IObservableProperty).IsAssignableFrom(memberType);
-            bool isObsList = typeof(IObservableList).IsAssignableFrom(memberType);
-            bool isCommand = typeof(ICommand).IsAssignableFrom(memberType);
+            bool isObsProp  = typeof(IObservableProperty).IsAssignableFrom(memberType);
+            bool isObsList  = typeof(IObservableList).IsAssignableFrom(memberType);
+            bool isCommand  = typeof(ICommand).IsAssignableFrom(memberType);
             bool isAsyncCmd = typeof(IAsyncCommand).IsAssignableFrom(memberType);
 
-            // 1) 바인딩 가능한 타입이면 바로 후보로 추가
-            if (isObsProp || isObsList || isCommand || isAsyncCmd)
+            bool hasBindingAttr =
+                m.IsDefined(typeof(BindableAttribute), inherit: true);
+
+            // 1) 바인딩 가능한 타입이거나 [Bindable] 이면 후보로 추가
+            if (isObsProp || isObsList || isCommand || isAsyncCmd || hasBindingAttr)
             {
-                string typeName = memberType.Name;
-                string label = BuildDisplayLabel(currentPath, typeName, basePath);
+                string typeName = GetFriendlyTypeName(memberType);
+                string label    = BuildDisplayLabel(currentPath, typeName, basePath);
+
                 acc.Add(new PathCandidate
                 {
-                    Path = currentPath,
+                    Path         = currentPath,
                     DisplayLabel = label
                 });
             }
@@ -402,7 +401,7 @@ namespace AES.Tools.Editor
                 if (ownerInstance != null)
                 {
                     var ownerVal = ownerInstance;
-                    var dictObj = mInstGetter(ownerVal) as IDictionary;
+                    var dictObj  = mInstGetter(ownerVal) as IDictionary;
 
                     if (dictObj != null)
                     {
@@ -411,10 +410,11 @@ namespace AES.Tools.Editor
                             if (entry.Key is string keyStr)
                             {
                                 string dictPath = $"{currentPath}[\"{keyStr}\"]";
-                                string label = $"{currentPath}/\"{keyStr}\"";
+                                string label    = $"{currentPath}/\"{keyStr}\"";
+
                                 acc.Add(new PathCandidate
                                 {
-                                    Path = dictPath,
+                                    Path         = dictPath,
                                     DisplayLabel = label
                                 });
                             }
@@ -468,6 +468,30 @@ namespace AES.Tools.Editor
             // fullPath: "Stats.HP" → 메뉴 라벨을 "Stats/HP (ObservableProperty<int>)" 형태로
             string pathForMenu = fullPath.Replace('.', '/');
             return $"{pathForMenu} ({typeName})";
+        }
+        
+        string GetFriendlyTypeName(Type t)
+        {
+            if (t == null)
+                return "null";
+
+            // 제네릭이 아니면 그냥 Name
+            if (!t.IsGenericType)
+                return t.Name;
+
+            // "ObservableProperty`1" → "ObservableProperty"
+            string genericName = t.Name;
+            int backtickIndex = genericName.IndexOf('`');
+            if (backtickIndex >= 0)
+                genericName = genericName.Substring(0, backtickIndex);
+
+            var args = t.GetGenericArguments();
+            var argNames = new string[args.Length];
+
+            for (int i = 0; i < args.Length; i++)
+                argNames[i] = GetFriendlyTypeName(args[i]);
+
+            return $"{genericName}<{string.Join(", ", argNames)}>";
         }
     }
 }

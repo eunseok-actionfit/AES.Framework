@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 namespace AES.Tools
@@ -8,24 +9,43 @@ namespace AES.Tools
         [SerializeField] bool activeWhenError = true;
 
         IValidatableProperty _validatable;
-        
 
-        protected override void Subscribe()
+        protected override void OnContextAvailable(IBindingContext context, string path)
         {
-            var prop = ResolveObservablePropertyBoxed();
-            if (prop is IValidatableProperty validatable)
+            if (target == null)
+                return;
+
+            var ctx = CurrentContext;
+            var vm = ctx?.ViewModel;
+            if (vm == null)
             {
-                _validatable = validatable;
-                _validatable.OnValidationChanged += OnValidationChanged;
-                UpdateState();
+                LogBindingError("ValidationStateBinding: ViewModel 을 찾지 못했습니다.");
+                return;
             }
-            else
+
+            try
             {
-                LogBindingError($"멤버 '{memberPath}' 는 IValidatableProperty 를 구현하지 않습니다.");
+                var mp = MemberPathCache.Get(vm.GetType(), path);
+                var value = mp.GetValue(vm);
+
+                if (value is IValidatableProperty validatable)
+                {
+                    _validatable = validatable;
+                    _validatable.OnValidationChanged += OnValidationChanged;
+                    UpdateState();
+                }
+                else
+                {
+                    LogBindingError($"멤버 '{path}' 는 IValidatableProperty 를 구현하지 않습니다.");
+                }
+            }
+            catch (Exception e)
+            {
+                LogBindingException($"ValidationStateBinding: Path '{path}' 해석 중 오류", e);
             }
         }
 
-        protected override void Unsubscribe()
+        protected override void OnContextUnavailable()
         {
             if (_validatable != null)
             {

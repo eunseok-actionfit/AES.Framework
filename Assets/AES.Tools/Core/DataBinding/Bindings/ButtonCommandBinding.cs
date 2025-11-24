@@ -1,9 +1,9 @@
 using System;
 using System.Globalization;
+using AES.Tools;
 using AES.Tools.Commands;
 using UnityEngine;
 using UnityEngine.UI;
-
 
 namespace AES.Tools.Bindings
 {
@@ -17,28 +17,31 @@ namespace AES.Tools.Bindings
     public class ButtonCommandBinding : ContextBindingBase
     {
         [Header("Target")]
-        [SerializeField] private Button button;
+        [SerializeField] Button button;
 
         [Header("Parameter (optional)")]
-        [SerializeField] private bool useParameter;
-        [SerializeField, ShowIf(nameof(useParameter))] private ParameterType parameterType = ParameterType.None;
-        [SerializeField, ShowIf(nameof(useParameter))] private string stringParameter;
+        [SerializeField] bool useParameter;
+        [SerializeField, ShowIf(nameof(useParameter))] ParameterType parameterType = ParameterType.None;
+        [SerializeField, ShowIf(nameof(useParameter))] string stringParameter;
 
         [Header("Behaviour")]
-        [SerializeField] private bool updateInteractableOnEnable = true;
-        [SerializeField] private bool disableWhileRunning = true;
+        [SerializeField] bool updateInteractableOnEnable = true;
+        [SerializeField] bool disableWhileRunning = true;
 
-        private ICommand _command;
+        ICommand _command;
+        IBindingContext _ctx;
+
+        bool _isRunning;
 
 #if UNITY_EDITOR
-        private void Reset()
+        void Reset()
         {
             if (button == null)
                 button = GetComponent<Button>();
         }
 #endif
 
-        protected override void Subscribe()
+        protected override void OnContextAvailable(IBindingContext context, string path)
         {
             if (button == null)
             {
@@ -46,25 +49,28 @@ namespace AES.Tools.Bindings
                 return;
             }
 
-            if (Context == null || Path == null || Context.ViewModel == null)
-                return;
+            _ctx = context;
 
             object value;
-
-            try { value = Path.GetValue(Context.ViewModel); }
+            try
+            {
+                value = context.GetValue(path);
+            }
             catch (Exception e)
             {
-                Debug.LogError($"ButtonCommandBinding: Path '{memberPath}' 조회 실패: {e.Message}", this);
+                Debug.LogError($"ButtonCommandBinding: Path '{path}' 조회 실패: {e.Message}", this);
                 return;
             }
 
-            if (value is ICommand cmd) { BindCommand(cmd); }
+            if (value is ICommand cmd)
+            {
+                BindCommand(cmd);
+            }
             else
             {
                 Debug.LogError(
-                    $"ButtonCommandBinding: Path '{memberPath}' 는 ICommand 타입이 아닙니다 ({value?.GetType().Name}).",
+                    $"ButtonCommandBinding: Path '{path}' 는 ICommand 타입이 아닙니다 ({value?.GetType().Name}).",
                     this);
-
                 return;
             }
 
@@ -74,22 +80,22 @@ namespace AES.Tools.Bindings
                 UpdateInteractable();
         }
 
-        protected override void Unsubscribe()
+        protected override void OnContextUnavailable()
         {
             if (button != null)
                 button.onClick.RemoveListener(OnClick);
 
             _command = null;
+            _ctx = null;
         }
 
-        private void BindCommand(ICommand cmd)
+        void BindCommand(ICommand cmd)
         {
             _command = cmd;
-
             UpdateInteractable();
         }
 
-        private void UpdateInteractable()
+        void UpdateInteractable()
         {
             if (button == null || _command == null)
                 return;
@@ -103,12 +109,10 @@ namespace AES.Tools.Bindings
                 button.interactable = canExecute;
         }
 
-        private bool _isRunning;
-
-        private async void OnClick()
+        async void OnClick()
         {
-            if (_isRunning)
-                return; // 연속 탭 방지
+            if (_isRunning || _command == null)
+                return;
 
             var param = GetParameterObject();
             if (!_command.CanExecute(param))
@@ -131,7 +135,7 @@ namespace AES.Tools.Bindings
             }
         }
 
-        private object GetParameterObject()
+        object GetParameterObject()
         {
             if (!useParameter)
                 return null;
@@ -149,26 +153,22 @@ namespace AES.Tools.Bindings
                     case ParameterType.Int:
                         if (int.TryParse(stringParameter, NumberStyles.Integer, CultureInfo.InvariantCulture, out var i))
                             return i;
-
                         Debug.LogWarning($"ButtonCommandBinding: int 변환 실패 '{stringParameter}'", this);
                         return null;
 
                     case ParameterType.Float:
-                        if (float.TryParse(stringParameter, NumberStyles.Float | NumberStyles.AllowThousands,
-                            CultureInfo.InvariantCulture, out var f))
+                        if (float.TryParse(stringParameter,
+                                NumberStyles.Float | NumberStyles.AllowThousands,
+                                CultureInfo.InvariantCulture, out var f))
                             return f;
-
                         Debug.LogWarning($"ButtonCommandBinding: float 변환 실패 '{stringParameter}'", this);
                         return null;
 
                     case ParameterType.Bool:
-                        // true/false, 0/1 둘 다 지원
                         if (bool.TryParse(stringParameter, out var b))
                             return b;
-
                         if (stringParameter == "0") return false;
                         if (stringParameter == "1") return true;
-
                         Debug.LogWarning($"ButtonCommandBinding: bool 변환 실패 '{stringParameter}'", this);
                         return null;
 
@@ -184,10 +184,11 @@ namespace AES.Tools.Bindings
             }
         }
 
-        private void Update()
+        void Update()
         {
-            if (button == null || _command == null || !updateInteractableOnEnable) return;
-            
+            if (button == null || _command == null || !updateInteractableOnEnable)
+                return;
+
             UpdateInteractable();
         }
     }

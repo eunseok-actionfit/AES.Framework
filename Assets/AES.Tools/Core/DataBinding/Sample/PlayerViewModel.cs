@@ -12,6 +12,9 @@ namespace AES.Tools.Sample
         public ObservableProperty<float> Hp { get; }
         public ObservableProperty<bool> IsAlive { get; }
 
+        [Bindable]
+        public string TestString = "HIHI123";
+
         public Command LevelUpCommand { get; }
         public Command<float> DamageCommand { get; }
         public AsyncCommand<string> AsyncEchoCommand { get; }

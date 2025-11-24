@@ -13,35 +13,44 @@ public class ToggleBinding : ContextBindingBase
     [SerializeField] ValueConverterSOBase converter;
     [SerializeField] string converterParameter;
 
-    IObservableProperty _property; // 원래 타입 유지
-    
-    private void OnValidate()
+    IBindingContext _ctx;
+    object _listenerToken;
+    bool _isUpdatingFromUI;
+
+    void OnValidate()
     {
         toggle ??= GetComponent<Toggle>();
     }
 
-    protected override void Subscribe()
+    protected override void OnContextAvailable(IBindingContext context, string path)
     {
-        _property = ResolveObservablePropertyBoxed();
-        if (_property == null || toggle == null)
+        if (toggle == null)
+            toggle = GetComponent<Toggle>();
+
+        if (toggle == null)
+        {
+            LogBindingError("ToggleBinding: Toggle 이 설정되지 않았습니다.");
             return;
+        }
 
-        _property.OnValueChangedBoxed += OnSourceValueChanged;
+        _ctx = context;
+
+        _listenerToken = context.RegisterListener(path, OnSourceValueChanged);
         toggle.onValueChanged.AddListener(OnToggleValueChanged);
-
-        OnSourceValueChanged(_property.Value);
     }
 
-    protected override void Unsubscribe()
+    protected override void OnContextUnavailable()
     {
-        if (_property != null)
+        if (_ctx != null && _listenerToken != null)
         {
-            _property.OnValueChangedBoxed -= OnSourceValueChanged;
-            _property = null;
+            _ctx.RemoveListener(ResolvedPath, OnSourceValueChanged, _listenerToken);
         }
 
         if (toggle != null)
             toggle.onValueChanged.RemoveListener(OnToggleValueChanged);
+
+        _ctx = null;
+        _listenerToken = null;
     }
 
     void OnSourceValueChanged(object value)
@@ -55,26 +64,26 @@ public class ToggleBinding : ContextBindingBase
         }
         else
         {
-            // 기본: 단순 bool 캐스팅
             isOn = value is bool b && b;
         }
 
+        _isUpdatingFromUI = true;
         toggle.isOn = isOn;
+        _isUpdatingFromUI = false;
     }
 
     void OnToggleValueChanged(bool isOn)
     {
-        if (_property == null)
+        if (_ctx == null || _isUpdatingFromUI)
             return;
 
         object newValue = isOn;
 
         if (useConverter && converter != null)
         {
-            // 양방향 지원하는 컨버터라면 ConvertBack 사용
             try
             {
-                newValue = converter.ConvertBack(isOn, _property.ValueType, converterParameter, null);
+                newValue = converter.ConvertBack(isOn, null, converterParameter, null);
             }
             catch (NotSupportedException)
             {
@@ -82,6 +91,6 @@ public class ToggleBinding : ContextBindingBase
             }
         }
 
-        _property.SetBoxedValue(newValue);
+        _ctx.SetValue(ResolvedPath, newValue);
     }
 }

@@ -1,47 +1,45 @@
 using System.Collections.Generic;
+using AES.Tools;
 using UnityEngine;
 using UnityEngine.UI;
 
-
 namespace AES.Tools.Bindings
 {
-
     [RequireComponent(typeof(ScrollRect))]
     public class VirtualizedListBinding : ContextBindingBase
     {
         [Header("Core")]
-        [SerializeField] private RectTransform content;
-        [SerializeField] private GameObject itemPrefab;
-        
-        
+        [SerializeField] RectTransform content;
+        [SerializeField] GameObject itemPrefab;
+
         [Tooltip("뷰포트에 필요한 수 + 여유 버퍼")]
-        [SerializeField] private int extraBuffer = 2;
-        
-        private float itemHeight = 0f;
+        [SerializeField] int extraBuffer = 2;
+
+        float itemHeight = 0f;
 
         [Header("Selection")]
-        [Tooltip("선택된 인덱스를 보관하는 IObservableProperty<int> 경로 (예: SelectedIndex)")]
-        [SerializeField] private string selectedIndexPath;
+        [Tooltip("선택된 인덱스를 보관하는 경로 (예: SelectedIndex)")]
+        [SerializeField] string selectedIndexPath;
 
         [Tooltip("SelectedIndex 변경 시 해당 인덱스로 자동 스크롤할지 여부")]
-        [SerializeField] private bool autoScrollToSelectedIndex = true;
+        [SerializeField] bool autoScrollToSelectedIndex = true;
 
-        private IObservableList _list;
-        private ScrollRect _scrollRect;
+        IObservableList _list;
+        ScrollRect _scrollRect;
 
-        // Pool / Spacer
-        private readonly List<RectTransform> _pool = new();
-        private int _poolSize;
-        private LayoutElement _topSpacer;
-        private LayoutElement _bottomSpacer;
+        readonly List<RectTransform> _pool = new();
+        int _poolSize;
+        LayoutElement _topSpacer;
+        LayoutElement _bottomSpacer;
 
-        private int _currentStartIndex;
+        int _currentStartIndex;
 
-        // Selection
-        private IObservableProperty _selectedIndexProp;
-        private int _selectedIndex = -1;
-        
-        
+        int _selectedIndex = -1;
+
+        IBindingContext _ctx;
+        object _listListenerToken;
+        object _selectedIndexListenerToken;
+
         void OnValidate()
         {
             _scrollRect ??= GetComponent<ScrollRect>();
@@ -49,7 +47,7 @@ namespace AES.Tools.Bindings
                 content = _scrollRect.content;
         }
 
-        protected override void Subscribe()
+        protected override void OnContextAvailable(IBindingContext context, string path)
         {
             if (itemPrefab == null)
             {
@@ -57,44 +55,55 @@ namespace AES.Tools.Bindings
                 return;
             }
 
+            _ctx = context;
+
+            _scrollRect ??= GetComponent<ScrollRect>();
+            if (_scrollRect == null)
+            {
+                Debug.LogError("[VirtualizedListBinding] ScrollRect 가 필요합니다.", this);
+                return;
+            }
+
+            if (content == null)
+                content = _scrollRect.content;
+
             InitItemHeightFromPrefab();
             EnsureSpacers();
 
-            _list = ResolveObservableList();
-            if (_list == null)
-                return;
-
-            _list.OnListChanged += OnListChanged;
+            _listListenerToken = context.RegisterListener(path, OnListValueChanged);
             _scrollRect.onValueChanged.AddListener(OnScrollChanged);
 
             ResolveSelectedIndexBinding();
-            RebuildPoolAndRefresh();
         }
 
-        protected override void Unsubscribe()
+        protected override void OnContextUnavailable()
         {
-            if (_list != null)
-                _list.OnListChanged -= OnListChanged;
+            if (_ctx != null && _listListenerToken != null)
+            {
+                _ctx.RemoveListener(ResolvedPath, OnListValueChanged, _listListenerToken);
+            }
+
+            if (_ctx != null && !string.IsNullOrEmpty(selectedIndexPath) && _selectedIndexListenerToken != null)
+            {
+                _ctx.RemoveListener(selectedIndexPath, OnSelectedIndexChanged, _selectedIndexListenerToken);
+            }
 
             if (_scrollRect != null)
                 _scrollRect.onValueChanged.RemoveListener(OnScrollChanged);
 
-            if (_selectedIndexProp != null)
-            {
-                _selectedIndexProp.OnValueChangedBoxed -= OnSelectedIndexChanged;
-                _selectedIndexProp = null;
-            }
-
             ClearPool();
+            _list = null;
+            _ctx = null;
+            _listListenerToken = null;
+            _selectedIndexListenerToken = null;
         }
 
         // ============
         // INIT
         // ============
 
-        private void InitItemHeightFromPrefab()
+        void InitItemHeightFromPrefab()
         {
-            // 임시 오브젝트 생성 → 레이아웃 강제 계산 → 높이 추출
             var temp = Instantiate(itemPrefab, content);
             var rt = temp.GetComponent<RectTransform>();
 
@@ -102,12 +111,12 @@ namespace AES.Tools.Bindings
 
             itemHeight = rt.rect.height;
             if (itemHeight <= 0.01f)
-                itemHeight = 40f; // 비상용
+                itemHeight = 40f;
 
             Destroy(temp);
         }
 
-        private void EnsureSpacers()
+        void EnsureSpacers()
         {
             if (_topSpacer == null)
             {
@@ -130,27 +139,16 @@ namespace AES.Tools.Bindings
         // SELECTION
         // ============
 
-        private void ResolveSelectedIndexBinding()
+        void ResolveSelectedIndexBinding()
         {
-            if (string.IsNullOrEmpty(selectedIndexPath))
+            if (string.IsNullOrEmpty(selectedIndexPath) || _ctx == null)
                 return;
 
-            var ctx = Context;
-            if (ctx == null || ctx.ViewModel == null)
-                return;
-
-            var path = MemberPathCache.Get(ctx.ViewModel.GetType(), selectedIndexPath);
-            var value = path.GetValue(ctx.ViewModel);
-
-            if (value is IObservableProperty prop)
-            {
-                _selectedIndexProp = prop;
-                _selectedIndexProp.OnValueChangedBoxed += OnSelectedIndexChanged;
-                _selectedIndex = ConvertToInt(_selectedIndexProp.Value);
-            }
+            _selectedIndexListenerToken =
+                _ctx.RegisterListener(selectedIndexPath, OnSelectedIndexChanged);
         }
 
-        private void OnSelectedIndexChanged(object val)
+        void OnSelectedIndexChanged(object val)
         {
             _selectedIndex = ConvertToInt(val);
 
@@ -160,7 +158,7 @@ namespace AES.Tools.Bindings
             RefreshSelectionStates();
         }
 
-        private int ConvertToInt(object v)
+        int ConvertToInt(object v)
         {
             if (v is int i) return i;
             if (v == null) return -1;
@@ -172,12 +170,20 @@ namespace AES.Tools.Bindings
         // LIST CHANGES
         // ============
 
-        private void OnListChanged()
+        void OnListValueChanged(object value)
         {
+            _list = value as IObservableList;
+
+            if (_list == null)
+            {
+                ClearPool();
+                return;
+            }
+
             RebuildPoolAndRefresh();
         }
 
-        private void OnScrollChanged(Vector2 _)
+        void OnScrollChanged(Vector2 _)
         {
             UpdateVisibleItems(false);
         }
@@ -186,7 +192,7 @@ namespace AES.Tools.Bindings
         // POOL
         // ============
 
-        private void RebuildPoolAndRefresh()
+        void RebuildPoolAndRefresh()
         {
             ClearPool();
             if (_list == null)
@@ -199,32 +205,29 @@ namespace AES.Tools.Bindings
             _poolSize = Mathf.CeilToInt(viewportHeight / itemHeight) + extraBuffer;
             _poolSize = Mathf.Max(1, _poolSize);
 
-            // create pool between top/bottom spacer
             int insertIndex = _topSpacer.transform.GetSiblingIndex() + 1;
             for (int i = 0; i < _poolSize; i++)
             {
-                var go = Instantiate(itemPrefab, content);
+                var go = Object.Instantiate(itemPrefab, content);
                 go.transform.SetSiblingIndex(insertIndex + i);
 
                 var rt = go.GetComponent<RectTransform>();
                 _pool.Add(rt);
             }
 
-            // bottom spacer at last
             _bottomSpacer.transform.SetAsLastSibling();
 
             _currentStartIndex = 0;
             UpdateVisibleItems(true);
         }
 
-        private void ClearPool()
+        void ClearPool()
         {
             foreach (var rt in _pool)
             {
                 if (rt != null)
-                    Destroy(rt.gameObject);
+                    Object.Destroy(rt.gameObject);
             }
-
             _pool.Clear();
         }
 
@@ -263,7 +266,7 @@ namespace AES.Tools.Bindings
             UpdateVisibleItems(true);
         }
 
-        private void UpdateVisibleItems(bool force)
+        void UpdateVisibleItems(bool force)
         {
             if (_list == null)
                 return;
@@ -312,7 +315,7 @@ namespace AES.Tools.Bindings
             }
         }
 
-        private void RefreshSelectionStates()
+        void RefreshSelectionStates()
         {
             if (_list == null)
                 return;
