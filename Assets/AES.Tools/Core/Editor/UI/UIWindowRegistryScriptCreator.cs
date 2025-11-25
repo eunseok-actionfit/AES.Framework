@@ -82,7 +82,7 @@ namespace AES.Tools.Editor
             sb.AppendLine("using UnityEngine;");
             sb.AppendLine();
             sb.AppendLine($"[CreateAssetMenu(menuName = \"UI/Registry/{enumName}\")]");
-            sb.AppendLine($"public sealed class {registryName} : UIWindowRegistryBase<{enumName}>");
+            sb.AppendLine($"public sealed class {registryName} : UIRegistryBase<{enumName}>");
             sb.AppendLine("{");
             sb.AppendLine("    // customize if needed");
             sb.AppendLine("}");

@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using UnityEngine;
 
 namespace AES.Tools
@@ -16,6 +17,7 @@ namespace AES.Tools
     }
     
     [AttributeUsage(AttributeTargets.Field, AllowMultiple = true)]
+    [Conditional("UNITY_EDITOR")]
     public class ShowIfAttribute : PropertyAttribute
     {
         public string ConditionFieldName { get; }

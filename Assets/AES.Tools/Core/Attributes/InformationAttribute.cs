@@ -1,9 +1,11 @@
+using System.Diagnostics;
 using UnityEditor;
 using UnityEngine;
 
 
 namespace AES.Tools
 {
+    [Conditional("UNITY_EDITOR")]
     public class InformationAttribute : PropertyAttribute
     {
         public enum InformationType

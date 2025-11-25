@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.EventSystems;
 
 
@@ -10,11 +11,11 @@ namespace AES.Tools
     [RequireComponent(typeof(RectTransform))]
     public sealed class UIClickCatcher : MonoBehaviour, IPointerClickHandler
     {
-        public System.Action OnClicked;
+        public UnityEvent OnClickedEvent;
 
         public void OnPointerClick(PointerEventData eventData)
         {
-            OnClicked?.Invoke();
+            OnClickedEvent?.Invoke();
         }
     }
 }
