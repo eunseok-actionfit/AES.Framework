@@ -40,7 +40,7 @@ namespace AES.Tools.VContainer
 
             var go = await _assets.LoadAsync<GameObject>(overlayAddressKey);
             Object.Instantiate(go);
-            UnityEngine.Object.DontDestroyOnLoad(go);
+            Object.DontDestroyOnLoad(go);
 
             Exception caught = null;
             try

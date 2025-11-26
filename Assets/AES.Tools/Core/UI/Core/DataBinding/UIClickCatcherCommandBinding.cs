@@ -3,50 +3,44 @@ using System.Globalization;
 using AES.Tools;
 using AES.Tools.Commands;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace AES.Tools.Bindings
 {
-    public enum ParameterType
-    {
-        None, String, Int,
-        Float, Bool
-    }
-
-    [RequireComponent(typeof(Button))]
-    public class ButtonCommandBinding : ContextBindingBase
+    [RequireComponent(typeof(UIClickCatcher))]
+    public sealed class UIClickCatcherCommandBinding : ContextBindingBase
     {
         [Header("Target")]
-        [SerializeField] Button button;
+        [SerializeField] UIClickCatcher catcher;
 
         [Header("Parameter (optional)")]
         [SerializeField] bool useParameter;
         [SerializeField, ShowIf(nameof(useParameter))] ParameterType parameterType = ParameterType.None;
         [SerializeField, ShowIf(nameof(useParameter))] string stringParameter;
-
-        [Header("Behaviour")]
-        [SerializeField] bool updateInteractableOnEnable = true;
-        [SerializeField] bool disableWhileRunning = true;
+        [SerializeField] bool useInvariantCulture = true;
 
         ICommand _command;
-
+        IBindingContext _ctx;
         bool _isRunning;
 
 #if UNITY_EDITOR
         void Reset()
         {
-            if (button == null)
-                button = GetComponent<Button>();
+            catcher = GetComponent<UIClickCatcher>();
         }
 #endif
 
         protected override void OnContextAvailable(IBindingContext context, string path)
         {
-            if (button == null)
+            if (catcher == null)
+                catcher = GetComponent<UIClickCatcher>();
+
+            if (catcher == null)
             {
-                Debug.LogError("ButtonCommandBinding: Button 이 설정되지 않았습니다.", this);
+                LogBindingError("UIClickCatcherCommandBinding: UIClickCatcher 가 설정되지 않았습니다.");
                 return;
             }
+
+            _ctx = context;
 
             object value;
             try
@@ -55,57 +49,35 @@ namespace AES.Tools.Bindings
             }
             catch (Exception e)
             {
-                Debug.LogError($"ButtonCommandBinding: Path '{path}' 조회 실패: {e.Message}", this);
+                Debug.LogError($"UIClickCatcherCommandBinding: Path '{path}' 조회 실패: {e.Message}", this);
                 return;
             }
 
             if (value is ICommand cmd)
             {
-                BindCommand(cmd);
+                _command = cmd;
             }
             else
             {
                 Debug.LogError(
-                    $"ButtonCommandBinding: Path '{path}' 는 ICommand 타입이 아닙니다 ({value?.GetType().Name}).",
+                    $"UIClickCatcherCommandBinding: Path '{path}' 는 ICommand 타입이 아닙니다 ({value?.GetType().Name}).",
                     this);
                 return;
             }
 
-            button.onClick.AddListener(OnClick);
-
-            if (updateInteractableOnEnable)
-                UpdateInteractable();
+            catcher.OnClickedEvent.AddListener(OnClicked);
         }
 
         protected override void OnContextUnavailable()
         {
-            if (button != null)
-                button.onClick.RemoveListener(OnClick);
+            if (catcher != null)
+                catcher.OnClickedEvent.RemoveListener(OnClicked);
 
             _command = null;
+            _ctx = null;
         }
 
-        void BindCommand(ICommand cmd)
-        {
-            _command = cmd;
-            UpdateInteractable();
-        }
-
-        void UpdateInteractable()
-        {
-            if (button == null || _command == null)
-                return;
-
-            var param = GetParameterObject();
-            var canExecute = _command.CanExecute(param);
-
-            if (disableWhileRunning)
-                button.interactable = canExecute && !_isRunning;
-            else
-                button.interactable = canExecute;
-        }
-
-        async void OnClick()
+        async void OnClicked()
         {
             if (_isRunning || _command == null)
                 return;
@@ -115,7 +87,6 @@ namespace AES.Tools.Bindings
                 return;
 
             _isRunning = true;
-            UpdateInteractable();
 
             try
             {
@@ -127,7 +98,6 @@ namespace AES.Tools.Bindings
             finally
             {
                 _isRunning = false;
-                UpdateInteractable();
             }
         }
 
@@ -139,6 +109,10 @@ namespace AES.Tools.Bindings
             if (string.IsNullOrEmpty(stringParameter))
                 return null;
 
+            var culture = useInvariantCulture
+                ? CultureInfo.InvariantCulture
+                : CultureInfo.CurrentCulture;
+
             try
             {
                 switch (parameterType)
@@ -147,17 +121,17 @@ namespace AES.Tools.Bindings
                         return stringParameter;
 
                     case ParameterType.Int:
-                        if (int.TryParse(stringParameter, NumberStyles.Integer, CultureInfo.InvariantCulture, out var i))
+                        if (int.TryParse(stringParameter, NumberStyles.Integer, culture, out var i))
                             return i;
-                        Debug.LogWarning($"ButtonCommandBinding: int 변환 실패 '{stringParameter}'", this);
+                        Debug.LogWarning($"UIClickCatcherCommandBinding: int 변환 실패 '{stringParameter}'", this);
                         return null;
 
                     case ParameterType.Float:
                         if (float.TryParse(stringParameter,
                                 NumberStyles.Float | NumberStyles.AllowThousands,
-                                CultureInfo.InvariantCulture, out var f))
+                                culture, out var f))
                             return f;
-                        Debug.LogWarning($"ButtonCommandBinding: float 변환 실패 '{stringParameter}'", this);
+                        Debug.LogWarning($"UIClickCatcherCommandBinding: float 변환 실패 '{stringParameter}'", this);
                         return null;
 
                     case ParameterType.Bool:
@@ -165,7 +139,7 @@ namespace AES.Tools.Bindings
                             return b;
                         if (stringParameter == "0") return false;
                         if (stringParameter == "1") return true;
-                        Debug.LogWarning($"ButtonCommandBinding: bool 변환 실패 '{stringParameter}'", this);
+                        Debug.LogWarning($"UIClickCatcherCommandBinding: bool 변환 실패 '{stringParameter}'", this);
                         return null;
 
                     case ParameterType.None:
@@ -175,17 +149,9 @@ namespace AES.Tools.Bindings
             }
             catch (Exception e)
             {
-                Debug.LogWarning($"ButtonCommandBinding: 파라미터 변환 실패 '{stringParameter}': {e.Message}", this);
+                Debug.LogWarning($"UIClickCatcherCommandBinding: 파라미터 변환 실패 '{stringParameter}': {e.Message}", this);
                 return null;
             }
-        }
-
-        void Update()
-        {
-            if (button == null || _command == null || !updateInteractableOnEnable)
-                return;
-
-            UpdateInteractable();
         }
     }
 }

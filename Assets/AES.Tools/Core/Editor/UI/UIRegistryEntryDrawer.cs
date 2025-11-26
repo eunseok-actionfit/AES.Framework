@@ -12,11 +12,11 @@ namespace Systems.UI.Registry.Editor
     public sealed class UIRegistryEntryDrawer : PropertyDrawer
     {
         static readonly GUIContent GC_Source = new("Source");
-        static readonly GUIContent GC_Placement = new("Placement");
-        static readonly GUIContent GC_Lifetime = new("Lifetime");
+        //static readonly GUIContent GC_Placement = new("Placement");
+        //static readonly GUIContent GC_Lifetime = new("Lifetime");
         static readonly GUIContent GC_Optimization = new("Optimization");
 
-        static readonly string[] Tabs = { "Source", "Placement", "Lifetime", "Optimization" };
+        static readonly string[] Tabs = { "Source",/*"Placement", "Lifetime",*/ "Optimization" };
         static readonly Dictionary<string, int> _tabState = new();
         static readonly Dictionary<string, bool> _expandState = new();
 
@@ -119,9 +119,9 @@ namespace Systems.UI.Registry.Editor
             switch (tab)
             {
                 case 0: Draw_Source(ref body, property); break;
-                case 1: Draw_Placement(ref body, property); break;
-                case 2: Draw_Lifetime(ref body, property); break;
-                case 3: Draw_Optimization(ref body, property); break;
+             //   case 1: Draw_Placement(ref body, property); break;
+               // case 2: Draw_Lifetime(ref body, property); break;
+                case 1: Draw_Optimization(ref body, property); break;
             }
 
             EditorGUI.EndProperty();

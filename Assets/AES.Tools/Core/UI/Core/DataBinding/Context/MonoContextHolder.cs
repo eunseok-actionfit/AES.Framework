@@ -17,7 +17,7 @@ namespace AES.Tools
         Custom
     }
 
-    [DefaultExecutionOrder(-1)]
+    [DefaultExecutionOrder(-10)]
     public abstract class MonoContextHolder : MonoBehaviour, IBindingContextProvider
     {
         [Header("Context Name")]

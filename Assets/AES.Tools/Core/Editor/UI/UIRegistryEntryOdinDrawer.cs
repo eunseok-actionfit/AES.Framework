@@ -24,8 +24,8 @@ namespace AES.Tools.Editor
 
             var tabGroup = SirenixEditorGUI.CreateAnimatedTabGroup(key);
             var tabSource = tabGroup.RegisterTab("Source");
-            var tabPlacement = tabGroup.RegisterTab("Placement");
-            var tabLifetime = tabGroup.RegisterTab("Lifetime");
+           // var tabPlacement = tabGroup.RegisterTab("Placement");
+           // var tabLifetime = tabGroup.RegisterTab("Lifetime");
             var tabOptimization = tabGroup.RegisterTab("Optimization");
 
             tabGroup.BeginGroup(drawToolbar: true);
@@ -36,17 +36,17 @@ namespace AES.Tools.Editor
                 }
                 tabSource.EndPage();
 
-                if (tabPlacement.BeginPage())
-                {
-                    Draw_Placement();
-                }
-                tabPlacement.EndPage();
-
-                if (tabLifetime.BeginPage())
-                {
-                    Draw_Lifetime();
-                }
-                tabLifetime.EndPage();
+                // if (tabPlacement.BeginPage())
+                // {
+                //     Draw_Placement();
+                // }
+                // tabPlacement.EndPage();
+                //
+                // if (tabLifetime.BeginPage())
+                // {
+                //     Draw_Lifetime();
+                // }
+                // tabLifetime.EndPage();
 
                 if (tabOptimization.BeginPage())
                 {

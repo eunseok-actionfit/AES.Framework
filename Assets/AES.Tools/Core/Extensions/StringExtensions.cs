@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 
 
 namespace AES.Tools
@@ -82,6 +83,20 @@ namespace AES.Tools
             // Return the filtered string
             return lastValidIndex >= 0
                 ? new string(filteredChars.ToArray(), 0, lastValidIndex + 1) : string.Empty;
+        }
+        
+        public static string ToHexString(this string input)
+        {
+            if (input == null)
+                return null;
+
+            byte[] bytes = Encoding.UTF8.GetBytes(input);
+            StringBuilder sb = new StringBuilder(bytes.Length * 2);
+
+            foreach (byte b in bytes)
+                sb.AppendFormat("{0:X2}", b); // 대문자 HEX
+
+            return sb.ToString();
         }
         
         // Rich text formatting, for Unity UI elements that support rich text.

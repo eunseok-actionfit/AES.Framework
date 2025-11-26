@@ -35,11 +35,11 @@ namespace AES.Tools.VContainer.Installer.App
                 .As<IStorageService>()
                 .WithParameter(storageProfile);
 
-            builder.Register<SaveCoordinator>(Lifetime.Singleton)
-                .As<ISaveCoordinator>();
+            // builder.Register<SaveCoordinator>(Lifetime.Singleton)
+            //     .As<ISaveCoordinator>();
             
             
-            builder.RegisterEntryPoint<AutoSaveOnAppEvents>();
+            //builder.RegisterEntryPoint<AutoSaveOnAppEvents>();
         }
     }
 }

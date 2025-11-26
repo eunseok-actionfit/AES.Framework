@@ -171,7 +171,11 @@ namespace AES.Tools
             MainThreadGuard.AssertMainThread();
 
             if (TryRent(out var fromFree))
+            {
+                _onAfterRent?.Invoke(fromFree);
                 return fromFree;
+            }
+            
 
 #if AESFW_UNITASK
             await UniTask.SwitchToMainThread();

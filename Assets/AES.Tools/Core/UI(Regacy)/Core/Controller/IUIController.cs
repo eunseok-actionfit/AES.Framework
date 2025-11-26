@@ -7,10 +7,10 @@ using Cysharp.Threading.Tasks;
 
 namespace AES.Tools.Controller
 {
-    public enum UILayerKind
-    {
-        Window, Hud, Popup, Overlay
-    }
+    // public enum UILayerKind
+    // {
+    //     Window, Hud, Popup, Overlay
+    // }
     
     public interface IUIController
     {

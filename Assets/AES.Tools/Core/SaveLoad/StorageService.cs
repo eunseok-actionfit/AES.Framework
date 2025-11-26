@@ -60,14 +60,14 @@ public sealed class StorageService : IStorageService
     string BuildKey(SaveDataInfo info, string slotId)
         => BuildKeyWithProfile(info, slotId); // StorageProfile-aware key builder
 
-    public async UniTask<Result<T>> LoadAsync<T>(string slotId, CancellationToken ct = default)
+    public async UniTask<Result<T>> LoadAsync<T>(string slotId = null, CancellationToken ct = default)
     {
         var info = GetInfo<T>();
         var key = BuildKey(info, slotId);
         var backend = EffectiveBackend(info);
 
         byte[] bytes = null;
-        Error lastErr = Error.None;
+        Error lastErr;
 
         // Cloud First 시도
         if (backend == SaveBackend.CloudFirst && cloud != null)
@@ -110,7 +110,9 @@ public sealed class StorageService : IStorageService
             return Result<T>.Fail(new Error("json-parse", ex.Message, info.Id, false, ex));
         }
     }
-
+    public UniTask<Result> SaveAsync<T>(T data, CancellationToken ct = default)
+    => SaveAsync(null, data, ct);
+    
     public async UniTask<Result> SaveAsync<T>(string slotId, T data, CancellationToken ct = default)
     {
         var info = GetInfo<T>();
@@ -136,6 +138,33 @@ public sealed class StorageService : IStorageService
         catch (Exception ex)
         {
             return Result.Fail(new Error("save-fail", ex.Message, info.Id, false, ex));
+        }
+    }
+    
+    public async UniTask<Result> DeleteAsync<T>(string slotId = null, CancellationToken ct = default)
+    {
+        var info = GetInfo<T>();
+        var key = BuildKey(info, slotId);
+        var backend = EffectiveBackend(info);
+
+        try
+        {
+            // Local 삭제
+            var rLocal = await local.DeleteAsync(key, ct);
+            if (rLocal.IsFail) return rLocal;
+
+            // CloudFirst면 클라우드도 삭제
+            if (backend == SaveBackend.CloudFirst && cloud != null)
+            {
+                var rCloud = await cloud.DeleteAsync(key, ct);
+                if (rCloud.IsFail) return rCloud;
+            }
+
+            return Result.Ok();
+        }
+        catch (Exception ex)
+        {
+            return Result.Fail(new Error("delete-fail", ex.Message, info.Id, false, ex));
         }
     }
 }

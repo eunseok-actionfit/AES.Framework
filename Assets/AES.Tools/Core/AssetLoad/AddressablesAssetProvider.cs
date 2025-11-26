@@ -1,9 +1,13 @@
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
+using Object = UnityEngine.Object;
+
+
 #if AESFW_UNITASK
 
 
@@ -70,7 +74,7 @@ namespace AES.Tools
                 if (handle.Status != AsyncOperationStatus.Succeeded)
                 {
                     _handles.Remove(key);
-                    throw new System.Exception($"[AssetLoader] Failed to load asset: {key}");
+                    throw new Exception($"[AssetLoader] Failed to load asset: {key}");
                 }
 
                 _assetToKey[handle.Result] = key;
@@ -93,8 +97,16 @@ namespace AES.Tools
             info.RefCount--;
             if (info.RefCount <= 0)
             {
-                Addressables.Release(info.Handle);
-                _assetToKey.Remove(info.Handle.Result);
+                // Result를 Release 전에 확보
+                var result = info.Handle.IsValid() ? info.Handle.Result : null;
+
+                if (result != null)
+                    _assetToKey.Remove(result);
+
+                // 이제 안전하게 Release
+                if (info.Handle.IsValid())
+                    Addressables.Release(info.Handle);
+
                 _handles.Remove(key);
             }
         }
@@ -103,7 +115,7 @@ namespace AES.Tools
         {
             if (asset == null || !_assetToKey.TryGetValue(asset, out var key))
                 return;
-    
+
             Release(key);
         }
 
@@ -155,7 +167,7 @@ namespace AES.Tools
                 ct.ThrowIfCancellationRequested();
 #endif
                 if (handle.Status != AsyncOperationStatus.Succeeded)
-                    throw new System.Exception($"[AssetLoader] Failed to load label: {label}");
+                    throw new Exception($"[AssetLoader] Failed to load label: {label}");
 
                 // 결과 각각에 대해 내부 ref-count 관리에 편입시키고 싶다면
                 foreach (var asset in handle.Result)
@@ -176,6 +188,37 @@ namespace AES.Tools
                 }
 
                 return (IReadOnlyList<T>)handle.Result;
+            }
+            catch
+            {
+                Addressables.Release(handle);
+                throw;
+            }
+        }
+        
+        public async UniTask<GameObject> InstantiateAsync(string key, CancellationToken ct = default)
+        {
+            // Addressables.InstantiateAsync 자체가 handle을 생성
+            var handle = Addressables.InstantiateAsync(key);
+
+            try
+            {
+                await handle.ToUniTask(cancellationToken: ct);
+
+                if (handle.Status != AsyncOperationStatus.Succeeded)
+                    throw new Exception($"[AssetLoader] Failed to instantiate: {key}");
+
+                var go = handle.Result;
+                
+                _assetToKey[go] = key;
+
+                // ref-count 증가
+                if (_handles.TryGetValue(key, out var info))
+                    info.RefCount++;
+                else
+                    _handles[key] = new HandleInfo { Handle = handle, RefCount = 1 };
+
+                return go;
             }
             catch
             {

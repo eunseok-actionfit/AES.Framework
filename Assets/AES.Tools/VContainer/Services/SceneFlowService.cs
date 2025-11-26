@@ -1,5 +1,4 @@
 using System.Threading;
-using AES.Tools.Controller;
 using AES.Tools.Models;
 using AES.Tools.Root;
 using Cysharp.Threading.Tasks;
@@ -13,17 +12,15 @@ namespace AES.Tools.VContainer
     {
         readonly ISceneLoader _scenes;
         readonly ILoadingService _loading;
-        readonly LifetimeScope _root; 
-        readonly IObjectResolver _resolver; 
-        readonly IUIController _ui; 
+        readonly LifetimeScope _root;
+        // readonly IUIController _ui; 
 
-        public SceneFlowService(ISceneLoader scenes, ILoadingService loading, LifetimeScope root, IObjectResolver resolver, IUIController ui)
+        public SceneFlowService(ISceneLoader scenes, ILoadingService loading, LifetimeScope root)
         {
             _scenes = scenes;
             _loading = loading;
             _root = root;
-            _resolver = resolver;
-            _ui = ui;
+            //   _ui = ui;
         }
 
         public async UniTask LoadWithArgsAsync<T>(
@@ -42,8 +39,8 @@ namespace AES.Tools.VContainer
                     if (payload != null) b.RegisterInstance(payload).As<T>(); // DI로도 주입
                 }))
             {
-                if (!additive)
-                    await _ui.CloseAllAsync(UIRootRole.Local, ct); 
+                // if (!additive)
+                //     await _ui.CloseAllAsync(UIRootRole.Local, ct); 
                 
                 var opts = new SceneLoadOptions(
                     mode: additive ? SceneLoadMode.Additive : SceneLoadMode.Single,
@@ -60,7 +57,7 @@ namespace AES.Tools.VContainer
                             mode: additive ? SceneLoadMode.Additive : SceneLoadMode.Single,
                             setActive: !additive,
                             allowSceneActivation: allowActivation,
-                            onProgress: v => p.Report(v),
+                            onProgress: p.Report,
                             externalToken: ct
                         );
 

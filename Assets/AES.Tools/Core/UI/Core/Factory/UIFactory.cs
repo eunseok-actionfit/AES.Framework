@@ -17,7 +17,7 @@ namespace AES.Tools
             var useAddr   = entry.IsAddressable;
             var usePrefab = entry.Prefab != null;
             if (!useAddr && !usePrefab)
-                throw new InvalidOperationException($"No valid UI source for {entry.Kind}");
+                throw new InvalidOperationException($"No valid UI source for {entry}");
 
             GameObject go = null;
 

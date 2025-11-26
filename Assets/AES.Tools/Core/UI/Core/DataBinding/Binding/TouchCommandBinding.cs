@@ -24,7 +24,6 @@ namespace AES.Tools.Bindings
         [SerializeField] bool disableWhileRunning = true;
 
         ICommand _command;
-        IBindingContext _ctx;
 
         bool _isRunning;
 
@@ -43,8 +42,6 @@ namespace AES.Tools.Bindings
                 Debug.LogError("ButtonCommandBinding: Button 이 설정되지 않았습니다.", this);
                 return;
             }
-
-            _ctx = context;
 
             object value;
             try
@@ -81,7 +78,6 @@ namespace AES.Tools.Bindings
                 button.ButtonPressedFirstTime.RemoveListener(OnClick);
 
             _command = null;
-            _ctx = null;
         }
 
         void BindCommand(ICommand cmd)

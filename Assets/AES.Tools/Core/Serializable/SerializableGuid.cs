@@ -1,4 +1,5 @@
 using System;
+using System.Text;
 using UnityEngine;
 
 
@@ -50,6 +51,7 @@ namespace AES.Tools
                 Convert.ToUInt32(hexString.Substring(24, 8), 16)
             );
         }
+        
 
         public string ToHexString() {
             return $"{Part1:X8}{Part2:X8}{Part3:X8}{Part4:X8}";
@@ -79,5 +81,7 @@ namespace AES.Tools
 
         public static bool operator ==(SerializableGuid left, SerializableGuid right) => left.Equals(right);
         public static bool operator !=(SerializableGuid left, SerializableGuid right) => !(left == right); 
+        
+   
     }
 }

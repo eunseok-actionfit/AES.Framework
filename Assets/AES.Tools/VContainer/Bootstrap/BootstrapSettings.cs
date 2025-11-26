@@ -1,4 +1,5 @@
 using System.Linq;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using VContainer;
@@ -79,7 +80,7 @@ namespace AES.Tools.VContainer
         #region Bootstrap entry
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
-        private static void Bootstrap()
+        private async static void Bootstrap()
         {
             BootstrapSettings settings;
 
@@ -104,7 +105,7 @@ namespace AES.Tools.VContainer
 
 
             // 2. 모듈 초기화 (세이브/로거/SDK 등)
-            Instance.InitializeModules();
+           await Instance.InitializeModules();
 
             var root = _rootLifetimeScopeInstance; //
             var sceneFlow = root.Container.Resolve<ISceneFlow>();
@@ -116,7 +117,7 @@ namespace AES.Tools.VContainer
 
                 if (active.name != Instance.firstSceneName)
                 {
-                    sceneFlow.LoadWithArgsAsync<object>(Instance.firstSceneName, "Home.Load", null);
+                    await sceneFlow.LoadWithArgsAsync<object>(Instance.firstSceneName, "Home.Load", null);
 
                     //SceneManager.LoadScene(Instance.firstSceneName, LoadSceneMode.Single);
                 }
@@ -164,7 +165,7 @@ namespace AES.Tools.VContainer
 
         #region Modules
 
-        private void InitializeModules()
+        private async UniTask InitializeModules()
         {
             var root = _rootLifetimeScopeInstance; // null일 수도 있음
 
@@ -177,7 +178,10 @@ namespace AES.Tools.VContainer
             {
                 if (m == null) continue;
 
-                try { m.Initialize(root); }
+                try
+                {
+                    await m.Initialize(root);
+                }
                 catch (System.Exception e) { Debug.LogException(e); }
             }
         }

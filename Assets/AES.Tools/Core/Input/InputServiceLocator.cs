@@ -11,7 +11,7 @@ namespace AES.Tools
         {
             get => _service 
                    ?? throw new InvalidOperationException("UIController not initialized.");
-            internal set => _service = value;
+            set => _service = value;
         }
     }
 }

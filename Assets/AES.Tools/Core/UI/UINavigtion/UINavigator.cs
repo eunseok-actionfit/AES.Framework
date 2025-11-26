@@ -1,29 +1,33 @@
 using System;
 using System.Collections.Generic;
+using AES.Tools;
 using AES.Tools.View;
 using UnityEngine;
 
 #if ODIN_INSPECTOR
 using ReadOnly = Sirenix.OdinInspector.ReadOnlyAttribute;
-
-
 #else
 using ReadOnly = AES.Tools.ReadOnlyAttribute;
 #endif
 
-
-
 public class UINavigator : MonoBehaviour
 {
     [SerializeField] private Transform scanRoot;
-
-    [SerializeField] private UIView rootScreen;
+    
+    [Header("Options")]
+    [Tooltip("true 면 '아무 화면도 없는 상태'를 루트로 사용합니다.")]
+    [SerializeField] private bool useEmptyAsRoot = false;
+    
+    [SerializeField, ShowIf(nameof(useEmptyAsRoot), Condition = ShowIfCondition.BoolIsFalse)]
+    private UIView rootScreen;
 
     private List<UIView> screens = new();
     private readonly Dictionary<Type, UIView> _cache = new();
     private readonly Stack<UIView> _stack = new();
 
     public UIView Current => _stack.Count > 0 ? _stack.Peek() : null;
+
+    // 루트가 "빈 상태"일 수 있으므로, 스택 기준으로만 Pop 가능 여부 판단
     public bool CanPopScreen => _stack.Count > 1;
 
     private bool _initialized;
@@ -38,8 +42,8 @@ public class UINavigator : MonoBehaviour
         var found = scanRoot.GetComponentsInChildren<UIView>(true);
         screens.AddRange(found);
 
-        // 루트 지정 안 했으면 첫 번째를 루트로
-        if (rootScreen == null && screens.Count > 0)
+        // 루트 자동 지정은 "빈 루트" 모드가 아닐 때만
+        if (!useEmptyAsRoot && rootScreen == null && screens.Count > 0)
             rootScreen = screens[0];
     }
 #endif
@@ -70,21 +74,20 @@ public class UINavigator : MonoBehaviour
             var type = s.GetType();
             _cache.TryAdd(type, s);
 
-            if (s != rootScreen)
-                s.Hide(); // 초기 비활성화 책임은 Navigator
-
+            // 시작 시에는 모두 숨겨 둔다 (루트만 따로 Show)
+            s.Hide();
             s.transform.localPosition = Vector3.zero;
         }
 
         _stack.Clear();
 
-        if (rootScreen != null)
+        if (!useEmptyAsRoot && rootScreen != null)
         {
             rootScreen.Show();
             _stack.Push(rootScreen);
         }
+        // useEmptyAsRoot == true 이면: 아무 화면도 보이지 않는 상태에서 시작
     }
-
 
     /// <summary>
     /// 타입 기반 화면 Push
@@ -117,17 +120,46 @@ public class UINavigator : MonoBehaviour
 
         if (Current != null)
             Current.Show();
+        else if (useEmptyAsRoot)
+        {
+            // 스택이 비었고, 빈 루트 모드면 아무 것도 안 보이는 상태 유지
+            HideAll();
+        }
     }
 
     /// <summary>
-    /// 이 Navigator 안에서 루트 Screen 으로 복귀
+    /// 이 Navigator 안에서 루트로 복귀
     /// </summary>
     public void GoRoot()
     {
-        if (rootScreen == null)
+        if (useEmptyAsRoot)
+        {
+            // 루트 = 아무 화면도 없는 상태
+            HideAll();
+            _stack.Clear();
             return;
+        }
 
-        ShowInternal(rootScreen, clearStack: true);
+        if (rootScreen != null)
+        {
+            ShowInternal(rootScreen, clearStack: true);
+        }
+        else
+        {
+            // 루트 미지정 시, scanRoot 아래 첫 UIView 를 루트로 사용
+            var first = scanRoot != null
+                ? scanRoot.GetComponentInChildren<UIView>(true)
+                : null;
+
+            if (first != null)
+                ShowInternal(first, clearStack: true);
+            else
+            {
+                // 정말 아무것도 없다면 전부 숨기고 스택만 비운다
+                HideAll();
+                _stack.Clear();
+            }
+        }
     }
 
     /// <summary>
@@ -136,7 +168,8 @@ public class UINavigator : MonoBehaviour
     /// </summary>
     public void HideAll()
     {
-        foreach (var v in _stack)
+        // 스택에 올라온 것뿐 아니라, 관리 대상 전체를 숨긴다
+        foreach (var v in screens)
         {
             if (v != null)
                 v.Hide();
@@ -145,18 +178,31 @@ public class UINavigator : MonoBehaviour
 
     /// <summary>
     /// UINavigationController 가 이 Navigator 를 활성화할 때 호출
-    /// - 스택이 비어 있으면 루트 Screen 또는 첫 Screen 을 보여준다.
+    /// - 스택이 비어 있으면 루트 Screen 또는 첫 Screen, 혹은 빈 루트를 보여준다.
     /// - 스택이 있으면 최상단 Screen 을 다시 보여준다.
     /// </summary>
     public void ShowInitial()
     {
         if (_stack.Count == 0)
         {
-            if (rootScreen != null) { ShowInternal(rootScreen, clearStack: true); }
+            if (useEmptyAsRoot)
+            {
+                // 빈 루트 모드: 아무 것도 안 보여주는 상태 유지
+                HideAll();
+                return;
+            }
+
+            if (rootScreen != null)
+            {
+                ShowInternal(rootScreen, clearStack: true);
+            }
             else
             {
-                // 루트 미지정 시, scanRoot 아래 첫 ScreenView 를 루트로 사용
-                var first = scanRoot.GetComponentInChildren<UIView>(true);
+                // 루트 미지정 시, scanRoot 아래 첫 UIView 를 루트로 사용
+                var first = scanRoot != null
+                    ? scanRoot.GetComponentInChildren<UIView>(true)
+                    : null;
+
                 if (first != null)
                     ShowInternal(first, clearStack: true);
             }
@@ -176,18 +222,20 @@ public class UINavigator : MonoBehaviour
     {
         var type = typeof(T);
 
-        // 루트 Screen 타입이면 항상 루트 우선
-        if (rootScreen != null && rootScreen.GetType() == type)
+        // 루트 Screen 타입이면 항상 루트 우선 (빈 루트 모드가 아니고, rootScreen 이 있을 때만)
+        if (!useEmptyAsRoot && rootScreen != null && rootScreen.GetType() == type)
             return (T)rootScreen;
 
         if (_cache.TryGetValue(type, out var cached) && cached != null)
             return (T)cached;
 
-        var view = scanRoot.GetComponentInChildren<T>(true);
+        var view = scanRoot != null
+            ? scanRoot.GetComponentInChildren<T>(true)
+            : null;
 
         if (view == null)
         {
-            Debug.LogError($"[ScreenNavigator] ScreenView not found: {type.Name}", this);
+            Debug.LogError($"[UINavigator] UIView not found: {type.Name}", this);
             return null;
         }
 
@@ -200,6 +248,7 @@ public class UINavigator : MonoBehaviour
         if (view == null)
             return;
 
+        // 현재 스택에 있는 것들 숨기기
         foreach (var v in _stack)
         {
             if (v != null)

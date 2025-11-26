@@ -32,7 +32,7 @@ namespace AES.Tools
 
             if (!useAddr && !usePrefab)
                 throw new InvalidOperationException(
-                    $"No valid UI source for {entry.Kind}");
+                    $"No valid UI source for {entry}");
 
             GameObject go = null;
 

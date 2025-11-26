@@ -10,8 +10,8 @@ namespace AES.Tools.VContainer
         [Header("시스템 설정")]
         public InputConfig inputConfig;
 
-        [Header("UI Registry")]
-        public UIRegistrySO uiRegistrySO;
+        //[Header("UI Registry")]
+        //public UIRegistrySO uiRegistrySO;
 
         public StorageProfile storageProfile;
         

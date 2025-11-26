@@ -1,3 +1,4 @@
+using AES.Tools.StartKit;
 using AES.Tools.VContainer.Installer;
 using AES.Tools.VContainer.Installer.App;
 using UnityEngine;
@@ -45,7 +46,7 @@ namespace AES.Tools.VContainer.Scope
             new InputInstaller(config.inputConfig).Install(builder);
             
             // UI (엔진 Installer)
-            new UIInstaller(config.uiRegistrySO).Install(builder);
+          //  new UIInstaller(config.uiRegistrySO).Install(builder);
             
             // UX (앱 UX)
             new UXServicesInstaller().Install(builder);
