@@ -83,6 +83,23 @@ namespace AES.Tools
         {
             OnContextUnavailable();
         }
+        
+        protected TViewModel GetViewModel<TViewModel>()
+            where TViewModel : class
+        {
+            return BindingContext?.GetValue() as TViewModel;
+        }
+
+        protected T GetValue<T>(string path = null)
+        {
+            var value = BindingContext?.GetValue(path);
+            return value is T t ? t : default;
+        }
+
+        protected void SetValue(string path, object value)
+        {
+            BindingContext?.SetValue(path, value);
+        }
 
         protected abstract void OnContextAvailable(IBindingContext context, string path);
         protected abstract void OnContextUnavailable();

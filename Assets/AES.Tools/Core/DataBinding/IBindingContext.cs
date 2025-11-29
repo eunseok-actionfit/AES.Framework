@@ -9,7 +9,7 @@ namespace AES.Tools
     public interface IBindingContext
     {
         /// <summary>path에 해당하는 현재 값을 반환. path가 null/빈 문자열이면 root 자체를 반환.</summary>
-        object GetValue(string path);
+        object GetValue(string path = null);
 
         /// <summary>path에 값을 설정. (지원 가능한 경우에만 유효)</summary>
         void SetValue(string path, object value);

@@ -1,79 +1,87 @@
 using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
+using System.Runtime.CompilerServices;
+using AES.Tools;
 
-namespace AES.Tools
+
+public static class BindingContextExtensions
 {
-    public static class BindingContextExtensions
+    private static readonly ConditionalWeakTable<LambdaExpression, string> PathCache
+        = new();
+
+    private static string GetOrAddPath(LambdaExpression lambda)
     {
-        // =========================
-        // 기존: object 기반 버전
-        // =========================
-
-        public static object RegisterProperty<TViewModel, TValue>(
-            this IBindingContext ctx,
-            Expression<Func<TViewModel, IObservableProperty<TValue>>> selector,
-            Action<object> onChanged)
+        if (!PathCache.TryGetValue(lambda, out var path))
         {
-            string path = ExtractPath(selector.Body);
-            return ctx.RegisterListener(path, onChanged);
+            path = ExtractPath(lambda.Body);
+            PathCache.Add(lambda, path);
+        }
+        return path;
+    }
+
+    public static IDisposable SubscribeProperty<TViewModel, TValue>(
+        this IBindingContext ctx,
+        Expression<Func<TViewModel, IObservableProperty<TValue>>> selector,
+        Action<TValue> onChanged)
+    {
+        var lambda = selector;
+        string path = GetOrAddPath(lambda);
+
+        Action<object> boxed = v =>
+        {
+            if (v is TValue tv)
+                onChanged(tv);
+        };
+
+        var token = ctx.RegisterListener(path, boxed);
+
+        return new BindingSubscription(ctx, path, boxed, token);
+    }
+
+    private static string ExtractPath(Expression expr)
+    {
+        if (expr is UnaryExpression u && u.NodeType == ExpressionType.Convert)
+            expr = u.Operand;
+
+        var parts = new Stack<string>();
+        var cur = expr;
+
+        while (cur is MemberExpression m)
+        {
+            parts.Push(m.Member.Name);
+            cur = m.Expression;
         }
 
-        public static void RemoveProperty<TViewModel, TValue>(
-            this IBindingContext ctx,
-            Expression<Func<TViewModel, IObservableProperty<TValue>>> selector,
-            Action<object> listener,
+        return string.Join(".", parts);
+    }
+
+    private sealed class BindingSubscription : IDisposable
+    {
+        private readonly IBindingContext _ctx;
+        private readonly string _path;
+        private readonly Action<object> _boxed;
+        private readonly object _token;
+        private bool _disposed;
+
+        public BindingSubscription(
+            IBindingContext ctx,
+            string path,
+            Action<object> boxed,
             object token)
         {
-            string path = ExtractPath(selector.Body);
-            ctx.RemoveListener(path, listener, token);
+            _ctx = ctx;
+            _path = path;
+            _boxed = boxed;
+            _token = token;
         }
 
-
-        // =========================
-        // 새로 추가: 타입 안전 버전 (Action<TValue>)
-        // =========================
-
-        public static object RegisterProperty<TViewModel, TValue>(
-            this IBindingContext ctx,
-            Expression<Func<TViewModel, IObservableProperty<TValue>>> selector,
-            Action<TValue> onChanged)
+        public void Dispose()
         {
-            void Boxed(object v)
-            {
-                if (v is TValue tv) onChanged(tv);
-            }
+            if (_disposed) return;
+            _disposed = true;
 
-            return ctx.RegisterProperty(selector, (Action<object>)Boxed);
-        }
-
-        public static void RemoveProperty<TViewModel, TValue>(
-            this IBindingContext ctx,
-            Expression<Func<TViewModel, IObservableProperty<TValue>>> selector,
-            Action<TValue> listener,
-            object token)
-        {
-            // token 기반 제거라 listener는 필요 없음
-            ctx.RemoveProperty(selector, (Action<object>)null, token);
-        }
-
-
-        // =========================
-        // Path 추출
-        // =========================
-
-        private static string ExtractPath(Expression expr)
-        {
-            var parts = new Stack<string>();
-            var cur = expr;
-
-            while (cur is MemberExpression m)
-            {
-                parts.Push(m.Member.Name);
-                cur = m.Expression;
-            }
-
-            return string.Join(".", parts);
+            _ctx.RemoveListener(_path, _boxed, _token);
         }
     }
 }

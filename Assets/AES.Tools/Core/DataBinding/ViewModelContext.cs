@@ -23,7 +23,7 @@ namespace AES.Tools
             return MemberPathCache.Get(RootType, path);
         }
 
-        public virtual object GetValue(string path)
+        public virtual object GetValue(string path = null)
         {
             if (string.IsNullOrEmpty(path))
                 return Root;
