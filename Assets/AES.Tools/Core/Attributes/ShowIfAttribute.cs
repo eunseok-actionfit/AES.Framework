@@ -37,10 +37,17 @@ namespace AES.Tools
 
         // 단일/다중 값: [ShowIf("lookupMode", Mode.A)]
         //               [ShowIf("lookupMode", Mode.A, Mode.B)]
-        public ShowIfAttribute(string conditionFieldName, params object[] values)
+        
+        public ShowIfAttribute(string conditionFieldName, object value)
         {
             ConditionFieldName = conditionFieldName;
             Condition = ShowIfCondition.Equals;    // 기본은 Equals / In
+            RawValues = new[] { value };
+        }
+        public ShowIfAttribute(string conditionFieldName, params object[] values)
+        {
+            ConditionFieldName = conditionFieldName;
+            Condition = ShowIfCondition.In; 
             RawValues = values ?? Array.Empty<object>();
         }
     }

@@ -15,7 +15,7 @@ namespace AES.Tools
 #if ODIN_INSPECTOR
     public abstract class UIRegistrySO : SerializedScriptableObject, IURegistry 
 #else
-    public abstract class UIRegistrySO : ScriptableObject, IUIWindowRegistry
+    public abstract class UIRegistrySO : ScriptableObject, IURegistry
 #endif
     {
         public abstract bool TryGet(UIWindowKey key, out UIRegistryEntry entry);

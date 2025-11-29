@@ -99,7 +99,7 @@ namespace AES.Tools.Editor
                 {
                     string logicalName;
 
-                    if (mb is MonoContextHolder dc)
+                    if (mb is MonoContext dc)
                         logicalName = dc.ContextName;
                     else
                         logicalName = mb.gameObject.name;
@@ -201,7 +201,7 @@ namespace AES.Tools.Editor
             {
                 string ctxName;
 
-                if (mb is MonoContextHolder dc)
+                if (mb is MonoContext dc)
                     ctxName = dc.ContextName;
                 else
                     ctxName = mb.gameObject.name;
@@ -269,7 +269,7 @@ namespace AES.Tools.Editor
             {
                 if (mb is IBindingContextProvider p)
                 {
-                    if (mb is MonoContextHolder dc && dc.ContextName == name)
+                    if (mb is MonoContext dc && dc.ContextName == name)
                         return p;
 
                     if (mb.gameObject.name == name)
@@ -296,7 +296,7 @@ namespace AES.Tools.Editor
             {
                 if (mb is IBindingContextProvider p)
                 {
-                    if (mb is MonoContextHolder dc && dc.ContextName == name)
+                    if (mb is MonoContext dc && dc.ContextName == name)
                         return p;
 
                     if (mb.gameObject.name == name)

@@ -1,0 +1,1 @@
+public sealed class FloatPropertyBinding : PropertyBindingBase<float> { }

@@ -41,14 +41,12 @@ namespace AES.Tools.View
             State = UIViewState.Appearing;
             gameObject.SetActive(true);
 
-            // UnityEvent 호출
             OnShowStarted?.Invoke();
 
             InstantShow();
 
             State = UIViewState.Appeared;
 
-            // UnityEvent 호출
             OnShowCompleted?.Invoke();
         }
 
@@ -62,7 +60,6 @@ namespace AES.Tools.View
 
             State = UIViewState.Disappearing;
 
-            // UnityEvent 호출
             OnHideStarted?.Invoke();
 
             InstantHide();
@@ -70,7 +67,6 @@ namespace AES.Tools.View
             State = UIViewState.Disappeared;
             gameObject.SetActive(false);
 
-            // UnityEvent 호출
             OnHideCompleted?.Invoke();
         }
 

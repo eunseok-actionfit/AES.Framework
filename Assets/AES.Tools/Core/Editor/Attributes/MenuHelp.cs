@@ -67,14 +67,14 @@ namespace AES.Tools.Editor
                     return CachedHelpEnabled;
                 }
 
-                if (EditorPrefs.HasKey("MMShowHelpInInspectors"))
+                if (EditorPrefs.HasKey("ShowHelpInInspectors"))
                 {
-                    CachedHelpEnabled = EditorPrefs.GetBool("MMShowHelpInInspectors");
+                    CachedHelpEnabled = EditorPrefs.GetBool("ShowHelpInInspectors");
                     SettingCached = true;
                     return CachedHelpEnabled;
                 }
 
-                EditorPrefs.SetBool("MMShowHelpInInspectors", true);
+                EditorPrefs.SetBool("ShowHelpInInspectors", true);
                 CachedHelpEnabled = true;
                 SettingCached = true;
                 return CachedHelpEnabled;
@@ -88,7 +88,7 @@ namespace AES.Tools.Editor
         /// <param name="status">저장할 도움말 상태</param>
         private static void SetHelpEnabled(bool status)
         {
-            EditorPrefs.SetBool("MMShowHelpInInspectors", status);
+            EditorPrefs.SetBool("ShowHelpInInspectors", status);
             CachedHelpEnabled = status;
             SettingCached = true;
             SceneView.RepaintAll();

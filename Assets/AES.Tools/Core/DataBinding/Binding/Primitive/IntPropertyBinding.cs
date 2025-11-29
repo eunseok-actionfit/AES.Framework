@@ -1,0 +1,1 @@
+public sealed class IntPropertyBinding : PropertyBindingBase<int> { }
