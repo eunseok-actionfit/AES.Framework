@@ -15,12 +15,12 @@ namespace AES.Tools.Commands
             _canExecute = canExecute ?? (() => true);
         }
 
-        public override bool CanExecute(Unit _)
+        public override bool CanExecute(Unit _ = default)
             => _canExecute();
 
-        public override void Execute(Unit _)
+        public override void Execute(Unit unit = default)
         {
-            if (CanExecute(Unit.Default))
+            if (CanExecute(unit))
                 _execute();
         }
         

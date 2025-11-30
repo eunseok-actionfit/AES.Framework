@@ -14,8 +14,8 @@ namespace AES.Tools
 
     public abstract class CommandBase<T> : ICommand<T>
     {
-        public abstract bool CanExecute(T parameter);
-        public abstract void Execute(T parameter);
+        public abstract bool CanExecute(T parameter= default);
+        public abstract void Execute(T parameter= default);
 
         // ICommand(object) 구현 → UI는 이것만 본다
         bool ICommand.CanExecute(object parameter)
@@ -24,7 +24,7 @@ namespace AES.Tools
                 return CanExecute(t);
 
             // 파라미터가 없거나 타입 안 맞을 때 처리 방식은 프로젝트 스타일에 맞게
-            return CanExecute(default);
+            return CanExecute();
         }
 
         void ICommand.Execute(object parameter)
@@ -32,7 +32,7 @@ namespace AES.Tools
             if (parameter is T t)
                 Execute(t);
             else
-                Execute(default);
+                Execute();
         }
         
     }
