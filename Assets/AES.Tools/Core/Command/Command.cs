@@ -1,4 +1,6 @@
 using System;
+using UnityEngine;
+
 
 namespace AES.Tools.Commands
 {
@@ -20,8 +22,10 @@ namespace AES.Tools.Commands
 
         public override void Execute(Unit unit = default)
         {
+            Debug.Log($"[Command.Execute] thisHash={GetHashCode()}, target={_execute?.Target}, method={_execute?.Method.Name}");
+
             if (CanExecute(unit))
-                _execute();
+                _execute?.Invoke();
         }
         
     }
@@ -42,10 +46,10 @@ namespace AES.Tools.Commands
             _canExecute = canExecute ?? (_ => true);
         }
 
-        public override bool CanExecute(T parameter)
+        public override bool CanExecute(T parameter = default)
             => _canExecute(parameter);
 
-        public override void Execute(T parameter)
+        public override void Execute(T parameter = default)
         {
             if (CanExecute(parameter))
                 _execute(parameter);

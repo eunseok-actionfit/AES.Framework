@@ -1,6 +1,4 @@
 // InputToggleBoolBinding.cs
-using UnityEngine;
-
 namespace AES.Tools
 {
     /// <summary>

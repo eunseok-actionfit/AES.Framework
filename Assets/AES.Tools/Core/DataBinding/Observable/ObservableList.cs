@@ -18,6 +18,8 @@ namespace AES.Tools
         private readonly List<T> _inner = new();
 
         public event Action OnListChanged = delegate { };
+        public Action<int,T> ItemAdded = delegate { };
+        public Action<int,T> ItemRemoved = delegate { };
         private void Notify() => OnListChanged.Invoke();
         
         public int Count => _inner.Count;
@@ -27,6 +29,8 @@ namespace AES.Tools
         #region IList<T>
         bool ICollection<T>.IsReadOnly => false;
         
+
+
         public T this[int index]
         {
             get => _inner[index];
@@ -40,6 +44,7 @@ namespace AES.Tools
         public void Add(T item)
         {
             _inner.Add(item);
+            ItemAdded.Invoke(Count-1, item);
             Notify();
         }
         
@@ -57,19 +62,28 @@ namespace AES.Tools
         public void Insert(int index, T item)
         {
             _inner.Insert(index, item);
+            ItemAdded.Invoke(index, item);
             Notify();
         }
 
         public bool Remove(T item)
         {
-            var result = _inner.Remove(item);
-            if(result) Notify();
-            return result;
-        }       
+            var index = _inner.IndexOf(item);
+            if (index < 0)
+                return false;
+
+            _inner.RemoveAt(index);
+            ItemRemoved.Invoke(index, item);
+            Notify();
+            return true;
+        }
+  
         
         public void RemoveAt(int index)
         {
+            var item = _inner[index];
            _inner.RemoveAt(index);
+           ItemRemoved.Invoke(index, item);
             Notify();
         }
         

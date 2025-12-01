@@ -1,5 +1,4 @@
 // 파일: SingleSpawnBinding.cs
-using AES.Tools;
 using UnityEngine;
 
 namespace AES.Tools
@@ -46,7 +45,7 @@ namespace AES.Tools
             {
                 Clear();
                 _currentVm = value;
-                _instance = Object.Instantiate(itemPrefab, root);
+                _instance = Instantiate(itemPrefab, root);
                 _instance.SetViewModel(_currentVm);
             }
         }
@@ -56,7 +55,7 @@ namespace AES.Tools
             _currentVm = null;
             if (_instance != null)
             {
-                Object.Destroy(_instance.gameObject);
+                Destroy(_instance.gameObject);
                 _instance = null;
             }
         }

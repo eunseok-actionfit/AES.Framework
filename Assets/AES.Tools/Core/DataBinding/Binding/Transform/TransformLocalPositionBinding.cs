@@ -1,13 +1,19 @@
-// 2) TransformLocalPositionBinding.cs
+using System;
 using UnityEngine;
 
 namespace AES.Tools
 {
     public sealed class TransformLocalPositionBinding : ContextBindingBase
     {
-        private System.Action<object> _listener;
-        private object _token;
+        private Action<object> _listener;
+        private object         _token;
 
+        // 시작 시 보이지 않게
+        void Awake()
+        {
+            transform.localPosition = new Vector3(99999, 99999, 0); // 화면 밖
+        }
+        
         protected override void OnContextAvailable(IBindingContext context, string path)
         {
             _listener = OnValueChanged;
@@ -16,8 +22,19 @@ namespace AES.Tools
 
         protected override void OnContextUnavailable()
         {
-            if (BindingContext != null && _listener != null)
+            // 권장: IDisposable 토큰이면 Dispose
+            if (_token is IDisposable d)
+            {
+                d.Dispose();
+            }
+            else if (BindingContext != null && _listener != null)
+            {
+                // 구버전 컨텍스트 대응
                 BindingContext.RemoveListener(ResolvedPath, _listener, _token);
+            }
+
+            _listener = null;
+            _token    = null;
         }
 
         private void OnValueChanged(object value)

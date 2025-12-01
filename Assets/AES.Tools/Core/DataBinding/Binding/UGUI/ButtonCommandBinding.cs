@@ -1,6 +1,5 @@
 using System;
 using System.Globalization;
-using AES.Tools;
 using AES.Tools.Commands;
 using UnityEngine;
 using UnityEngine.UI;
@@ -87,6 +86,7 @@ namespace AES.Tools.Bindings
 
         void BindCommand(ICommand cmd)
         {
+            Debug.Log($"[BindCommand] {gameObject.name} path={ResolvedPath}, cmd={cmd.GetType().Name}, hash={cmd.GetHashCode()}", this);
             _command = cmd;
             UpdateInteractable();
         }

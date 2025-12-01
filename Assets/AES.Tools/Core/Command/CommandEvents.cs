@@ -1,5 +1,3 @@
-using AES.Tools;
-
 namespace AES.Tools.Commands
 {
     public struct CommandStartedEvent : IEvent

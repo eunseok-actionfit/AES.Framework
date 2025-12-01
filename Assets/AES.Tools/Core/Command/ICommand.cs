@@ -23,7 +23,7 @@ namespace AES.Tools
             if (parameter is T t)
                 return CanExecute(t);
 
-            // 파라미터가 없거나 타입 안 맞을 때 처리 방식은 프로젝트 스타일에 맞게
+          
             return CanExecute();
         }
 

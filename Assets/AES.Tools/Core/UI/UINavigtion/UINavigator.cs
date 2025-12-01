@@ -5,7 +5,8 @@ using AES.Tools.View;
 using UnityEngine;
 
 #if ODIN_INSPECTOR
-using ReadOnly = Sirenix.OdinInspector.ReadOnlyAttribute;
+
+
 #else
 using ReadOnly = AES.Tools.ReadOnlyAttribute;
 #endif

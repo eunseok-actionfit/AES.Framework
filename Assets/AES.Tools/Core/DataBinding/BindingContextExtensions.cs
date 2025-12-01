@@ -59,10 +59,10 @@ public static class BindingContextExtensions
     private sealed class BindingSubscription : IDisposable
     {
         private readonly IBindingContext _ctx;
-        private readonly string _path;
-        private readonly Action<object> _boxed;
-        private readonly object _token;
-        private bool _disposed;
+        private readonly string          _path;
+        private readonly Action<object>  _boxed;
+        private readonly object          _token;
+        private bool                     _disposed;
 
         public BindingSubscription(
             IBindingContext ctx,
@@ -70,8 +70,8 @@ public static class BindingContextExtensions
             Action<object> boxed,
             object token)
         {
-            _ctx = ctx;
-            _path = path;
+            _ctx   = ctx;
+            _path  = path;
             _boxed = boxed;
             _token = token;
         }
@@ -81,7 +81,17 @@ public static class BindingContextExtensions
             if (_disposed) return;
             _disposed = true;
 
-            _ctx.RemoveListener(_path, _boxed, _token);
+            // 1순위: IDisposable 토큰이면 그냥 Dispose()
+            if (_token is IDisposable d)
+            {
+                d.Dispose();
+            }
+            else
+            {
+                // 구버전 컨텍스트 호환용
+                _ctx.RemoveListener(_path, _boxed, _token);
+            }
         }
     }
+
 }

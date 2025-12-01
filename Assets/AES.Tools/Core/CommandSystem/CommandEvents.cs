@@ -1,5 +1,3 @@
-using AES.Tools;
-
 namespace AES.Tools.TBC.CommandSystem
 {
     public struct CommandStartedEvent : IEvent

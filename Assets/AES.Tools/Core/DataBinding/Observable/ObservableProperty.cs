@@ -102,8 +102,6 @@ namespace AES.Tools
 
         public void SetBoxedValue(object value)
         {
-            // null + 값형 케이스 등은 바인딩 쪽에서 사전에 막아두거나,
-            // 여기서 기본값으로 떨어뜨리는 식으로 처리.
             T cast;
             if (value is T v)
             {
@@ -111,14 +109,17 @@ namespace AES.Tools
             }
             else if (value == null && default(T) == null)
             {
-                // 참조형 T 에 null 허용
                 cast = default;
             }
             else
             {
-                // 필요하면 더 친절한 예외/로그로 교체
+                string targetName = TypeNameUtil.GetFriendlyTypeName(typeof(T));
+                string actualName = value == null
+                    ? "null"
+                    : TypeNameUtil.GetFriendlyTypeName(value.GetType());
+
                 throw new InvalidCastException(
-                    $"값을 타입 {typeof(T).Name} 으로 캐스팅할 수 없습니다. (실제 타입: {value?.GetType().Name ?? "null"})");
+                    $"값을 타입 {targetName} 으로 캐스팅할 수 없습니다. (실제 타입: {actualName})");
             }
 
             Value = cast;
@@ -157,5 +158,17 @@ namespace AES.Tools
             if (changed)
                 OnValidationChanged(this);
         }
+
+        public IDisposable Subscribe(Action<T> action)
+        {
+            OnValueChanged += action;
+
+            return new Subscription(() =>
+            {
+                OnValueChanged -= action;
+            });
+        }
     }
 }
+
+
