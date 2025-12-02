@@ -82,7 +82,7 @@ namespace AES.Tools.VContainer
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private async static void Bootstrap()
         {
-            BootstrapSettings settings;
+            BootstrapSettings settings = null;
 
 #if UNITY_EDITOR
             settings = LoadFromPreloadedAssets();
