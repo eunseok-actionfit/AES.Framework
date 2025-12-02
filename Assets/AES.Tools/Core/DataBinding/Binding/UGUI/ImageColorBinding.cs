@@ -1,22 +1,23 @@
 using System;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace AES.Tools
 {
-    [RequireComponent(typeof(SpriteRenderer))]
-    public sealed class SpriteColorBinding : ContextBindingBase
+    [RequireComponent(typeof(Image))]
+    public sealed class ImageColorBinding : ContextBindingBase
     {
-        [SerializeField] private SpriteRenderer renderer;
-        
+        [SerializeField] private Image image;
+
         [Header("Value Converter")]
         [SerializeField] bool useConverter;
         [SerializeField, ShowIf(nameof(useConverter))] ValueConverterSOBase converter;
         [SerializeField, ShowIf(nameof(useConverter))] string converterParameter;
 
-        private System.Action<object> _listener;
+        private Action<object> _listener;
         private object _token;
 
-        private void Reset() => renderer = GetComponent<SpriteRenderer>();
+        private void Reset() => image = GetComponent<Image>();
 
         protected override void OnContextAvailable(IBindingContext context, string path)
         {
@@ -35,7 +36,7 @@ namespace AES.Tools
 #if UNITY_EDITOR
             Debug_SetLastValue(value);
 #endif
-            if (renderer == null)
+            if (image == null)
                 return;
 
             if (useConverter && converter != null)
@@ -44,12 +45,12 @@ namespace AES.Tools
                     value,
                     typeof(Color),
                     converterParameter,
-                    null // 문화권 필요 없음
+                    null 
                 );
             }
 
             if (value is Color c)
-                renderer.color = c;
+                image.color = c;
         }
     }
 }

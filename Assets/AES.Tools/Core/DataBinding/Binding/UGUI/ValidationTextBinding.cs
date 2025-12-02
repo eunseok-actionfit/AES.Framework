@@ -44,7 +44,6 @@ namespace AES.Tools
 
         void OnValueChanged(object value)
         {
-            // path 값이 IValidatableProperty 라고 가정 (ViewModelContext가 반환)
             _validatable = value as IValidatableProperty;
             UpdateText();
         }

@@ -10,8 +10,9 @@ namespace AES.Tools
         [SerializeField] TMP_Text tmpText;
 
         [Header("Formatting")]
-        [SerializeField] bool useFormat;
-        [SerializeField, ShowIf(nameof(useFormat))] string format;
+        [SerializeField] bool useFormat = true;
+        // 기본값은 "{0}" → 그냥 값만 출력
+        [SerializeField, ShowIf(nameof(useFormat))] string format = "{0}";
         [SerializeField, ShowIf(nameof(useFormat))] bool useInvariantCulture = true;
 
         [Header("Value Converter")]
@@ -33,16 +34,13 @@ namespace AES.Tools
                 tmpText = GetComponent<TMP_Text>();
 
             _ctx = context;
-
             _listenerToken = context.RegisterListener(path, OnValueChanged);
         }
 
         protected override void OnContextUnavailable()
         {
             if (_ctx != null && _listenerToken != null)
-            {
                 _ctx.RemoveListener(ResolvedPath, OnValueChanged, _listenerToken);
-            }
 
             _listenerToken = null;
             _ctx = null;
@@ -57,20 +55,9 @@ namespace AES.Tools
             object value = rawValue;
 
             if (useConverter && converter != null)
-            {
-                value = converter.Convert(value, typeof(string), converterParameter, culture);
-            }
+                value = converter.Convert(value, typeof(object), converterParameter, culture);
 
-            string text;
-
-            if (useFormat)
-            {
-                text = TextFormatHelper.Format(value, true, format, culture);
-            }
-            else
-            {
-                text = TextFormatHelper.ConvertToString(value, culture);
-            }
+            string text = TextFormatHelper.Format(value, useFormat, format, culture);
 
             tmpText.text = text;
 

@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace AES.Tools
 {
-    public enum ViewModelSourceMode { AutoCreate, External }
+    public enum ViewModelSourceMode { AutoCreate, External,   InheritFromParent }
 
     public enum ContextNameMode { TypeName, GameObjectName, Custom }
 
@@ -29,6 +29,11 @@ namespace AES.Tools
 
         // AutoCreate용 타입 정보 (원하면 안 써도 됨)
         [SerializeField] private string viewModelTypeName;
+        
+        [Header("Inherit From Parent Settings")]
+        [SerializeField] private ContextLookupMode inheritLookupMode = ContextLookupMode.Nearest;
+        [SerializeField] private string inheritContextName;  // ByName 모드일 때 쓸 이름
+        [SerializeField] private string inheritMemberPath;   // 부모 VM 안에서 자식 VM 위치 (예: "ChildVm")
 
 
         private readonly DataContext _dataContext = new DataContext();
