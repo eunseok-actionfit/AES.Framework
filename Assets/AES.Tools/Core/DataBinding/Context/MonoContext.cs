@@ -1,12 +1,26 @@
 using System;
+using System.Collections;
 using UnityEngine;
 
+#if UNITY_EDITOR
+using System.Reflection;
+#endif
 
 namespace AES.Tools
 {
-    public enum ViewModelSourceMode { AutoCreate, External,   InheritFromParent }
+    public enum ViewModelSourceMode
+    {
+        AutoCreate,
+        External,
+        InheritFromParent
+    }
 
-    public enum ContextNameMode { TypeName, GameObjectName, Custom }
+    public enum ContextNameMode
+    {
+        TypeName,
+        GameObjectName,
+        Custom
+    }
 
     /// <summary>
     /// 모든 ViewModel 컨텍스트 제공자.
@@ -27,16 +41,18 @@ namespace AES.Tools
         [SerializeField]
         private ViewModelSourceMode viewModelSource = ViewModelSourceMode.External;
 
-        // AutoCreate용 타입 정보 (원하면 안 써도 됨)
+        // AutoCreate용 타입 정보
         [SerializeField] private string viewModelTypeName;
-        
+
         [Header("Inherit From Parent Settings")]
         [SerializeField] private ContextLookupMode inheritLookupMode = ContextLookupMode.Nearest;
-        [SerializeField] private string inheritContextName;  // ByName 모드일 때 쓸 이름
-        [SerializeField] private string inheritMemberPath;   // 부모 VM 안에서 자식 VM 위치 (예: "ChildVm")
-
+        [SerializeField] private string inheritContextName;   // ByName 모드일 때 사용할 이름
+        [SerializeField] private string inheritMemberPath;    // 부모 VM 안에서 상속할 베이스 경로 (예: "ChildVm", "Child1.Value")
 
         private readonly DataContext _dataContext = new DataContext();
+
+        // InheritFromParent 모드에서 사용할 래핑 컨텍스트
+        private IBindingContext _inheritRuntimeContext;
 
         public string ContextName
         {
@@ -57,18 +73,55 @@ namespace AES.Tools
         public Type ViewModelType { get; private set; }
         public object ViewModel { get; private set; }
 
-        public IBindingContext RuntimeContext => _dataContext.BindingContext;
+        /// <summary>
+        /// 런타임 바인딩 컨텍스트.
+        /// - AutoCreate / External: 내부 DataContext
+        /// - InheritFromParent: 부모 컨텍스트 + inheritMemberPath 를 래핑한 SubContext
+        /// </summary>
+        public IBindingContext RuntimeContext
+        {
+            get
+            {
+                if (viewModelSource == ViewModelSourceMode.InheritFromParent)
+                    return _inheritRuntimeContext;
+
+                return _dataContext.BindingContext;
+            }
+        }
 
 #if UNITY_EDITOR
+        /// <summary>
+        /// 에디터 드롭다운용 ViewModel 타입.
+        /// - 일반 모드: ViewModelType
+        /// - 상속 모드: 부모 타입 + inheritMemberPath 기준으로 계산된 서브 타입
+        /// </summary>
         public Type DesignTimeViewModelType
         {
             get
             {
-                if (ViewModelType != null)
-                    return ViewModelType;
+                // 일반 모드
+                if (viewModelSource != ViewModelSourceMode.InheritFromParent)
+                {
+                    if (ViewModelType != null)
+                        return ViewModelType;
 
-                TryResolveType();
-                return ViewModelType;
+                    TryResolveType();
+                    return ViewModelType;
+                }
+
+                // 상속 모드: 부모 + 경로 기준 타입
+                var parent = EditorResolveParentProvider();
+                if (parent == null)
+                    return null;
+
+                var parentType = parent.DesignTimeViewModelType;
+                if (parentType == null)
+                    return null;
+
+                if (string.IsNullOrEmpty(inheritMemberPath))
+                    return parentType;
+
+                return GetTypeFromPath(parentType, inheritMemberPath);
             }
         }
 
@@ -79,20 +132,208 @@ namespace AES.Tools
             if (!Application.isPlaying)
                 TryResolveType();
         }
+
+        IBindingContextProvider EditorResolveParentProvider()
+        {
+            switch (inheritLookupMode)
+            {
+                case ContextLookupMode.Nearest:
+                    return GetNearestProviderInParents(excludeSelf: true);
+
+                case ContextLookupMode.ByNameInParents:
+                    return FindProviderInParentsByName(inheritContextName, excludeSelf: true);
+
+                case ContextLookupMode.ByNameInScene:
+                    return FindProviderInSceneByName(inheritContextName, excludeSelf: true);
+
+                default:
+                    return GetNearestProviderInParents(excludeSelf: true);
+            }
+        }
+
+        Type GetTypeFromPath(Type rootType, string path)
+        {
+            if (rootType == null || string.IsNullOrEmpty(path))
+                return rootType;
+
+            var parts = path.Split('.');
+            var t = rootType;
+
+            foreach (var part in parts)
+            {
+
+                var prop = t.GetProperty(part,
+                    BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                if (prop != null)
+                {
+                    t = prop.PropertyType;
+                    continue;
+                }
+
+                var field = t.GetField(part,
+                    BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                if (field != null)
+                {
+                    t = field.FieldType;
+                    continue;
+                }
+
+                // 찾지 못하면 실패
+                return null;
+            }
+
+            return t;
+        }
 #endif
 
         private void Awake()
         {
-            if (viewModelSource == ViewModelSourceMode.AutoCreate)
+            switch (viewModelSource)
             {
-                TryResolveType();
+                case ViewModelSourceMode.AutoCreate:
+                    TryAutoCreateViewModel();
+                    break;
 
-                if (ViewModelType != null)
+                case ViewModelSourceMode.InheritFromParent:
+                    StartCoroutine(CoInitInheritFromParent());
+                    break;
+
+                case ViewModelSourceMode.External:
+                default:
+                    // 외부에서 SetViewModel() 호출
+                    break;
+            }
+        }
+
+        private void TryAutoCreateViewModel()
+        {
+            TryResolveType();
+
+            if (ViewModelType == null)
+                return;
+
+            try
+            {
+                var vm = Activator.CreateInstance(ViewModelType);
+                SetViewModel(vm);
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"[MonoContext] ViewModel 인스턴스 생성 중 예외 발생: {e}", this);
+            }
+        }
+
+        /// <summary>
+        /// InheritFromParent 모드 초기화.
+        /// 부모 RuntimeContext 가 준비될 때까지 기다렸다가 SubBindingContext 생성.
+        /// </summary>
+        private IEnumerator CoInitInheritFromParent()
+        {
+            var parent = ResolveParentProvider();
+            if (parent == null)
+            {
+                Debug.LogWarning("[MonoContext] 상속용 부모 IBindingContextProvider 를 찾지 못했습니다.", this);
+                yield break;
+            }
+
+            var parentCtx = parent.RuntimeContext;
+            while (parentCtx == null)
+            {
+                yield return null;
+                parentCtx = parent.RuntimeContext;
+            }
+
+            // inheritMemberPath 가 비어 있으면 부모 전체를 서브 컨텍스트 루트로 사용
+            var basePath = string.IsNullOrEmpty(inheritMemberPath) ? null : inheritMemberPath;
+
+            _inheritRuntimeContext = new SubBindingContext(parentCtx, basePath);
+        }
+
+        private IBindingContextProvider ResolveParentProvider()
+        {
+            switch (inheritLookupMode)
+            {
+                case ContextLookupMode.Nearest:
+                    return GetNearestProviderInParents(excludeSelf: true);
+
+                case ContextLookupMode.ByNameInParents:
+                    return FindProviderInParentsByName(inheritContextName, excludeSelf: true);
+
+                case ContextLookupMode.ByNameInScene:
+                    return FindProviderInSceneByName(inheritContextName, excludeSelf: true);
+
+                default:
+                    return GetNearestProviderInParents(excludeSelf: true);
+            }
+        }
+
+        private IBindingContextProvider GetNearestProviderInParents(bool excludeSelf)
+        {
+            var parents = GetComponentsInParent<MonoBehaviour>(includeInactive: true);
+            foreach (var mb in parents)
+            {
+                if (excludeSelf && mb == this)
+                    continue;
+
+                if (mb is IBindingContextProvider p)
+                    return p;
+            }
+
+            return null;
+        }
+
+        private IBindingContextProvider FindProviderInParentsByName(string name, bool excludeSelf)
+        {
+            if (string.IsNullOrEmpty(name))
+                return null;
+
+            var parents = GetComponentsInParent<MonoBehaviour>(includeInactive: true);
+            foreach (var mb in parents)
+            {
+                if (excludeSelf && mb == this)
+                    continue;
+
+                if (mb is IBindingContextProvider p)
                 {
-                    var vm = Activator.CreateInstance(ViewModelType);
-                    SetViewModel(vm);
+                    if (mb is MonoContext dc && dc.ContextName == name)
+                        return p;
+
+                    if (mb.gameObject.name == name)
+                        return p;
                 }
             }
+
+            return null;
+        }
+
+        private IBindingContextProvider FindProviderInSceneByName(string name, bool excludeSelf)
+        {
+            if (string.IsNullOrEmpty(name))
+                return null;
+
+#if UNITY_2022_2_OR_NEWER
+            var all = FindObjectsByType<MonoBehaviour>(
+                FindObjectsInactive.Include,
+                FindObjectsSortMode.None);
+#else
+            var all = FindObjectsOfType<MonoBehaviour>(true);
+#endif
+            foreach (var mb in all)
+            {
+                if (excludeSelf && mb == this)
+                    continue;
+
+                if (mb is IBindingContextProvider p)
+                {
+                    if (mb is MonoContext dc && dc.ContextName == name)
+                        return p;
+
+                    if (mb.gameObject.name == name)
+                        return p;
+                }
+            }
+
+            return null;
         }
 
         private void TryResolveType()
@@ -126,6 +367,64 @@ namespace AES.Tools
                 ViewModelType = ViewModel.GetType();
 
             _dataContext.SetViewModel(ViewModel);
+        }
+
+        /// <summary>
+        /// 부모 컨텍스트 + basePath 를 래핑하는 서브 컨텍스트.
+        /// </summary>
+        private sealed class SubBindingContext : IBindingContext
+        {
+            private readonly IBindingContext _parent;
+            private readonly string _basePath;
+
+            public SubBindingContext(IBindingContext parent, string basePath)
+            {
+                _parent   = parent ?? throw new ArgumentNullException(nameof(parent));
+                _basePath = string.IsNullOrEmpty(basePath) ? null : basePath;
+            }
+
+            private string Concat(string path)
+            {
+                if (string.IsNullOrEmpty(_basePath))
+                    return path ?? string.Empty;
+
+                if (string.IsNullOrEmpty(path))
+                    return _basePath;
+
+                return _basePath + "." + path;
+            }
+
+            public object GetValue()
+            {
+                if (string.IsNullOrEmpty(_basePath))
+                    return _parent.GetValue();
+
+                return _parent.GetValue(_basePath);
+            }
+
+            public object GetValue(string path)
+            {
+                var full = Concat(path);
+                return _parent.GetValue(full);
+            }
+
+            public void SetValue(string path, object value)
+            {
+                var full = Concat(path);
+                _parent.SetValue(full, value);
+            }
+
+            public object RegisterListener(string path, Action<object> onValueChanged)
+            {
+                var full = Concat(path);
+                return _parent.RegisterListener(full, onValueChanged);
+            }
+
+            public void RemoveListener(string path, Action<object> onValueChanged, object token = null)
+            {
+                var full = Concat(path);
+                _parent.RemoveListener(full, onValueChanged, token);
+            }
         }
     }
 }
