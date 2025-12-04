@@ -51,14 +51,21 @@ namespace AES.Tools
 
         private void OnListChanged(object value)
         {
+            Debug.Log($"[ListSpawnBinding] OnListChanged value={value}");
 #if UNITY_EDITOR
             Debug_SetLastValue(value);
 #endif
             if (value is not IObservableList list)
+            {
+                // 리스트가 null(또는 다른 타입)이 되면 뷰를 전부 정리
+                ClearAll();
                 return;
+            }
 
             ApplyHybridBinding(list);
         }
+
+
 
         /// <summary>
         /// 하이브리드 방식:
@@ -114,7 +121,6 @@ namespace AES.Tools
                     vmKeysToRemove.Add(kvp.Key);
                 }
             }
-
             foreach (var key in vmKeysToRemove)
                 _vmToInstance.Remove(key);
 

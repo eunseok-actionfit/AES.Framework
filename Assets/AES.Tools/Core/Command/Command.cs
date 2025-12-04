@@ -22,8 +22,7 @@ namespace AES.Tools.Commands
 
         public override void Execute(Unit unit = default)
         {
-            Debug.Log($"[Command.Execute] thisHash={GetHashCode()}, target={_execute?.Target}, method={_execute?.Method.Name}");
-
+            
             if (CanExecute(unit))
                 _execute?.Invoke();
         }

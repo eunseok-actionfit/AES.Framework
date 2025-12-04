@@ -34,6 +34,14 @@ namespace AES.Tools
             RawValues = Array.Empty<object>();
         }
         
+        public ShowIfAttribute(string conditionFieldName, ShowIfCondition condition)
+        {
+            ConditionFieldName = conditionFieldName;
+            Condition = condition;
+            RawValues = Array.Empty<object>();
+        }
+
+        
 
         // 단일/다중 값: [ShowIf("lookupMode", Mode.A)]
         //               [ShowIf("lookupMode", Mode.A, Mode.B)]

@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine;
 
 
 namespace AES.Tools
@@ -20,8 +21,12 @@ namespace AES.Tools
         public event Action OnListChanged = delegate { };
         public Action<int,T> ItemAdded = delegate { };
         public Action<int,T> ItemRemoved = delegate { };
-        private void Notify() => OnListChanged.Invoke();
-        
+        private void Notify()
+        {
+            Debug.Log($"[ObservableList] Notify Count={Count}");
+            OnListChanged.Invoke();
+        }
+
         public int Count => _inner.Count;
         public object GetItem(int index) => _inner[index];
         public IEnumerable Enumerate() => _inner;

@@ -4,7 +4,8 @@
   "references": [
     "AES.Tools",
     "Unity.Addressables.Editor",
-    "UniTask"
+    "UniTask",
+    "Unity.TextMeshPro"
   ],
   "includePlatforms": [
     "Editor"
