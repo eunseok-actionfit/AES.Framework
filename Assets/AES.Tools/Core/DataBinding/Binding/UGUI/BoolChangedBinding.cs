@@ -40,7 +40,7 @@ namespace AES.Tools
         private void OnValueChangedInternal(object value)
         {
 #if UNITY_EDITOR
-            Debug_SetLastValue(value);
+            Debug_OnValueUpdated(value, ResolvedPath);
 #endif
             if (!TryGetBool(value, out bool current))
                 return;

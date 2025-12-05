@@ -90,7 +90,7 @@ namespace AES.Tools.Bindings
             _isUpdatingFromUI = false;
 
 #if UNITY_EDITOR
-            Debug_SetLastValue(text);
+            Debug_OnValueUpdated(text, ResolvedPath);
 #endif
         }
 

@@ -27,6 +27,10 @@ namespace AES.Tools
 		/// 버튼을 누르고 있는 동안 매 프레임 호출할 메서드(들)
 		[Tooltip("버튼을 누르고 있는 동안 호출할 메서드(들)")]
 		public UnityEvent ButtonPressed;
+		
+		/// 버튼을 '정상적으로 탭했을 때'(누르고 버튼 위에서 뗐을 때) 호출할 메서드(들)
+		[Tooltip("버튼을 탭(Down+Up을 버튼 안에서 완료)했을 때 호출할 메서드(들)")]
+		public UnityEvent ButtonTapped;
 
 		[Header("Sprite Swap")]
 		[Information("Disabled / Pressed 상태에서 사용할 다른 스프라이트나 색을 정의할 수 있습니다.", InformationAttribute.InformationType.Info,false)]
@@ -39,7 +43,7 @@ namespace AES.Tools
 		/// 비활성화 상태일 때 사용할 색
 		[Tooltip("비활성화 상태일 때 사용할 색")]
 		[ShowIf(nameof(DisabledChangeColor))]
-		public Color DisabledColor = Color.white;
+		public Color DisabledColor = Color.gray5;
 		/// 버튼이 눌린(Pressed) 상태일 때 사용할 스프라이트
 		[Tooltip("버튼이 눌린 상태일 때 사용할 스프라이트")]
 		public Sprite PressedSprite;
@@ -49,7 +53,7 @@ namespace AES.Tools
 		/// 버튼이 눌린 상태일 때 사용할 색
 		[Tooltip("버튼이 눌린 상태일 때 사용할 색")]
 		[ShowIf(nameof(PressedChangeColor))]
-		public Color PressedColor= Color.white;
+		public Color PressedColor= Color.gray7;
 		/// 버튼이 하이라이트(포커스) 상태일 때 사용할 스프라이트
 		[Tooltip("버튼이 하이라이트 상태일 때 사용할 스프라이트")]
 		public Sprite HighlightedSprite;
@@ -142,6 +146,8 @@ namespace AES.Tools
 		protected float _lastClickTimestamp = 0f;
 		/// 연결된 Selectable 컴포넌트 (있다면)
 		protected Selectable _selectable;
+		/// 포인터(손가락/마우스)가 현재 버튼 영역 안에 있는지 여부
+		protected bool _pointerInside = false;
         
       /// <summary>
 		/// Awake 시점에 CanvasGroup 등 필요한 컴포넌트를 가져와 초기 설정을 합니다.
@@ -333,6 +339,9 @@ namespace AES.Tools
 			{
 				return;
 			}
+    
+			// 포인터가 이 버튼을 실제로 누르기 시작했으니 안에 있다고 간주
+			_pointerInside = true;
 			
 			// BufferDuration 안에 다시 눌리면 무시
 			if (Time.unscaledTime - _lastClickTimestamp < BufferDuration)
@@ -390,13 +399,22 @@ namespace AES.Tools
 
 			CurrentState = ButtonStates.ButtonUp;
 			InvokeButtonStateChange(PointerEventData.FramePressState.Released, data);
+
+			// 1) 기존 Released 동작은 그대로 유지 (연출이 이걸 쓰고 있으니 손대지 않음)
 			if ((Time.timeScale != 0) && (ReleasedDelay > 0))
 			{
-				Invoke ("InvokeReleased", ReleasedDelay);
+				Invoke(nameof(InvokeReleased), ReleasedDelay);
 			}
 			else
 			{
-				ButtonReleased.Invoke();
+				ButtonReleased?.Invoke();
+			}
+
+			// 2) 실제 "탭 입력"은 버튼 안에서 Up이 발생했을 때만 인정
+			//    (밖으로 드래그해서 나간 경우: OnPointerExit에서 _pointerInside=false 후 Up 호출)
+			if (_pointerInside && ButtonTapped != null)
+			{
+				ButtonTapped.Invoke();
 			}
 		}
 
@@ -434,6 +452,7 @@ namespace AES.Tools
 		{
 			SetOpacity(_initialOpacity);
 			CurrentState = ButtonStates.Off;
+			_pointerInside = false;
 		}
 
 		/// <summary>
@@ -450,11 +469,15 @@ namespace AES.Tools
 			{
 				return;
 			}
+
+			_pointerInside = true; // 버튼 안으로 들어옴
+
 			if (!MouseMode)
 			{
-				OnPointerDown (data);
+				OnPointerDown(data);
 			}
 		}
+
 
 		/// <summary>
 		/// 포인터가 버튼 영역을 벗어났을 때 호출됩니다.
@@ -470,9 +493,13 @@ namespace AES.Tools
 			{
 				return;
 			}
+
+			_pointerInside = false; // 버튼 밖으로 나감
+
 			if (!MouseMode)
 			{
-				OnPointerUp(data);	
+				// 기존 동작 유지: 나갈 때 자동으로 Up 처리 → ButtonReleased 그대로 동작
+				OnPointerUp(data);
 			}
 		}
 

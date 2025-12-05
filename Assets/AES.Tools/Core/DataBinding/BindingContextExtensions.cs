@@ -39,6 +39,30 @@ public static class BindingContextExtensions
         return new BindingSubscription(ctx, path, boxed, token);
     }
 
+    public static IDisposable SubscribeProperty<TViewModel, TValue>(
+        this IBindingContext ctx,
+        AES.Tools.BindingBehaviour owner,   // ← 추가
+        Expression<Func<TViewModel, IObservableProperty<TValue>>> selector,
+        Action<TValue> onChanged)
+    {
+        var lambda = selector;
+        string path = GetOrAddPath(lambda);
+
+        Action<object> boxed = v =>
+        {
+#if UNITY_EDITOR
+            owner?.Debug_OnValueUpdated(v, path);
+#endif
+            if (v is TValue tv)
+                onChanged(tv);
+        };
+
+        var token = ctx.RegisterListener(path, boxed);
+
+        return new BindingSubscription(ctx, path, boxed, token);
+    }
+
+
     private static string ExtractPath(Expression expr)
     {
         if (expr is UnaryExpression u && u.NodeType == ExpressionType.Convert)

@@ -26,7 +26,7 @@ namespace AES.Tools
         private void OnValueChanged(object value)
         {
 #if UNITY_EDITOR
-            Debug_SetLastValue(value);
+            Debug_OnValueUpdated(value, ResolvedPath);
 #endif
             if (value is bool b)
                 gameObject.SetActive(invert ? !b : b);

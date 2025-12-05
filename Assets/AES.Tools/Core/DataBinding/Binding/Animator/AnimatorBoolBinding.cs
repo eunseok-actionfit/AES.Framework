@@ -29,8 +29,9 @@ namespace AES.Tools
         private void OnValueChanged(object value)
         {
 #if UNITY_EDITOR
-            Debug_SetLastValue(value);
+            Debug_OnValueUpdated(value, ResolvedPath);
 #endif
+
             if (_animator == null || string.IsNullOrEmpty(parameterName)) return;
             if (value is bool b)
                 _animator.SetBool(parameterName, b);

@@ -13,7 +13,7 @@ namespace AES.Tools
     {
         Nearest,        // 기존처럼 가장 가까운 상위 DataContext
         ByNameInParents,// 부모 계층(DataContextBase들)에서 이름으로 검색
-        ByNameInScene,   // 씬 전체에서 이름으로 검색
+        ByNameInScene,  // 씬 전체에서 이름으로 검색
     }
 
     /// <summary>
@@ -42,10 +42,8 @@ namespace AES.Tools
             CurrentProvider = ResolveProvider();
 
 #if UNITY_EDITOR
-            if (CurrentProvider is Object obj)
-                Debug_SetContextAndPath(obj, memberPath);
-            else
-                Debug_SetContextAndPath(null, memberPath);
+            // Provider / Path / ContextName / RuntimeContextType 등 기본 정보 기록
+            Debug_OnSubscribeStart(CurrentProvider, memberPath);
 #endif
 
             if (CurrentProvider == null)
@@ -62,6 +60,10 @@ namespace AES.Tools
                 return;
             }
 
+#if UNITY_EDITOR
+            Debug_OnContextReady(BindingContext);
+#endif
+
             OnContextAvailable(BindingContext, memberPath);
         }
 
@@ -72,12 +74,11 @@ namespace AES.Tools
                 yield return null;
 
 #if UNITY_EDITOR
-            Debug_SetContextAndPath(CurrentProvider as Object, memberPath);
+            Debug_OnContextReady(BindingContext);
 #endif
 
             OnContextAvailable(BindingContext, memberPath);
         }
-
 
         protected override void Unsubscribe()
         {

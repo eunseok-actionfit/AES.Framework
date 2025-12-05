@@ -6,6 +6,12 @@ using UnityEngine;
 
 namespace AES.Tools.Bindings
 {
+    public enum ButtonTriggerMode
+    {
+        Tap,           // 탭 완료 시(Up inside) 실행 — 기본값
+        FirstPress   // 기존처럼 눌렀을 때 실행
+    }
+
 
     [RequireComponent(typeof(TouchButton))]
     public class TouchButtonCommandBinding : ContextBindingBase
@@ -19,6 +25,7 @@ namespace AES.Tools.Bindings
         [SerializeField, ShowIf(nameof(useParameter))] string stringParameter;
 
         [Header("Behaviour")]
+        [SerializeField] ButtonTriggerMode triggerMode = ButtonTriggerMode.Tap; // 기본값 Tap
         [SerializeField] bool updateInteractableOnEnable = true;
         [SerializeField] bool disableWhileRunning = true;
 
@@ -56,6 +63,11 @@ namespace AES.Tools.Bindings
             if (value is ICommand cmd)
             {
                 BindCommand(cmd);
+
+#if UNITY_EDITOR
+                // 커맨드는 처음 한번만 디버그에 기록
+                Debug_OnValueUpdated(cmd, path);
+#endif
             }
             else
             {
@@ -65,16 +77,37 @@ namespace AES.Tools.Bindings
                 return;
             }
 
-            button.ButtonPressedFirstTime.AddListener(OnClick);
+            switch (triggerMode)
+            {
+                case ButtonTriggerMode.FirstPress:
+                    button.ButtonPressedFirstTime.AddListener(OnClick);
+                    break;
+
+                case ButtonTriggerMode.Tap:
+                    button.ButtonTapped.AddListener(OnClick);
+                    break;
+            }
 
             if (updateInteractableOnEnable)
                 UpdateInteractable();
         }
 
+
         protected override void OnContextUnavailable()
         {
             if (button != null)
-                button.ButtonPressedFirstTime.RemoveListener(OnClick);
+            {
+                switch (triggerMode)
+                {
+                    case ButtonTriggerMode.FirstPress:
+                        button.ButtonPressedFirstTime.RemoveListener(OnClick);
+                        break;
+
+                    case ButtonTriggerMode.Tap:
+                        button.ButtonTapped.RemoveListener(OnClick);
+                        break;
+                }
+            }
 
             _command = null;
         }

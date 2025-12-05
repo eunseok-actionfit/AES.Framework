@@ -7,14 +7,15 @@ namespace AES.Tools.Editor
     [CustomEditor(typeof(BindingBehaviour), true)]
     public class BindingBehaviourEditor : UnityEditor.Editor
     {
-        static bool _showDebug = true;
+        // 기본값을 true → false 로 변경 (처음엔 닫혀있게)
+        static bool _showDebug = false;
 
         public override void OnInspectorGUI()
         {
-            // 먼저 원래 인스펙터 그리기
+            // 기본 인스펙터
             base.OnInspectorGUI();
 
-            // 디버그 전역 토글이 꺼져 있으면 그리지 않음
+            // 전역 디버그 토글이 꺼져 있으면 아무것도 안 그림
             if (!BindingDebugSettings.Enabled)
                 return;
 
@@ -22,7 +23,12 @@ namespace AES.Tools.Editor
 
             EditorGUILayout.Space();
             EditorGUILayout.BeginVertical("box");
-            _showDebug = EditorGUILayout.Foldout(_showDebug, "Binding Debug Info", false);
+
+            // Foldout 헤더
+            _showDebug = EditorGUILayout.Foldout(
+                _showDebug,
+                "Binding Debug Info",
+                true); // expandedDefaultOnFirstDraw는 true로 두고, 실제 상태는 static bool에 의해 제어
 
             if (_showDebug)
             {

@@ -61,6 +61,11 @@ namespace AES.Tools.Bindings
             if (value is ICommand cmd)
             {
                 BindCommand(cmd);
+
+#if UNITY_EDITOR
+                // 커맨드는 처음 한번만 디버그에 기록
+                Debug_OnValueUpdated(cmd, path);
+#endif
             }
             else
             {
@@ -75,6 +80,7 @@ namespace AES.Tools.Bindings
             if (updateInteractableOnEnable)
                 UpdateInteractable();
         }
+
 
         protected override void OnContextUnavailable()
         {

@@ -62,7 +62,7 @@ namespace AES.Tools
             tmpText.text = text;
 
 #if UNITY_EDITOR
-            Debug_SetLastValue(text);
+            Debug_OnValueUpdated(text, ResolvedPath);
 #endif
         }
     }

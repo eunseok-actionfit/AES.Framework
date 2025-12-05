@@ -29,7 +29,7 @@ namespace AES.Tools
         private void OnValueChanged(object value)
         {
 #if UNITY_EDITOR
-            Debug_SetLastValue(value);
+            Debug_OnValueUpdated(value, ResolvedPath);
 #endif
             if (_renderer == null) return;
             if (value is bool b)

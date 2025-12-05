@@ -23,6 +23,8 @@ namespace AES.Tools.View
         public UnityEvent OnShowCompleted;
         public UnityEvent OnHideStarted;
         public UnityEvent OnHideCompleted;
+        
+        protected void Reset() => canvasGroup = GetComponent<CanvasGroup>();
 
         protected virtual void Awake()
         {

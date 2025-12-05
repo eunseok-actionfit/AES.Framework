@@ -25,11 +25,13 @@ namespace AES.Tools
             if (BindingContext != null && _listener != null)
                 BindingContext.RemoveListener(ResolvedPath, _listener, _token);
         }
+        
+        
 
         private void OnValueChanged(object value)
         {
 #if UNITY_EDITOR
-            Debug_SetLastValue(value);
+            Debug_OnValueUpdated(value, ResolvedPath);
 #endif
             if (_animator == null || string.IsNullOrEmpty(parameterName)) return;
             if (value is int i)

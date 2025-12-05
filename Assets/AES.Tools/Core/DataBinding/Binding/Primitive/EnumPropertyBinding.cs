@@ -23,7 +23,7 @@ public sealed class EnumPropertyBinding : ContextBindingBase
                 int intValue = Convert.ToInt32(e);
                 onChanged?.Invoke(intValue);
 #if UNITY_EDITOR
-                Debug_SetLastValue(e);
+                Debug_OnValueUpdated(e, ResolvedPath);
 #endif
             }
             // 필요하면 여기서 string 이름으로도 이벤트 한 번 더 쏘는 구조 추가 가능

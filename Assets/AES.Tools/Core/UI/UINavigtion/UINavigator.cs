@@ -22,7 +22,7 @@ public class UINavigator : MonoBehaviour
     [SerializeField, ShowIf(nameof(useEmptyAsRoot), Condition = ShowIfCondition.BoolIsFalse)]
     private UIView rootScreen;
 
-    private List<UIView> screens = new();
+    [SerializeField, HideInInspector]private List<UIView> screens = new();
     private readonly Dictionary<Type, UIView> _cache = new();
     private readonly Stack<UIView> _stack = new();
 
@@ -67,7 +67,6 @@ public class UINavigator : MonoBehaviour
         if (_initialized) return;
         _initialized = true;
 
-        // OnValidate 에서 채워진 screens 기준으로 초기화
         foreach (var s in screens)
         {
             if (s == null) continue;
@@ -75,9 +74,21 @@ public class UINavigator : MonoBehaviour
             var type = s.GetType();
             _cache.TryAdd(type, s);
 
-            // 시작 시에는 모두 숨겨 둔다 (루트만 따로 Show)
+            var rt = (RectTransform)s.transform;
+
+            // 부모 기준 전체 확장
+            rt.anchorMin = Vector2.zero;          // (0, 0)
+            rt.anchorMax = Vector2.one;           // (1, 1)
+
+            // 앵커에서의 여백 0
+            rt.offsetMin = Vector2.zero;
+            rt.offsetMax = Vector2.zero;
+
+            // 필요하면 스케일/회전도 초기화
+            rt.localScale = Vector3.one;
+            rt.localRotation = Quaternion.identity;
+
             s.Hide();
-            s.transform.localPosition = Vector3.zero;
         }
 
         _stack.Clear();
@@ -87,8 +98,10 @@ public class UINavigator : MonoBehaviour
             rootScreen.Show();
             _stack.Push(rootScreen);
         }
+        
         // useEmptyAsRoot == true 이면: 아무 화면도 보이지 않는 상태에서 시작
     }
+
 
     /// <summary>
     /// 타입 기반 화면 Push

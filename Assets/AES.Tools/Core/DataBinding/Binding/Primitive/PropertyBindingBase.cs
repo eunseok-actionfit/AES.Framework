@@ -37,7 +37,7 @@ public abstract class PropertyBindingBase<T> : ContextBindingBase
     {
         onChanged?.Invoke(value);
 #if UNITY_EDITOR
-        Debug_SetLastValue(value);
+        Debug_OnValueUpdated(value, ResolvedPath);
 #endif
     }
 }

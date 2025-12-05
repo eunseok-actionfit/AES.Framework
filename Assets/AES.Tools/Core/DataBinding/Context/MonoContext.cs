@@ -26,7 +26,7 @@ namespace AES.Tools
     /// 모든 ViewModel 컨텍스트 제공자.
     /// 제네릭 없이 하나로 사용한다.
     /// </summary>
-    [DefaultExecutionOrder(-10)]
+    [DefaultExecutionOrder(-100)]
     public sealed class MonoContext : MonoBehaviour, IBindingContextProvider
     {
         [Header("Context Name")]
@@ -49,7 +49,7 @@ namespace AES.Tools
         [SerializeField] private string inheritContextName;   // ByName 모드일 때 사용할 이름
         [SerializeField] private string inheritMemberPath;    // 부모 VM 안에서 상속할 베이스 경로 (예: "ChildVm", "Child1.Value")
 
-        private readonly DataContext _dataContext = new DataContext();
+        private readonly DataContext _dataContext = new();
 
         // InheritFromParent 모드에서 사용할 래핑 컨텍스트
         private IBindingContext _inheritRuntimeContext;
@@ -83,11 +83,36 @@ namespace AES.Tools
             get
             {
                 if (viewModelSource == ViewModelSourceMode.InheritFromParent)
-                    return _inheritRuntimeContext;
+                {
+                    // 이미 만들어져 있으면 그대로 사용
+                    if (_inheritRuntimeContext != null)
+                        return _inheritRuntimeContext;
 
+                    // 아직 없으면 지금 시점에서 부모를 찾아본다.
+                    var parent = ResolveParentProvider();
+                    if (parent == null)
+                        return null;
+
+                    var parentCtx = parent.RuntimeContext;
+                    if (parentCtx == null)
+                        return null; // 부모가 아직 준비 전이면, 다음 프레임에 다시 시도
+
+                    var basePath = string.IsNullOrEmpty(inheritMemberPath) ? null : inheritMemberPath;
+                    _inheritRuntimeContext = new SubBindingContext(parentCtx, basePath);
+
+                    Debug.Log(
+                        $"[MonoContext:{name}] RuntimeContext(Inherit) 생성 완료. " +
+                        $"Parent={(parent as MonoBehaviour)?.name}, BasePath={basePath}",
+                        this);
+
+                    return _inheritRuntimeContext;
+                }
+
+                // AutoCreate / External
                 return _dataContext.BindingContext;
             }
         }
+
 
 #if UNITY_EDITOR
         /// <summary>
@@ -195,7 +220,8 @@ namespace AES.Tools
                     break;
 
                 case ViewModelSourceMode.InheritFromParent:
-                    StartCoroutine(CoInitInheritFromParent());
+                    // 예전: StartCoroutine(CoInitInheritFromParent());
+                    // 이제는 RuntimeContext 게터에서 필요할 때 상속 컨텍스트를 만든다.
                     break;
 
                 case ViewModelSourceMode.External:
@@ -204,6 +230,7 @@ namespace AES.Tools
                     break;
             }
         }
+
 
         private void TryAutoCreateViewModel()
         {
@@ -227,6 +254,11 @@ namespace AES.Tools
         /// InheritFromParent 모드 초기화.
         /// 부모 RuntimeContext 가 준비될 때까지 기다렸다가 SubBindingContext 생성.
         /// </summary>
+        /// <summary>
+        /// InheritFromParent 모드 초기화.
+        /// 부모 RuntimeContext 가 준비될 때까지 기다렸다가 SubBindingContext 생성.
+        /// </summary>
+// MonoContext.cs
         private IEnumerator CoInitInheritFromParent()
         {
             var parent = ResolveParentProvider();
@@ -236,18 +268,27 @@ namespace AES.Tools
                 yield break;
             }
 
-            var parentCtx = parent.RuntimeContext;
-            while (parentCtx == null)
+            // 부모 RuntimeContext 준비될 때까지 대기
+            IBindingContext parentCtx = null;
+            while ((parentCtx = parent.RuntimeContext) == null)
             {
+                Debug.Log(
+                    $"[MonoContext:{name}] InheritFromParent → 부모 RuntimeContext 아직 null. " +
+                    $"parent={(parent as MonoBehaviour)?.name}",
+                    this);
                 yield return null;
-                parentCtx = parent.RuntimeContext;
             }
 
-            // inheritMemberPath 가 비어 있으면 부모 전체를 서브 컨텍스트 루트로 사용
             var basePath = string.IsNullOrEmpty(inheritMemberPath) ? null : inheritMemberPath;
-
             _inheritRuntimeContext = new SubBindingContext(parentCtx, basePath);
+
+            Debug.Log(
+                $"[MonoContext:{name}] InheritFromParent 초기화 완료. " +
+                $"Parent={(parent as MonoBehaviour)?.name}, BasePath={basePath}",
+                this);
         }
+
+
 
         private IBindingContextProvider ResolveParentProvider()
         {

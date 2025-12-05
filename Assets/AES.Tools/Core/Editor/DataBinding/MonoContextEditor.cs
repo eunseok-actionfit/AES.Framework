@@ -23,17 +23,19 @@ namespace AES.Tools.Editor
         SerializedProperty _inheritLookupModeProp;
         SerializedProperty _inheritContextNameProp;
         SerializedProperty _inheritMemberPathProp;
+        
+        static bool _showRuntimeDebug = false;
 
         void OnEnable()
         {
-            _nameModeProp = serializedObject.FindProperty("nameMode");
-            _customNameProp = serializedObject.FindProperty("customName");
-            _viewModelSourceProp = serializedObject.FindProperty("viewModelSource");
-            _viewModelTypeNameProp = serializedObject.FindProperty("viewModelTypeName");
+            _nameModeProp           = serializedObject.FindProperty("nameMode");
+            _customNameProp         = serializedObject.FindProperty("customName");
+            _viewModelSourceProp    = serializedObject.FindProperty("viewModelSource");
+            _viewModelTypeNameProp  = serializedObject.FindProperty("viewModelTypeName");
 
-            _inheritLookupModeProp = serializedObject.FindProperty("inheritLookupMode");
+            _inheritLookupModeProp  = serializedObject.FindProperty("inheritLookupMode");
             _inheritContextNameProp = serializedObject.FindProperty("inheritContextName");
-            _inheritMemberPathProp = serializedObject.FindProperty("inheritMemberPath");
+            _inheritMemberPathProp  = serializedObject.FindProperty("inheritMemberPath");
         }
 
         public override void OnInspectorGUI()
@@ -91,6 +93,13 @@ namespace AES.Tools.Editor
                     "• InheritFromParent 모드는 부모 Context 의 특정 멤버(ChildVm 등)를 서브 컨텍스트 루트로 사용합니다.",
                     MessageType.Info);
             }
+
+            EditorGUILayout.Space(10);
+
+            // ------------------------------
+            // Runtime Debug 패널
+            // ------------------------------
+            DrawRuntimeDebugSection();
 
             serializedObject.ApplyModifiedProperties();
         }
@@ -416,6 +425,119 @@ namespace AES.Tools.Editor
             }
         }
 
+// --------------------------------------------------------------------
+// Runtime Debug
+// --------------------------------------------------------------------
+void DrawRuntimeDebugSection()
+{
+    var ctx = (MonoContext)target;
+    var sourceMode = (ViewModelSourceMode)_viewModelSourceProp.enumValueIndex;
+
+    // 전역 디버그가 꺼져 있으면 아예 안 보이게
+    if (!BindingDebugSettings.Enabled)
+        return;
+
+    EditorGUILayout.Space();
+
+    using (new EditorGUILayout.VerticalScope("box"))
+    {
+        // 헤더를 Foldout으로
+        _showRuntimeDebug = EditorGUILayout.Foldout(
+            _showRuntimeDebug,
+            "Runtime Debug",
+            true);
+
+        if (!_showRuntimeDebug)
+            return;
+
+        EditorGUI.indentLevel++;
+
+        if (!EditorApplication.isPlaying)
+        {
+            EditorGUILayout.HelpBox(
+                "플레이 모드에서 ViewModel 생성/주입/상속 상태를 확인할 수 있습니다.",
+                MessageType.Info);
+            EditorGUI.indentLevel--;
+            return;
+        }
+
+        // 기존 내용 그대로 아래로 이동
+        EditorGUILayout.LabelField("Source Mode", sourceMode.ToString());
+        EditorGUILayout.LabelField("Context Name", ctx.ContextName);
+
+        var vmType    = ctx.ViewModelType;
+        var vmInst    = ctx.ViewModel;
+        var runtimeCtx = ctx.RuntimeContext;
+
+        EditorGUILayout.LabelField("ViewModel Type",
+            vmType != null ? vmType.FullName : "(null)");
+
+        EditorGUILayout.LabelField("ViewModel Instance",
+            vmInst != null ? vmInst.ToString() : "(null)");
+
+        EditorGUILayout.LabelField("RuntimeContext",
+            runtimeCtx != null ? runtimeCtx.GetType().Name : "(null)");
+
+        if (sourceMode == ViewModelSourceMode.External)
+        {
+            if (vmInst == null)
+                EditorGUILayout.HelpBox(
+                    "External 모드인데 ViewModel 인스턴스가 아직 없습니다.\n" +
+                    "→ Presenter/EntryPoint에서 SetViewModel()이 호출되지 않았을 가능성이 있습니다.",
+                    MessageType.Warning);
+        }
+        else if (sourceMode == ViewModelSourceMode.AutoCreate)
+        {
+            if (vmInst == null)
+            {
+                EditorGUILayout.HelpBox(
+                    "AutoCreate 모드인데 ViewModel 인스턴스가 없습니다.\n" +
+                    "→ viewModelTypeName 설정 또는 Activator.CreateInstance 실패 여부를 확인하세요.",
+                    MessageType.Error);
+            }
+        }
+        else if (sourceMode == ViewModelSourceMode.InheritFromParent)
+        {
+            var (provider, mode, ctxNameForLookup) = ResolveParentProviderForEditor();
+            string basePath = _inheritMemberPathProp != null
+                ? _inheritMemberPathProp.stringValue
+                : "";
+
+            EditorGUILayout.Space(3);
+            EditorGUILayout.LabelField("InheritFromParent Runtime Info", EditorStyles.boldLabel);
+
+            if (provider is MonoBehaviour mb)
+            {
+                string parentName =
+                    mb is MonoContext dc ? dc.ContextName : mb.gameObject.name;
+
+                EditorGUILayout.LabelField("Parent Provider", $"{mb.GetType().Name} ({parentName})");
+            }
+            else
+            {
+                EditorGUILayout.LabelField("Parent Provider", "(null)");
+            }
+
+            EditorGUILayout.LabelField("Lookup Mode", mode.ToString());
+            EditorGUILayout.LabelField("Inherit ContextName",
+                string.IsNullOrEmpty(ctxNameForLookup) ? "(empty)" : ctxNameForLookup);
+            EditorGUILayout.LabelField("Base Path",
+                string.IsNullOrEmpty(basePath) ? "(root)" : basePath);
+
+            if (runtimeCtx == null)
+            {
+                EditorGUILayout.HelpBox(
+                    "상속용 RuntimeContext 가 아직 null 입니다.\n" +
+                    "→ 부모 ViewModel 주입 이전이거나, 상속 컨텍스트가 아직 준비되지 않았을 수 있습니다.",
+                    MessageType.Warning);
+            }
+        }
+
+        EditorGUI.indentLevel--;
+    }
+}
+
+
         // --------------------------------------------------------------------
         // Path 후보 빌드 (ContextBindingBaseEditor 로직 그대로 재사용)
         // --------------------------------------------------------------------
@@ -496,7 +618,10 @@ namespace AES.Tools.Editor
                 ProcessMember(p, p.PropertyType, obj => SafeGet(() => p.GetValue(obj)), instance, basePath, depth, acc);
             }
 
-            foreach (var f in type.GetFields(flags)) { ProcessMember(f, f.FieldType, obj => SafeGet(() => f.GetValue(obj)), instance, basePath, depth, acc); }
+            foreach (var f in type.GetFields(flags))
+            {
+                ProcessMember(f, f.FieldType, obj => SafeGet(() => f.GetValue(obj)), instance, basePath, depth, acc);
+            }
         }
 
         void ProcessMember(

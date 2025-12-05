@@ -99,7 +99,9 @@ public class EnumActiveBinding : ContextBindingBase
             target.SetActive(active);
 
 #if UNITY_EDITOR
-        Debug_SetLastValue($"value={value}, active={active}");
+        // 값 + 실제 경로까지 디버그에 기록
+        Debug_OnValueUpdated($"value={value}, active={active}", ResolvedPath);
 #endif
     }
+
 }

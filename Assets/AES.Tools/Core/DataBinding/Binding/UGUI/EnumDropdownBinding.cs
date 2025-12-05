@@ -94,12 +94,13 @@ public class EnumDropdownBinding : ContextBindingBase
 
         if (boxed == null)
         {
-            // nullable enum에서 null인 경우 처리 원하면 여기서 결정
+            // nullable enum에서 null인 경우
             _isUpdatingFromModel = true;
             dropdown.SetValueWithoutNotify(0);
             _isUpdatingFromModel = false;
+
 #if UNITY_EDITOR
-            Debug_SetLastValue("null");
+            Debug_OnValueUpdated("null", ResolvedPath);
 #endif
             return;
         }
@@ -115,9 +116,10 @@ public class EnumDropdownBinding : ContextBindingBase
         _isUpdatingFromModel = false;
 
 #if UNITY_EDITOR
-        Debug_SetLastValue(boxed);
+        Debug_OnValueUpdated(boxed, ResolvedPath);
 #endif
     }
+
 
     // UI → VM
     void OnDropdownChanged(int index)

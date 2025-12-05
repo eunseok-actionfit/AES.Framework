@@ -53,7 +53,7 @@ namespace AES.Tools
         {
             Debug.Log($"[ListSpawnBinding] OnListChanged value={value}");
 #if UNITY_EDITOR
-            Debug_SetLastValue(value);
+            Debug_OnValueUpdated(value, ResolvedPath);
 #endif
             if (value is not IObservableList list)
             {

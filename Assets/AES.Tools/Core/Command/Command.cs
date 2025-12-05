@@ -26,7 +26,6 @@ namespace AES.Tools.Commands
             if (CanExecute(unit))
                 _execute?.Invoke();
         }
-        
     }
 
     /// <summary>
