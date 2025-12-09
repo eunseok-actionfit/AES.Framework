@@ -1,12 +1,12 @@
 #if UNITY_EDITOR && !ODIN_INSPECTOR
 using System;
 using System.Collections.Generic;
-using AES.Tools;
 using UnityEditor;
-using UnityEngine;
 using UnityEditor.AddressableAssets;
+using UnityEngine;
 
-namespace Systems.UI.Registry.Editor
+
+namespace AES.Tools.Editor.UI
 {
     [CustomPropertyDrawer(typeof(UIRegistryEntry))]
     public sealed class UIRegistryEntryDrawer : PropertyDrawer

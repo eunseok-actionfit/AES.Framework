@@ -33,7 +33,7 @@ namespace AES.Tools
 		public UnityEvent ButtonTapped;
 
 		[Header("Sprite Swap")]
-		[Information("Disabled / Pressed 상태에서 사용할 다른 스프라이트나 색을 정의할 수 있습니다.", InformationAttribute.InformationType.Info,false)]
+		[AesInformation("Disabled / Pressed 상태에서 사용할 다른 스프라이트나 색을 정의할 수 있습니다.")]
 		/// 버튼이 비활성화(Disabled) 상태일 때 사용할 스프라이트
 		[Tooltip("버튼이 비활성화 상태일 때 사용할 스프라이트")]
 		public Sprite DisabledSprite;
@@ -66,7 +66,7 @@ namespace AES.Tools
 		public Color HighlightedColor = Color.white;
 
 		[Header("Opacity")]
-		[Information("버튼이 눌렸을 때 / 대기 중일 때 / 비활성화되었을 때 각각 다른 투명도를 설정할 수 있습니다. 시각적 피드백에 유용합니다.",InformationAttribute.InformationType.Info,false)]
+		[AesInformation("버튼이 눌렸을 때 / 대기 중일 때 / 비활성화되었을 때 각각 다른 투명도를 설정할 수 있습니다. 시각적 피드백에 유용합니다.")]
 		/// 버튼이 눌렸을 때 CanvasGroup에 적용할 투명도
 		[Tooltip("버튼이 눌렸을 때 CanvasGroup에 적용할 투명도")]
 		public float PressedOpacity = 1f;
@@ -78,7 +78,7 @@ namespace AES.Tools
 		public float DisabledOpacity = 1f;
 
 		[Header("Delays")]
-		[Information("버튼이 처음 눌렸을 때와 손을 뗐을 때 이벤트 호출에 지연 시간을 줄 수 있습니다. 보통은 0으로 둡니다.",InformationAttribute.InformationType.Info,false)]
+		[AesInformation("버튼이 처음 눌렸을 때와 손을 뗐을 때 이벤트 호출에 지연 시간을 줄 수 있습니다. 보통은 0으로 둡니다.")]
 		/// 버튼이 처음 눌렸을 때 이벤트 호출까지의 지연 시간
 		[Tooltip("버튼이 처음 눌렸을 때 이벤트 호출까지의 지연 시간")]
 		public float PressedFirstTimeDelay = 0f;
@@ -92,7 +92,7 @@ namespace AES.Tools
 		public float BufferDuration = 0f;
 
 		[Header("Animation")]
-		[Information("Animator를 연결해서 버튼 상태에 따라 애니메이션 파라미터를 업데이트할 수 있습니다.",InformationAttribute.InformationType.Info,false)]
+		[AesInformation("Animator를 연결해서 버튼 상태에 따라 애니메이션 파라미터를 업데이트할 수 있습니다.")]
 		/// 버튼 상태를 반영하도록 바인딩할 Animator
 		[Tooltip("버튼 상태를 반영하도록 바인딩할 Animator")]
 		public Animator Animator;
@@ -107,7 +107,7 @@ namespace AES.Tools
 		public string PressedAnimationParameterName = "Pressed";
 
 		[Header("Mouse Mode")]
-		[Information("이 값을 true로 설정하면 실제로 클릭해야 버튼이 동작합니다. false라면 마우스를 올리는 것만으로도(hover) 트리거되므로, 터치 입력 위주의 UI라면 false가 더 잘 맞습니다.", InformationAttribute.InformationType.Info,false)]
+		[AesInformation("이 값을 true로 설정하면 실제로 클릭해야 버튼이 동작합니다. false라면 마우스를 올리는 것만으로도(hover) 트리거되므로, 터치 입력 위주의 UI라면 false가 더 잘 맞습니다.")]
 		/// true면 실제 클릭해야 하고, false면 마우스 오버만으로도 트리거됩니다(터치 입력에 더 적합).
 		[Tooltip("true면 실제 클릭해야 하고, false면 마우스 오버만으로도 트리거됩니다(터치 입력에 더 적합).")]
 		public bool MouseMode = false;

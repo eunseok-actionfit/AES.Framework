@@ -6,7 +6,9 @@
     "UniTask",
     "AES.Tools",
     "Unity.Addressables",
-    "Unity.ResourceManager"
+    "Unity.ResourceManager",
+    "MaxSdk.Scripts",
+    "AES.Tools.Editor"
   ],
   "includePlatforms": [],
   "excludePlatforms": [],

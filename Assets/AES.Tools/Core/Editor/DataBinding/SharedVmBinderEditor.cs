@@ -8,7 +8,8 @@ using AES.Tools.Commands;
 using UnityEditor;
 using UnityEngine;
 
-namespace AES.Tools.Editor
+
+namespace AES.Tools.Editor.DataBinding
 {
     [CustomEditor(typeof(SharedVmBinder))]
     public class SharedVmBinderEditor : UnityEditor.Editor

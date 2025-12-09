@@ -4,13 +4,6 @@ using AES.Tools;
 using AES.Tools.View;
 using UnityEngine;
 
-#if ODIN_INSPECTOR
-
-
-#else
-using ReadOnly = AES.Tools.ReadOnlyAttribute;
-#endif
-
 public class UINavigator : MonoBehaviour
 {
     [SerializeField] private Transform scanRoot;

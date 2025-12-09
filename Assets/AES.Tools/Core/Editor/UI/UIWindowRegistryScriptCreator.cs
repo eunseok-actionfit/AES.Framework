@@ -5,7 +5,7 @@ using UnityEditor.ProjectWindowCallback;
 using UnityEngine;
 
 
-namespace AES.Tools.Editor
+namespace AES.Tools.Editor.UI
 {
     public sealed class UIWindowRegistryScriptCreator : EndNameEditAction
     {

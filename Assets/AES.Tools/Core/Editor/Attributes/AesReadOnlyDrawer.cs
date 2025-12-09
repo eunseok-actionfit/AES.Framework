@@ -1,11 +1,12 @@
+#if UNITY_EDITOR && !ODIN_INSPECTOR
 using UnityEditor;
 using UnityEngine;
 
 
 namespace AES.Tools.Editor
 {
-    [CustomPropertyDrawer(typeof(ReadOnlyAttribute))]
-    public class ReadOnlyAttributeDrawer : PropertyDrawer
+    [CustomPropertyDrawer(typeof(AesReadOnlyAttribute))]
+    public class AesReadOnlyDrawer : PropertyDrawer
     {
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
@@ -47,3 +48,4 @@ namespace AES.Tools.Editor
         }
     }
 }
+#endif

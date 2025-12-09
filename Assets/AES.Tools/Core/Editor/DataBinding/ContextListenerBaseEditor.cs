@@ -5,7 +5,8 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
-namespace AES.Tools.Editor
+
+namespace AES.Tools.Editor.DataBinding
 {
     [CustomEditor(typeof(ContextListenerBase), true)]
     public class ContextListenerBaseEditor : UnityEditor.Editor

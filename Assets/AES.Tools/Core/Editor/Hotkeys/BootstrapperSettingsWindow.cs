@@ -3,7 +3,7 @@ using UnityEditor;
 using UnityEngine;
 
 
-namespace AES.Tools.Editor
+namespace AES.Tools.Editor.Hotkeys
 {
     /// <summary>
     /// Bootstrapper 씬 설정 전용 에디터 윈도우.

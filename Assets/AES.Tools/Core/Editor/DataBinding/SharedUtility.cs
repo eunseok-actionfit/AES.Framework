@@ -7,7 +7,8 @@ using System.Reflection;
 using UnityEditor;
 using UnityEngine;
 
-namespace AES.Tools
+
+namespace AES.Tools.Editor.DataBinding
 {
     internal static class SharedUtility
     {

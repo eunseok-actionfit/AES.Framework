@@ -2,7 +2,7 @@ using UnityEditor;
 using UnityEngine;
 
 
-namespace AES.Tools.Editor
+namespace AES.Tools.Editor.Hotkeys
 {
     public static class CloseWindowTab {
         [MenuItem("File/Close Window Tab %w")]

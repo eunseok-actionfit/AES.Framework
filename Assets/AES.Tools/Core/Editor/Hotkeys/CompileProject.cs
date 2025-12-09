@@ -2,7 +2,7 @@ using UnityEditor;
 using UnityEditor.Compilation;
 
 
-namespace AES.Tools.Editor
+namespace AES.Tools.Editor.Hotkeys
 {
     public static class CompileProject {
         [MenuItem("File/Compile _F5")]

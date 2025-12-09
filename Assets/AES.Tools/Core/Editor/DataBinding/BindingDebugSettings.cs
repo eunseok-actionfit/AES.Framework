@@ -2,7 +2,7 @@ using UnityEditor;
 
 
 #if UNITY_EDITOR
-namespace AES.Tools.Editor
+namespace AES.Tools.Editor.DataBinding
 {
     public static class BindingDebugSettings
     {

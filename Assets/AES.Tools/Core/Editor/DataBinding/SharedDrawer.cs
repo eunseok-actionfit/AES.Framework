@@ -4,7 +4,8 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
-namespace AES.Tools
+
+namespace AES.Tools.Editor.DataBinding
 {
     [CustomPropertyDrawer(typeof(Shared<>))]
     public sealed class SharedDrawer : PropertyDrawer

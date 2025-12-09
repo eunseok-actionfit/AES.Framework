@@ -2,7 +2,7 @@
 using UnityEngine;
 
 
-namespace AES.Tools.Editor
+namespace AES.Tools.Editor.Hotkeys
 {
     public static class SaveSceneAndProject {
         [MenuItem("File/Save Scene And Project %#&s")]
