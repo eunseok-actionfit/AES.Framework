@@ -442,7 +442,6 @@ public sealed class SaveDataInspectorWindow : EditorWindow
 
             EditorGUILayout.EndVertical();
 
-            // 값이 실제로 바뀌었으면 변경 플래그 강제 세팅 → field.SetValue(...)까지 이어지게
             if (dt != original)
                 GUI.changed = true;
 

@@ -7,8 +7,8 @@ namespace AES.Tools.VContainer
     [CreateAssetMenu(menuName = "App/AppConfig (VContainer)")]
     public class AppConfig : ScriptableObject
     {
-        [Header("시스템 설정")]
-        public InputConfig inputConfig;
+        // [Header("시스템 설정")]
+        // public InputConfig inputConfig;
 
         //[Header("UI Registry")]
         //public UIRegistrySO uiRegistrySO;

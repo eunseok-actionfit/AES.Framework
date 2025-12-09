@@ -167,7 +167,7 @@ namespace AES.Tools.VContainer
 
         private async UniTask InitializeModules()
         {
-            var root = _rootLifetimeScopeInstance; // null일 수도 있음
+            var root = _rootLifetimeScopeInstance; 
 
             var modules = root.Container.Resolve<AppConfig>().modules;
             if (modules == null)

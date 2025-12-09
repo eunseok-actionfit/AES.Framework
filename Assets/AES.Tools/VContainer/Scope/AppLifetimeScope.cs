@@ -42,8 +42,8 @@ namespace AES.Tools.VContainer.Scope
             // Save / Load (앱)
             new SaveAndLoadInstaller(config.storageProfile).Install(builder);
 
-            // Input (엔진 Installer, config 넘김)
-            new InputInstaller(config.inputConfig).Install(builder);
+            // // Input (엔진 Installer, config 넘김)
+            // new InputInstaller(config.inputConfig).Install(builder);
             
             // UI (엔진 Installer)
           //  new UIInstaller(config.uiRegistrySO).Install(builder);
