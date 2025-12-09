@@ -6,21 +6,12 @@ using UnityEngine;
 using System.Reflection;
 #endif
 
+
 namespace AES.Tools
 {
-    public enum ViewModelSourceMode
-    {
-        AutoCreate,
-        External,
-        InheritFromParent
-    }
+    public enum ViewModelSourceMode { AutoCreate, External, InheritFromParent }
 
-    public enum ContextNameMode
-    {
-        TypeName,
-        GameObjectName,
-        Custom
-    }
+    public enum ContextNameMode { TypeName, GameObjectName, Custom }
 
     /// <summary>
     /// 모든 ViewModel 컨텍스트 제공자.
@@ -46,12 +37,14 @@ namespace AES.Tools
 
         [Header("Inherit From Parent Settings")]
         [SerializeField] private ContextLookupMode inheritLookupMode = ContextLookupMode.Nearest;
-        [SerializeField] private string inheritContextName;   // ByName 모드일 때 사용할 이름
-        [SerializeField] private string inheritMemberPath;    // 부모 VM 안에서 상속할 베이스 경로 (예: "ChildVm", "Child1.Value")
+        [SerializeField] private string inheritContextName; // ByName 모드일 때 사용할 이름
+        [SerializeField] private string inheritMemberPath; // 부모 VM 안에서 상속할 베이스 경로 (예: "ChildVm", "Child1.Value")
 
         private readonly DataContext _dataContext = new();
 
-        // InheritFromParent 모드에서 사용할 래핑 컨텍스트
+        // TODO: inheritMemberPath → PropertyPath 변환 적용 고려
+        // // 현재는 문자열 기반 경로를 그대로 사용하지만,
+        // // 바인딩 시스템 v2 계획 시 PropertyPath로 통합 가능.
         private IBindingContext _inheritRuntimeContext;
 
         public string ContextName
@@ -61,18 +54,29 @@ namespace AES.Tools
                 switch (nameMode)
                 {
                     case ContextNameMode.TypeName:
+                        if (ViewModelType == null && !string.IsNullOrEmpty(viewModelTypeName))
+                        {
+                            TryResolveType();
+                        }
+
                         return ViewModelType != null ? ViewModelType.Name : gameObject.name;
+
                     case ContextNameMode.Custom:
                         return string.IsNullOrEmpty(customName) ? gameObject.name : customName;
+
                     default:
                         return gameObject.name;
                 }
             }
         }
 
+
         public Type ViewModelType { get; private set; }
         public object ViewModel { get; private set; }
 
+        
+        [ThreadStatic]
+        static int _inheritResolveDepth;
         /// <summary>
         /// 런타임 바인딩 컨텍스트.
         /// - AutoCreate / External: 내부 DataContext
@@ -84,34 +88,47 @@ namespace AES.Tools
             {
                 if (viewModelSource == ViewModelSourceMode.InheritFromParent)
                 {
-                    // 이미 만들어져 있으면 그대로 사용
                     if (_inheritRuntimeContext != null)
                         return _inheritRuntimeContext;
 
-                    // 아직 없으면 지금 시점에서 부모를 찾아본다.
-                    var parent = ResolveParentProvider();
-                    if (parent == null)
+                    // 재귀 깊이 가드
+                    if (_inheritResolveDepth > 64)
+                    {
+                        Debug.LogError(
+                            "[MonoContext] InheritFromParent RuntimeContext 해석 중 순환 참조 또는 " +
+                            "비정상적으로 깊은 상속 체인이 감지되었습니다. " +
+                            "inheritLookupMode / inheritContextName 설정을 확인하세요.",
+                            this);
                         return null;
+                    }
 
-                    var parentCtx = parent.RuntimeContext;
-                    if (parentCtx == null)
-                        return null; // 부모가 아직 준비 전이면, 다음 프레임에 다시 시도
+                    _inheritResolveDepth++;
+                    try
+                    {
+                        var parent = ResolveParentProvider();
+                        if (parent == null)
+                            return null;
 
-                    var basePath = string.IsNullOrEmpty(inheritMemberPath) ? null : inheritMemberPath;
-                    _inheritRuntimeContext = new SubBindingContext(parentCtx, basePath);
+                        var parentCtx = parent.RuntimeContext;
+                        if (parentCtx == null)
+                            return null;
 
-                    Debug.Log(
-                        $"[MonoContext:{name}] RuntimeContext(Inherit) 생성 완료. " +
-                        $"Parent={(parent as MonoBehaviour)?.name}, BasePath={basePath}",
-                        this);
+                        var basePath = string.IsNullOrEmpty(inheritMemberPath) ? null : inheritMemberPath;
+                        _inheritRuntimeContext = new SubBindingContext(parentCtx, basePath);
 
-                    return _inheritRuntimeContext;
+                        return _inheritRuntimeContext;
+                    }
+                    finally
+                    {
+                        _inheritResolveDepth--;
+                    }
                 }
 
                 // AutoCreate / External
                 return _dataContext.BindingContext;
             }
         }
+
 
 
 #if UNITY_EDITOR
@@ -189,6 +206,7 @@ namespace AES.Tools
 
                 var prop = t.GetProperty(part,
                     BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+
                 if (prop != null)
                 {
                     t = prop.PropertyType;
@@ -197,6 +215,7 @@ namespace AES.Tools
 
                 var field = t.GetField(part,
                     BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+
                 if (field != null)
                 {
                     t = field.FieldType;
@@ -244,10 +263,7 @@ namespace AES.Tools
                 var vm = Activator.CreateInstance(ViewModelType);
                 SetViewModel(vm);
             }
-            catch (Exception e)
-            {
-                Debug.LogError($"[MonoContext] ViewModel 인스턴스 생성 중 예외 발생: {e}", this);
-            }
+            catch (Exception e) { Debug.LogError($"[MonoContext] ViewModel 인스턴스 생성 중 예외 발생: {e}", this); }
         }
 
         /// <summary>
@@ -262,6 +278,7 @@ namespace AES.Tools
         private IEnumerator CoInitInheritFromParent()
         {
             var parent = ResolveParentProvider();
+
             if (parent == null)
             {
                 Debug.LogWarning("[MonoContext] 상속용 부모 IBindingContextProvider 를 찾지 못했습니다.", this);
@@ -270,12 +287,14 @@ namespace AES.Tools
 
             // 부모 RuntimeContext 준비될 때까지 대기
             IBindingContext parentCtx = null;
+
             while ((parentCtx = parent.RuntimeContext) == null)
             {
                 Debug.Log(
                     $"[MonoContext:{name}] InheritFromParent → 부모 RuntimeContext 아직 null. " +
                     $"parent={(parent as MonoBehaviour)?.name}",
                     this);
+
                 yield return null;
             }
 
@@ -311,6 +330,7 @@ namespace AES.Tools
         private IBindingContextProvider GetNearestProviderInParents(bool excludeSelf)
         {
             var parents = GetComponentsInParent<MonoBehaviour>(includeInactive: true);
+
             foreach (var mb in parents)
             {
                 if (excludeSelf && mb == this)
@@ -329,6 +349,7 @@ namespace AES.Tools
                 return null;
 
             var parents = GetComponentsInParent<MonoBehaviour>(includeInactive: true);
+
             foreach (var mb in parents)
             {
                 if (excludeSelf && mb == this)
@@ -420,10 +441,12 @@ namespace AES.Tools
 
             public SubBindingContext(IBindingContext parent, string basePath)
             {
-                _parent   = parent ?? throw new ArgumentNullException(nameof(parent));
+                _parent = parent ?? throw new ArgumentNullException(nameof(parent));
                 _basePath = string.IsNullOrEmpty(basePath) ? null : basePath;
             }
 
+            // TODO: 문자열 경로 결합 대신 PropertyPath 기반으로 리팩터링 고려
+            // 현재는 "a.b" 방식 문자열 경로를 그대로 위임함.
             private string Concat(string path)
             {
                 if (string.IsNullOrEmpty(_basePath))

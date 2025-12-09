@@ -26,8 +26,7 @@ namespace AES.Tools
                 return string.Empty;
 
             var fmt = string.IsNullOrEmpty(format) ? "{0}" : format;
-
-            // C# Composite Format 그대로 사용
+            
             return string.Format(provider, fmt, value);
         }
 

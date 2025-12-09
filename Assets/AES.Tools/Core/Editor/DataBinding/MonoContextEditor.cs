@@ -4,7 +4,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using AES.Tools.Commands;
 using UnityEditor;
 using UnityEngine;
 
@@ -198,6 +197,10 @@ namespace AES.Tools.Editor
 
             foreach (var mb in providers)
             {
+                // ★ 자기 자신은 스킵
+                if (mb == self)
+                    continue;
+
                 if (mb is IBindingContextProvider)
                 {
                     string logicalName =
@@ -241,7 +244,7 @@ namespace AES.Tools.Editor
 
                 case ContextLookupMode.ByNameInScene:
 #if UNITY_2022_2_OR_NEWER
-                    return UnityEngine.Object.FindObjectsByType<MonoBehaviour>(
+                    return FindObjectsByType<MonoBehaviour>(
                         FindObjectsInactive.Include,
                         FindObjectsSortMode.None);
 #else
@@ -323,7 +326,7 @@ namespace AES.Tools.Editor
                     break;
 
                 case ContextLookupMode.ByNameInScene:
-                    provider = FindProviderInSceneByName(ctxNameForLookup);
+                    provider = FindProviderInSceneByName(ctxNameForLookup, self);
                     break;
             }
 
@@ -332,6 +335,7 @@ namespace AES.Tools.Editor
 
         static IBindingContextProvider GetNearestProviderInParents(MonoContext self)
         {
+            // GetComponentsInParent 가 자기 자신을 포함할 수 있으므로 반드시 self 스킵
             var parents = self.GetComponentsInParent<MonoBehaviour>(includeInactive: true);
 
             foreach (var mb in parents)
@@ -355,6 +359,7 @@ namespace AES.Tools.Editor
 
             foreach (var mb in parents)
             {
+                // ★ 자기 자신 스킵
                 if (mb == self)
                     continue;
 
@@ -371,13 +376,13 @@ namespace AES.Tools.Editor
             return null;
         }
 
-        static IBindingContextProvider FindProviderInSceneByName(string name)
+        static IBindingContextProvider FindProviderInSceneByName(string name, MonoContext self)
         {
             if (string.IsNullOrEmpty(name))
                 return null;
 
 #if UNITY_2022_2_OR_NEWER
-            var all = UnityEngine.Object.FindObjectsByType<MonoBehaviour>(
+            var all = FindObjectsByType<MonoBehaviour>(
                 FindObjectsInactive.Include,
                 FindObjectsSortMode.None);
 #else
@@ -385,6 +390,10 @@ namespace AES.Tools.Editor
 #endif
             foreach (var mb in all)
             {
+                // ★ 자기 자신 스킵
+                if (mb == self)
+                    continue;
+
                 if (mb is IBindingContextProvider p)
                 {
                     if (mb is MonoContext dc && dc.ContextName == name)
@@ -425,121 +434,119 @@ namespace AES.Tools.Editor
             }
         }
 
-// --------------------------------------------------------------------
-// Runtime Debug
-// --------------------------------------------------------------------
-void DrawRuntimeDebugSection()
-{
-    var ctx = (MonoContext)target;
-    var sourceMode = (ViewModelSourceMode)_viewModelSourceProp.enumValueIndex;
-
-    // 전역 디버그가 꺼져 있으면 아예 안 보이게
-    if (!BindingDebugSettings.Enabled)
-        return;
-
-    EditorGUILayout.Space();
-
-    using (new EditorGUILayout.VerticalScope("box"))
-    {
-        // 헤더를 Foldout으로
-        _showRuntimeDebug = EditorGUILayout.Foldout(
-            _showRuntimeDebug,
-            "Runtime Debug",
-            true);
-
-        if (!_showRuntimeDebug)
-            return;
-
-        EditorGUI.indentLevel++;
-
-        if (!EditorApplication.isPlaying)
+        // --------------------------------------------------------------------
+        // Runtime Debug
+        // --------------------------------------------------------------------
+        void DrawRuntimeDebugSection()
         {
-            EditorGUILayout.HelpBox(
-                "플레이 모드에서 ViewModel 생성/주입/상속 상태를 확인할 수 있습니다.",
-                MessageType.Info);
-            EditorGUI.indentLevel--;
-            return;
-        }
+            var ctx = (MonoContext)target;
+            var sourceMode = (ViewModelSourceMode)_viewModelSourceProp.enumValueIndex;
 
-        // 기존 내용 그대로 아래로 이동
-        EditorGUILayout.LabelField("Source Mode", sourceMode.ToString());
-        EditorGUILayout.LabelField("Context Name", ctx.ContextName);
+            // 전역 디버그가 꺼져 있으면 아예 안 보이게
+            if (!BindingDebugSettings.Enabled)
+                return;
 
-        var vmType    = ctx.ViewModelType;
-        var vmInst    = ctx.ViewModel;
-        var runtimeCtx = ctx.RuntimeContext;
+            EditorGUILayout.Space();
 
-        EditorGUILayout.LabelField("ViewModel Type",
-            vmType != null ? vmType.FullName : "(null)");
-
-        EditorGUILayout.LabelField("ViewModel Instance",
-            vmInst != null ? vmInst.ToString() : "(null)");
-
-        EditorGUILayout.LabelField("RuntimeContext",
-            runtimeCtx != null ? runtimeCtx.GetType().Name : "(null)");
-
-        if (sourceMode == ViewModelSourceMode.External)
-        {
-            if (vmInst == null)
-                EditorGUILayout.HelpBox(
-                    "External 모드인데 ViewModel 인스턴스가 아직 없습니다.\n" +
-                    "→ Presenter/EntryPoint에서 SetViewModel()이 호출되지 않았을 가능성이 있습니다.",
-                    MessageType.Warning);
-        }
-        else if (sourceMode == ViewModelSourceMode.AutoCreate)
-        {
-            if (vmInst == null)
+            using (new EditorGUILayout.VerticalScope("box"))
             {
-                EditorGUILayout.HelpBox(
-                    "AutoCreate 모드인데 ViewModel 인스턴스가 없습니다.\n" +
-                    "→ viewModelTypeName 설정 또는 Activator.CreateInstance 실패 여부를 확인하세요.",
-                    MessageType.Error);
+                _showRuntimeDebug = EditorGUILayout.Foldout(
+                    _showRuntimeDebug,
+                    "Runtime Debug",
+                    true);
+
+                if (!_showRuntimeDebug)
+                    return;
+
+                EditorGUI.indentLevel++;
+
+                if (!EditorApplication.isPlaying)
+                {
+                    EditorGUILayout.HelpBox(
+                        "플레이 모드에서 ViewModel 생성/주입/상속 상태를 확인할 수 있습니다.",
+                        MessageType.Info);
+                    EditorGUI.indentLevel--;
+                    return;
+                }
+
+                EditorGUILayout.LabelField("Source Mode", sourceMode.ToString());
+                EditorGUILayout.LabelField("Context Name", ctx.ContextName);
+
+                var vmType    = ctx.ViewModelType;
+                var vmInst    = ctx.ViewModel;
+                var runtimeCtx = ctx.RuntimeContext;
+
+                EditorGUILayout.LabelField("ViewModel Type",
+                    vmType != null ? vmType.FullName : "(null)");
+
+                EditorGUILayout.LabelField("ViewModel Instance",
+                    vmInst != null ? vmInst.ToString() : "(null)");
+
+                EditorGUILayout.LabelField("RuntimeContext",
+                    runtimeCtx != null ? runtimeCtx.GetType().Name : "(null)");
+
+                if (sourceMode == ViewModelSourceMode.External)
+                {
+                    if (vmInst == null)
+                        EditorGUILayout.HelpBox(
+                            "External 모드인데 ViewModel 인스턴스가 아직 없습니다.\n" +
+                            "→ Presenter/EntryPoint에서 SetViewModel()이 호출되지 않았을 가능성이 있습니다.",
+                            MessageType.Warning);
+                }
+                else if (sourceMode == ViewModelSourceMode.AutoCreate)
+                {
+                    if (vmInst == null)
+                    {
+                        EditorGUILayout.HelpBox(
+                            "AutoCreate 모드인데 ViewModel 인스턴스가 없습니다.\n" +
+                            "→ viewModelTypeName 설정 또는 Activator.CreateInstance 실패 여부를 확인하세요.",
+                            MessageType.Error);
+                    }
+                }
+                else if (sourceMode == ViewModelSourceMode.InheritFromParent)
+                {
+                    var (provider, mode, ctxNameForLookup) = ResolveParentProviderForEditor();
+                    string basePath = _inheritMemberPathProp != null
+                        ? _inheritMemberPathProp.stringValue
+                        : "";
+
+                    EditorGUILayout.Space(3);
+                    EditorGUILayout.LabelField("InheritFromParent Runtime Info", EditorStyles.boldLabel);
+
+                    if (provider is MonoBehaviour mb)
+                    {
+                        string parentName =
+                            mb is MonoContext dc ? dc.ContextName : mb.gameObject.name;
+
+                        EditorGUILayout.LabelField("Parent Provider", $"{mb.GetType().Name} ({parentName})");
+                    }
+                    else
+                    {
+                        EditorGUILayout.LabelField("Parent Provider", "(null)");
+                    }
+
+                    EditorGUILayout.LabelField("Lookup Mode", mode.ToString());
+                    EditorGUILayout.LabelField("Inherit ContextName",
+                        string.IsNullOrEmpty(ctxNameForLookup) ? "(empty)" : ctxNameForLookup);
+                    EditorGUILayout.LabelField("Base Path",
+                        string.IsNullOrEmpty(basePath) ? "(root)" : basePath);
+
+                    if (runtimeCtx == null)
+                    {
+                        EditorGUILayout.HelpBox(
+                            "상속용 RuntimeContext 가 아직 null 입니다.\n" +
+                            "→ 부모 ViewModel 주입 이전이거나, 상속 컨텍스트가 아직 준비되지 않았을 수 있습니다.",
+                            MessageType.Warning);
+                    }
+                }
+
+                EditorGUI.indentLevel--;
             }
         }
-        else if (sourceMode == ViewModelSourceMode.InheritFromParent)
-        {
-            var (provider, mode, ctxNameForLookup) = ResolveParentProviderForEditor();
-            string basePath = _inheritMemberPathProp != null
-                ? _inheritMemberPathProp.stringValue
-                : "";
-
-            EditorGUILayout.Space(3);
-            EditorGUILayout.LabelField("InheritFromParent Runtime Info", EditorStyles.boldLabel);
-
-            if (provider is MonoBehaviour mb)
-            {
-                string parentName =
-                    mb is MonoContext dc ? dc.ContextName : mb.gameObject.name;
-
-                EditorGUILayout.LabelField("Parent Provider", $"{mb.GetType().Name} ({parentName})");
-            }
-            else
-            {
-                EditorGUILayout.LabelField("Parent Provider", "(null)");
-            }
-
-            EditorGUILayout.LabelField("Lookup Mode", mode.ToString());
-            EditorGUILayout.LabelField("Inherit ContextName",
-                string.IsNullOrEmpty(ctxNameForLookup) ? "(empty)" : ctxNameForLookup);
-            EditorGUILayout.LabelField("Base Path",
-                string.IsNullOrEmpty(basePath) ? "(root)" : basePath);
-
-            if (runtimeCtx == null)
-            {
-                EditorGUILayout.HelpBox(
-                    "상속용 RuntimeContext 가 아직 null 입니다.\n" +
-                    "→ 부모 ViewModel 주입 이전이거나, 상속 컨텍스트가 아직 준비되지 않았을 수 있습니다.",
-                    MessageType.Warning);
-            }
-        }
-
-        EditorGUI.indentLevel--;
-    }
-}
 
 
         // --------------------------------------------------------------------
-        // Path 후보 빌드 (ContextBindingBaseEditor 로직 그대로 재사용)
+        // Path 후보 빌드 ([Bindable]만 노출)
         // --------------------------------------------------------------------
 
         void ShowInheritPathMenu(IBindingContextProvider provider)
@@ -574,7 +581,7 @@ void DrawRuntimeDebugSection()
             {
                 EditorUtility.DisplayDialog(
                     "경로 없음",
-                    "IObservableProperty / IObservableList / ICommand / [Bindable] 멤버를 찾지 못했습니다.",
+                    "[Bindable] 멤버를 찾지 못했습니다.",
                     "확인");
 
                 return;
@@ -637,22 +644,18 @@ void DrawRuntimeDebugSection()
             string currentPath = string.IsNullOrEmpty(basePath) ? memberName : $"{basePath}.{memberName}";
 
             bool isObsProp = typeof(IObservableProperty).IsAssignableFrom(memberType);
-            bool isObsList = typeof(IObservableList).IsAssignableFrom(memberType);
-            bool isCommand = typeof(ICommand).IsAssignableFrom(memberType);
-            bool isAsyncCmd = typeof(IAsyncCommand).IsAssignableFrom(memberType);
 
             bool hasBindingAttr =
                 m.IsDefined(typeof(BindableAttribute), inherit: true);
 
-            // IDictionary<string, T> 의 경우 키들 추가 (기존 로직 유지)
-            if (typeof(IDictionary).IsAssignableFrom(memberType))
+            // IDictionary<string, T> 이면서 [Bindable]인 경우: 키들을 후보로 추가
+            if (typeof(IDictionary).IsAssignableFrom(memberType) && hasBindingAttr)
             {
                 if (ownerInstance != null)
                 {
                     var ownerVal = ownerInstance;
-                    var dictObj = mInstGetter(ownerVal) as IDictionary;
 
-                    if (dictObj != null)
+                    if (mInstGetter(ownerVal) is IDictionary dictObj)
                     {
                         foreach (DictionaryEntry entry in dictObj)
                         {
@@ -672,10 +675,10 @@ void DrawRuntimeDebugSection()
                 }
             }
 
-            // 1) 자기 자신을 후보에 추가
-            if (isObsProp || isObsList || isCommand || isAsyncCmd || hasBindingAttr)
+            // 1) 오직 [Bindable] 멤버만 후보에 추가
+            if (hasBindingAttr)
             {
-                string typeName = GetFriendlyTypeName(memberType);
+                string typeName = memberType.GetDisplayName();  
                 string label = BuildDisplayLabel(currentPath, typeName);
 
                 acc.Add(new PathCandidate
@@ -685,20 +688,8 @@ void DrawRuntimeDebugSection()
                 });
             }
 
-            // 2-A) 일반 컨테이너 타입이면 재귀
-            if (!isObsProp && !isObsList && !isCommand && !isAsyncCmd)
-            {
-                if (IsContainerType(memberType))
-                {
-                    object childInstance = null;
-                    if (ownerInstance != null)
-                        childInstance = mInstGetter(ownerInstance);
-
-                    BuildCandidates(memberType, childInstance, currentPath, depth + 1, acc);
-                }
-            }
-            // 2-B) IObservableProperty 인 경우: Value 타입 안으로 한 번 더 내려감
-            else if (isObsProp)
+            // 2-A) ObservableProperty 인 경우: Value 타입 안으로 내려가서 내부 [Bindable] 탐색
+            if (isObsProp)
             {
                 var valuePropInfo = memberType.GetProperty("Value",
                     BindingFlags.Instance | BindingFlags.Public);
@@ -720,8 +711,23 @@ void DrawRuntimeDebugSection()
                         }
 
                         string valuePath = $"{currentPath}.Value";
+
+                        // Value 자체는 Bindable이 아니면 후보에 안 올리고,
+                        // 내부로만 내려가서 [Bindable] 멤버를 찾는다.
                         BuildCandidates(valueType, valueInstance, valuePath, depth + 1, acc);
                     }
+                }
+            }
+            // 2-B) 일반 컨테이너 타입이면 재귀 (Bindable 여부와 무관)
+            else
+            {
+                if (IsContainerType(memberType))
+                {
+                    object childInstance = null;
+                    if (ownerInstance != null)
+                        childInstance = mInstGetter(ownerInstance);
+
+                    BuildCandidates(memberType, childInstance, currentPath, depth + 1, acc);
                 }
             }
         }
@@ -759,65 +765,6 @@ void DrawRuntimeDebugSection()
         {
             string pathForMenu = fullPath.Replace('.', '/');
             return $"{pathForMenu} ({typeName})";
-        }
-
-        static readonly Dictionary<Type, string> s_builtinNames = new()
-        {
-            { typeof(float), "float" },
-            { typeof(double), "double" },
-            { typeof(int), "int" },
-            { typeof(uint), "uint" },
-            { typeof(long), "long" },
-            { typeof(ulong), "ulong" },
-            { typeof(short), "short" },
-            { typeof(ushort), "ushort" },
-            { typeof(byte), "byte" },
-            { typeof(sbyte), "sbyte" },
-            { typeof(bool), "bool" },
-            { typeof(char), "char" },
-            { typeof(string), "string" },
-            { typeof(decimal), "decimal" },
-            { typeof(void), "void" },
-        };
-
-        string GetFriendlyTypeName(Type t)
-        {
-            if (t == null)
-                return "null";
-
-            if (s_builtinNames.TryGetValue(t, out var alias))
-                return alias;
-
-            if (t.IsArray)
-            {
-                var elemType = t.GetElementType();
-                return $"{GetFriendlyTypeName(elemType)}[]";
-            }
-
-            if (!t.IsGenericType)
-                return t.Name;
-
-            var genericDef = t.IsGenericTypeDefinition ? t : t.GetGenericTypeDefinition();
-
-            string genericName;
-
-            if (genericDef.Name.StartsWith("ObservableProperty")
-                || genericDef.Name.StartsWith("IObservableProperty")) { genericName = "Observable"; }
-            else
-            {
-                genericName = t.Name;
-                int backtickIndex = genericName.IndexOf('`');
-                if (backtickIndex >= 0)
-                    genericName = genericName.Substring(0, backtickIndex);
-            }
-
-            var args = t.GetGenericArguments();
-            var argNames = new string[args.Length];
-
-            for (int i = 0; i < args.Length; i++)
-                argNames[i] = GetFriendlyTypeName(args[i]);
-
-            return $"{genericName}<{string.Join(", ", argNames)}>";
         }
     }
 }

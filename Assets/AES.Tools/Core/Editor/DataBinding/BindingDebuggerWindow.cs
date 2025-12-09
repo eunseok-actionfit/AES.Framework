@@ -1,10 +1,10 @@
-// BindingDebuggerWindow.cs (Zebra + Column Resize Polished)
-
 #if UNITY_EDITOR
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using UnityEditor;
 using UnityEngine;
+
 
 namespace AES.Tools.Editor
 {
@@ -44,23 +44,34 @@ namespace AES.Tools.Editor
             public string fullPath;
             public string value;
             public string error;
-            public int    count;
-            public int    frameSub;
-            public int    frameUpd;
+            public int count;
+            public int frameSub;
+            public int frameUpd;
 
-            public bool   hasError;
-            public bool   hasWarning;
+            public bool hasError;
+            public bool hasWarning;
             public string warnMessage;
         }
 
         readonly Dictionary<string, bool> _foldouts = new();
 
         string _filterText = "";
-        bool   _onlyErrors = false;
-        bool   _autoRefresh = true;
-        bool   _zebra = true;     // 지브라 로우 On/Off
+        bool _onlyErrors = false;
+        bool _autoRefresh = true;
+        bool _zebra = true; // 지브라 로우 On/Off
 
         double _lastAutoRepaint;
+
+        // Context 상속 이슈 출력용
+        readonly List<string> _contextIssues = new();
+
+        // MonoContext 내부 정보용 Reflection 캐시
+        static readonly FieldInfo _fiViewModelSource =
+            typeof(MonoContext).GetField("viewModelSource", BindingFlags.NonPublic | BindingFlags.Instance);
+
+        static readonly MethodInfo _miEditorResolveParent =
+            typeof(MonoContext).GetMethod("EditorResolveParentProvider",
+                BindingFlags.NonPublic | BindingFlags.Instance);
 
         void OnEnable()
         {
@@ -70,84 +81,6 @@ namespace AES.Tools.Editor
         void OnDisable()
         {
             SaveColumnWidths();
-        }
-
-        //──────────────────────────────────────────────────────────────
-        //  OnGUI
-        //──────────────────────────────────────────────────────────────
-        void OnGUI()
-        {
-            if (!BindingDebugSettings.Enabled)
-            {
-                EditorGUILayout.HelpBox(
-                    "Binding Debug is disabled.\nEnable: AES/DataBinding/Binding Debug",
-                    MessageType.Info);
-
-                if (GUILayout.Button("Enable Binding Debug"))
-                    BindingDebugSettings.Enabled = true;
-
-                return;
-            }
-
-            DrawToolbar();
-
-            if (_autoRefresh && EditorApplication.timeSinceStartup - _lastAutoRepaint > 0.5f)
-            {
-                _lastAutoRepaint = EditorApplication.timeSinceStartup;
-                Repaint();
-            }
-
-            // Collect binding data
-            var bindings = FindObjectsByType<BindingBehaviour>(
-                FindObjectsInactive.Include,
-                FindObjectsSortMode.None);
-
-            var list = CollectBindingInfos(bindings);
-
-            // Apply Filters
-            ApplyFilters(list);
-
-            // Sorting
-            list = list
-                .OrderBy(i => string.IsNullOrEmpty(i.providerObj) ? "~" : i.providerObj)
-                .ThenBy(i => i.binding.GetType().Name)
-                .ThenBy(i => i.path)
-                .ToList();
-
-            var groups = list
-                .GroupBy(i => string.IsNullOrEmpty(i.providerObj)
-                                ? "(No Provider)"
-                                : i.providerObj);
-
-            _scroll = EditorGUILayout.BeginScrollView(_scroll);
-
-            foreach (var g in groups)
-            {
-                DrawGroup(g.Key, g.ToList());
-            }
-
-            EditorGUILayout.EndScrollView();
-        }
-
-        //──────────────────────────────────────────────────────────────
-        //  Toolbar
-        //──────────────────────────────────────────────────────────────
-        void DrawToolbar()
-        {
-            EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
-
-            if (GUILayout.Button("Refresh", EditorStyles.toolbarButton, GUILayout.Width(70)))
-                Repaint();
-
-            GUILayout.Label("Filter:", GUILayout.Width(40));
-            _filterText = GUILayout.TextField(_filterText, EditorStyles.toolbarTextField, GUILayout.MinWidth(100));
-
-            _onlyErrors  = GUILayout.Toggle(_onlyErrors,  "Only Errors", EditorStyles.toolbarButton, GUILayout.Width(90));
-            _autoRefresh = GUILayout.Toggle(_autoRefresh, "Auto Refresh", EditorStyles.toolbarButton, GUILayout.Width(100));
-            _zebra       = GUILayout.Toggle(_zebra,       "Zebra",       EditorStyles.toolbarButton, GUILayout.Width(70));
-
-            GUILayout.FlexibleSpace();
-            EditorGUILayout.EndHorizontal();
         }
 
         //──────────────────────────────────────────────────────────────
@@ -163,18 +96,18 @@ namespace AES.Tools.Editor
 
                 var info = new BindInfo
                 {
-                    binding        = b,
-                    ctxName        = so.FindProperty("_debugContextName")?.stringValue ?? "(unknown)",
-                    path           = so.FindProperty("_debugMemberPath")?.stringValue ?? "",
-                    value          = so.FindProperty("_debugLastValue")?.stringValue ?? "",
-                    error          = so.FindProperty("_debugLastError")?.stringValue ?? "",
-                    count          = so.FindProperty("_debugUpdateCount")?.intValue ?? 0,
-                    providerObj    = so.FindProperty("_debugProviderObject")?.stringValue ?? "",
-                    providerType   = so.FindProperty("_debugProviderType")?.stringValue ?? "",
-                    runtimeCtxType = so.FindProperty("_debugRuntimeContextType")?.stringValue ?? "",
-                    fullPath       = so.FindProperty("_debugFullPath")?.stringValue ?? "",
-                    frameSub       = so.FindProperty("_debugFrameSubscribed")?.intValue ?? 0,
-                    frameUpd       = so.FindProperty("_debugFrameFirstUpdate")?.intValue ?? 0,
+                    binding       = b,
+                    ctxName       = so.FindProperty("_debugContextName")?.stringValue ?? "(unknown)",
+                    path          = so.FindProperty("_debugMemberPath")?.stringValue ?? "",
+                    value         = so.FindProperty("_debugLastValue")?.stringValue ?? "",
+                    error         = so.FindProperty("_debugLastError")?.stringValue ?? "",
+                    count         = so.FindProperty("_debugUpdateCount")?.intValue ?? 0,
+                    providerObj   = so.FindProperty("_debugProviderObject")?.stringValue ?? "",
+                    providerType  = so.FindProperty("_debugProviderType")?.stringValue ?? "",
+                    runtimeCtxType= so.FindProperty("_debugRuntimeContextType")?.stringValue ?? "",
+                    fullPath      = so.FindProperty("_debugFullPath")?.stringValue ?? "",
+                    frameSub      = so.FindProperty("_debugFrameSubscribed")?.intValue ?? 0,
+                    frameUpd      = so.FindProperty("_debugFrameFirstUpdate")?.intValue ?? 0,
                 };
 
                 AnalyzeIssues(info);
@@ -200,13 +133,101 @@ namespace AES.Tools.Editor
                       i.binding.GetType().Name.ToLowerInvariant().Contains(f) ||
                       i.ctxName.ToLowerInvariant().Contains(f) ||
                       i.providerObj.ToLowerInvariant().Contains(f) ||
+                      i.providerType.ToLowerInvariant().Contains(f) ||   // ← providerType 도 필터에 포함
                       i.path.ToLowerInvariant().Contains(f) ||
                       i.fullPath.ToLowerInvariant().Contains(f)));
             }
         }
 
         //──────────────────────────────────────────────────────────────
-        //  Issue Analysis
+        //  OnGUI
+        //──────────────────────────────────────────────────────────────
+        void OnGUI()
+        {
+            if (!BindingDebugSettings.Enabled)
+            {
+                EditorGUILayout.HelpBox(
+                    "Binding Debug is disabled.\nEnable: AES/DataBinding/Binding Debug",
+                    MessageType.Info);
+
+                if (GUILayout.Button("Enable Binding Debug"))
+                    BindingDebugSettings.Enabled = true;
+
+                return;
+            }
+
+            DrawToolbar();
+
+            // Context 이슈 표시
+            if (_contextIssues.Count > 0)
+            {
+                foreach (var msg in _contextIssues)
+                    EditorGUILayout.HelpBox(msg, MessageType.Warning);
+
+                EditorGUILayout.Space(4);
+            }
+
+            if (_autoRefresh && EditorApplication.timeSinceStartup - _lastAutoRepaint > 0.5f)
+            {
+                _lastAutoRepaint = EditorApplication.timeSinceStartup;
+                Repaint();
+            }
+
+            // Collect binding data
+            var bindings = FindObjectsByType<BindingBehaviour>(
+                FindObjectsInactive.Include,
+                FindObjectsSortMode.None);
+
+            var list = CollectBindingInfos(bindings);
+
+            // Apply Filters
+            ApplyFilters(list);
+
+            // Sorting (providerObj → providerType → Binding 타입 → path)
+            list = list
+                .OrderBy(i => string.IsNullOrEmpty(i.providerObj)  ? "~" : i.providerObj)
+                .ThenBy(i => string.IsNullOrEmpty(i.providerType) ? "~" : i.providerType)
+                .ThenBy(i => i.binding.GetType().Name)
+                .ThenBy(i => i.path)
+                .ToList();
+
+            var groups = list
+                .GroupBy(i => string.IsNullOrEmpty(i.providerObj)
+                    ? "(No Provider)"
+                    : i.providerObj);
+
+            _scroll = EditorGUILayout.BeginScrollView(_scroll);
+
+            foreach (var g in groups) { DrawGroup(g.Key, g.ToList()); }
+
+            EditorGUILayout.EndScrollView();
+        }
+
+        //──────────────────────────────────────────────────────────────
+        //  Toolbar
+        //──────────────────────────────────────────────────────────────
+        void DrawToolbar()
+        {
+            EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
+
+            if (GUILayout.Button("Refresh", EditorStyles.toolbarButton, GUILayout.Width(70)))
+                Repaint();
+
+            GUILayout.Label("Filter:", GUILayout.Width(40));
+            _filterText = GUILayout.TextField(_filterText, EditorStyles.toolbarTextField, GUILayout.MinWidth(100));
+
+            _onlyErrors = GUILayout.Toggle(_onlyErrors, "Only Errors", EditorStyles.toolbarButton, GUILayout.Width(90));
+            _autoRefresh = GUILayout.Toggle(_autoRefresh, "Auto Refresh", EditorStyles.toolbarButton, GUILayout.Width(100));
+            _zebra = GUILayout.Toggle(_zebra, "Zebra", EditorStyles.toolbarButton, GUILayout.Width(70));
+
+            if (GUILayout.Button("Check Contexts", EditorStyles.toolbarButton, GUILayout.Width(110))) { ScanContextIssues(); }
+
+            GUILayout.FlexibleSpace();
+            EditorGUILayout.EndHorizontal();
+        }
+
+        //──────────────────────────────────────────────────────────────
+        //  Issue Analysis (Binding 단위)
         //──────────────────────────────────────────────────────────────
         void AnalyzeIssues(BindInfo info)
         {
@@ -254,6 +275,7 @@ namespace AES.Tools.Editor
                 DrawHeader();
 
                 int rowIndex = 0;
+
                 foreach (var i in list)
                 {
                     DrawRow(i, rowIndex);
@@ -272,7 +294,7 @@ namespace AES.Tools.Editor
             var headerStyle = new GUIStyle(EditorStyles.helpBox)
             {
                 padding = new RectOffset(4, 4, 2, 2),
-                margin  = new RectOffset(2, 2, 1, 3)
+                margin = new RectOffset(2, 2, 1, 3)
             };
 
             EditorGUILayout.BeginHorizontal(headerStyle);
@@ -345,86 +367,84 @@ namespace AES.Tools.Editor
         }
 
         //──────────────────────────────────────────────────────────────
-        //  Row (Compact + Zebra)
+        //  Row (Compact + Strong Zebra)
         //──────────────────────────────────────────────────────────────
-        //──────────────────────────────────────────────────────────────
-//  Row (Compact + Strong Zebra)
-//──────────────────────────────────────────────────────────────
-void DrawRow(BindInfo i, int rowIndex)
-{
-    // helpBox 대신 box 스타일 사용 (tint가 더 잘 먹음)
-    var rowStyle = new GUIStyle("box")
-    {
-        padding = new RectOffset(4, 4, 2, 2),
-        margin  = new RectOffset(2, 2, 1, 1)
-    };
+        void DrawRow(BindInfo i, int rowIndex)
+        {
+            var rowStyle = new GUIStyle("box")
+            {
+                padding = new RectOffset(4, 4, 2, 2),
+                margin  = new RectOffset(2, 2, 1, 1)
+            };
 
-    Color prevBg = GUI.backgroundColor;
+            Color prevBg = GUI.backgroundColor;
 
-    // 기본 지브라 색상 (꽤 진하게)
-    if (_zebra && !i.hasError && !i.hasWarning)
-    {
-        GUI.backgroundColor = (rowIndex % 2 == 0)
-            ? new Color(0.80f, 0.88f, 1.00f)  // 파란 계열 연한 줄
-            : new Color(0.90f, 0.95f, 1.00f); // 더 연한 줄
-    }
+            if (_zebra && !i.hasError && !i.hasWarning)
+            {
+                GUI.backgroundColor = (rowIndex % 2 == 0)
+                    ? new Color(0.80f, 0.88f, 1.00f)
+                    : new Color(0.90f, 0.95f, 1.00f);
+            }
 
-    // 에러/워닝이 있으면 지브라 색을 덮어씀
-    if (i.hasError)
-        GUI.backgroundColor = new Color(1f, 0.6f, 0.6f);
-    else if (i.hasWarning)
-        GUI.backgroundColor = new Color(1f, 0.95f, 0.6f);
+            if (i.hasError)
+                GUI.backgroundColor = new Color(1f, 0.6f, 0.6f);
+            else if (i.hasWarning)
+                GUI.backgroundColor = new Color(1f, 0.95f, 0.6f);
 
-    EditorGUILayout.BeginVertical(rowStyle);
-    GUI.backgroundColor = prevBg;
+            EditorGUILayout.BeginVertical(rowStyle);
+            GUI.backgroundColor = prevBg;
 
-    // 메인 행
-    EditorGUILayout.BeginHorizontal();
+            // 메인 행
+            EditorGUILayout.BeginHorizontal();
 
-    EditorGUILayout.ObjectField(i.binding, typeof(BindingBehaviour), true, GUILayout.Width(_colWidth[0]));
-    LabelEllipsis(i.ctxName,   _colWidth[1], 20);
-    LabelEllipsis(i.path,      _colWidth[2], 30);
-    LabelEllipsis(i.fullPath,  _colWidth[3], 40);
-    LabelEllipsis(i.value,     _colWidth[4], 40);
+            EditorGUILayout.ObjectField(i.binding, typeof(BindingBehaviour), true, GUILayout.Width(_colWidth[0]));
+            LabelEllipsis(i.ctxName, _colWidth[1], 20);
+            LabelEllipsis(i.path, _colWidth[2], 30);
+            LabelEllipsis(i.fullPath, _colWidth[3], 40);
+            LabelEllipsis(i.value, _colWidth[4], 40);
 
-    Label(i.count.ToString(), _colWidth[5]);
+            Label(i.count.ToString(), _colWidth[5]);
 
-    string fSU = (i.frameSub != 0 || i.frameUpd != 0)
-                 ? $"{i.frameSub}/{i.frameUpd}"
-                 : "-";
+            string fSU = (i.frameSub != 0 || i.frameUpd != 0)
+                ? $"{i.frameSub}/{i.frameUpd}"
+                : "-";
 
-    Label(fSU, _colWidth[6]);
-    Label(i.hasError ? "E" : i.hasWarning ? "W" : "", _colWidth[7]);
+            Label(fSU, _colWidth[6]);
+            Label(i.hasError ? "E" : i.hasWarning ? "W" : "", _colWidth[7]);
 
-    EditorGUILayout.EndHorizontal();
+            EditorGUILayout.EndHorizontal();
 
-    // Error / Warning message
-    if (i.hasError || i.hasWarning)
-    {
-        GUI.color = i.hasError ? Color.red : new Color(0.55f, 0.45f, 0.1f);
-        EditorGUILayout.LabelField(i.hasError ? i.error : i.warnMessage, EditorStyles.wordWrappedMiniLabel);
-        GUI.color = Color.white;
-    }
+            // Error / Warning message
+            if (i.hasError || i.hasWarning)
+            {
+                GUI.color = i.hasError ? Color.red : new Color(0.55f, 0.45f, 0.1f);
+                EditorGUILayout.LabelField(i.hasError ? i.error : i.warnMessage, EditorStyles.wordWrappedMiniLabel);
+                GUI.color = Color.white;
+            }
 
-    // Buttons inside same row
-    EditorGUILayout.BeginHorizontal();
+            // Buttons inside same row
+            EditorGUILayout.BeginHorizontal();
 
-// 왼쪽 정렬: 먼저 버튼들 배치
-    if (GUILayout.Button("Select Binding", GUILayout.Width(110)))
-        Selection.activeObject = i.binding;
+            if (GUILayout.Button("Select Binding", GUILayout.Width(110)))
+                Selection.activeObject = i.binding;
 
-    if (!string.IsNullOrEmpty(i.providerObj) &&
-        GUILayout.Button("Select Provider", GUILayout.Width(110)))
-        SelectProvider(i);
+            if (!string.IsNullOrEmpty(i.providerObj))
+            {
+                string btnLabel = "Select Provider";
+                string tooltip = string.IsNullOrEmpty(i.providerType)
+                    ? "Select provider object"
+                    : $"Select provider object\nType: {i.providerType}";
 
-// 오른쪽 빈 공간
-    GUILayout.FlexibleSpace();
+                if (GUILayout.Button(new GUIContent(btnLabel, tooltip), GUILayout.Width(110)))
+                    SelectProvider(i);
+            }
 
-    EditorGUILayout.EndHorizontal();
+            GUILayout.FlexibleSpace();
 
-    EditorGUILayout.EndVertical();
-}
+            EditorGUILayout.EndHorizontal();
 
+            EditorGUILayout.EndVertical();
+        }
 
         //──────────────────────────────────────────────────────────────
         //  Helper UI
@@ -446,12 +466,40 @@ void DrawRow(BindInfo i, int rowIndex)
             EditorGUILayout.LabelField(new GUIContent(disp, s), GUILayout.Width(w));
         }
 
+        //──────────────────────────────────────────────────────────────
+        //  Provider Selection
+        //──────────────────────────────────────────────────────────────
         void SelectProvider(BindInfo i)
         {
+#if UNITY_2022_2_OR_NEWER
+            var all = Object.FindObjectsByType<MonoContext>(
+                FindObjectsInactive.Include,
+                FindObjectsSortMode.None);
+#else
             var all = Object.FindObjectsOfType<MonoContext>(true);
-            var found = all.FirstOrDefault(mc =>
-                mc.gameObject.name == i.providerObj ||
-                mc.ContextName == i.providerObj);
+#endif
+
+            if (all == null || all.Length == 0)
+                return;
+
+            MonoContext found = null;
+
+            // 1) providerType 이 있으면 타입까지 우선 매칭
+            if (!string.IsNullOrEmpty(i.providerType))
+            {
+                found = all.FirstOrDefault(mc =>
+                    (mc.gameObject.name == i.providerObj ||
+                     mc.ContextName == i.providerObj) &&
+                    mc.GetType().FullName == i.providerType);
+            }
+
+            // 2) 타입으로 못 찾았으면, 기존대로 이름/ContextName 만 사용
+            if (found == null)
+            {
+                found = all.FirstOrDefault(mc =>
+                    mc.gameObject.name == i.providerObj ||
+                    mc.ContextName == i.providerObj);
+            }
 
             if (found)
                 Selection.activeObject = found;
@@ -470,6 +518,113 @@ void DrawRow(BindInfo i, int rowIndex)
         {
             for (int i = 0; i < 8; i++)
                 EditorPrefs.SetFloat(_colKeys[i], _colWidth[i]);
+        }
+
+        //──────────────────────────────────────────────────────────────
+        //  Context 상속 정합성 검사
+        //──────────────────────────────────────────────────────────────
+        void ScanContextIssues()
+        {
+            _contextIssues.Clear();
+
+           #if UNITY_2022_2_OR_NEWER
+            var all = Object.FindObjectsByType<MonoContext>(
+                FindObjectsInactive.Include,
+                FindObjectsSortMode.None);
+#else
+var all = Object.FindObjectsOfType<MonoContext>(true);
+#endif
+
+            if (all == null || all.Length == 0)
+                return;
+
+            if (_fiViewModelSource == null || _miEditorResolveParent == null)
+            {
+                _contextIssues.Add(
+                    "MonoContext 내부 정보를 Reflection 으로 가져오지 못했습니다.\n" +
+                    "- viewModelSource / EditorResolveParentProvider 시그니처를 확인하세요.");
+
+                return;
+            }
+
+            // InheritFromParent 들만 대상으로 부모 맵 구성
+            var parentMap = new Dictionary<MonoContext, MonoContext>();
+
+            foreach (var mc in all)
+            {
+                var srcObj = _fiViewModelSource.GetValue(mc);
+                if (srcObj is not ViewModelSourceMode src)
+                    continue;
+
+                if (src != ViewModelSourceMode.InheritFromParent)
+                    continue;
+
+                var parentProv = _miEditorResolveParent.Invoke(mc, null) as IBindingContextProvider;
+
+                if (parentProv == null)
+                {
+                    _contextIssues.Add(
+                        $"[Context:{mc.name}] ViewModelSource=InheritFromParent 이지만 " +
+                        "부모 컨텍스트를 찾지 못했습니다.\n" +
+                        "- inheritLookupMode / inheritContextName 설정을 확인하세요.");
+
+                    continue;
+                }
+
+                var parentMc = parentProv as MonoContext;
+                if (parentMc != null)
+                    parentMap[mc] = parentMc;
+            }
+
+            if (parentMap.Count == 0)
+                return;
+
+            // 사이클 탐지 (단순 DFS)
+            var visited = new HashSet<MonoContext>();
+            var stack = new Stack<MonoContext>();
+            var cycleReported = new HashSet<MonoContext>();
+
+            foreach (var mc in parentMap.Keys)
+            {
+                if (!visited.Contains(mc))
+                    Dfs(mc);
+            }
+
+            void Dfs(MonoContext node)
+            {
+                if (stack.Contains(node))
+                {
+                    // stack 안에서 cycle 부분만 뽑아서 메시지 생성
+                    var arr = stack.Reverse().SkipWhile(x => x != node).ToList();
+                    arr.Add(node);
+
+                    // 같은 사이클에 대해 여러 번 찍지 않도록 가드
+                    if (arr.Any(cycleReported.Contains))
+                        return;
+
+                    foreach (var n in arr)
+                        cycleReported.Add(n);
+
+                    string names = string.Join(" -> ", arr.Select(m => m.name));
+                    _contextIssues.Add(
+                        "InheritFromParent 컨텍스트 상속에 순환 참조가 감지되었습니다.\n" +
+                        $"Cycle: {names}\n" +
+                        "- 서로를 부모로 가리키는 MonoContext 가 있는지 확인하세요.");
+
+                    return;
+                }
+
+                if (visited.Contains(node))
+                    return;
+
+                visited.Add(node);
+                stack.Push(node);
+
+                if (parentMap.TryGetValue(node, out var parent) && parent != null)
+                    Dfs(parent);
+
+                stack.Pop();
+            }
         }
     }
 }

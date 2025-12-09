@@ -3,10 +3,10 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
+// ← 추가: GetDisplayName 확장 메서드
 using AES.Tools.Commands;
 using UnityEditor;
 using UnityEngine;
-
 
 namespace AES.Tools.Editor
 {
@@ -19,25 +19,28 @@ namespace AES.Tools.Editor
         SerializedProperty _lookupModeProp;
         SerializedProperty _contextNameProp;
 
+        // GenericMenu 콜백에서 직접 SerializedObject를 만지지 않기 위한 pending 값들
+        string _pendingContextName;
+        string _pendingMemberPath;
+
         protected virtual void OnEnable()
         {
             if (targets == null || targets.Length == 0 || targets[0] == null || target == null)
                 return;
             
             _memberPathModeProp = serializedObject.FindProperty("memberPathMode");
-            _memberPathProp = serializedObject.FindProperty("memberPath");
+            _memberPathProp     = serializedObject.FindProperty("memberPath");
 
-            _lookupModeProp = serializedObject.FindProperty("lookupMode");
-            _contextNameProp = serializedObject.FindProperty("contextName");
+            _lookupModeProp     = serializedObject.FindProperty("lookupMode");
+            _contextNameProp    = serializedObject.FindProperty("contextName");
         }
 
         public override void OnInspectorGUI()
         {
-            // 여기도 동일하게 방어 (serializedObject.Update() 전에)
+            // serializedObject.Update() 전에 방어
             if (targets == null || targets.Length == 0 || targets[0] == null || target == null)
                 return;
 
-            
             serializedObject.Update();
 
             // memberPath/mode 제외하고 나머지 기본 Inspector 먼저 그림
@@ -55,7 +58,27 @@ namespace AES.Tools.Editor
 
             DrawMemberPathSection();
 
+            // 여기서만 SerializedObject 를 실제로 변경/적용
+            ApplyPendingSelections();
+
             serializedObject.ApplyModifiedProperties();
+        }
+
+        void ApplyPendingSelections()
+        {
+            // Context Name
+            if (!string.IsNullOrEmpty(_pendingContextName) && _contextNameProp != null)
+            {
+                _contextNameProp.stringValue = _pendingContextName;
+                _pendingContextName = null;
+            }
+
+            // Member Path
+            if (!string.IsNullOrEmpty(_pendingMemberPath) && _memberPathProp != null)
+            {
+                _memberPathProp.stringValue = _pendingMemberPath;
+                _pendingMemberPath = null;
+            }
         }
 
         // --------------------------------------------------------------------
@@ -149,11 +172,11 @@ namespace AES.Tools.Editor
 
             foreach (var contextName in nameList)
             {
-                bool selected = _contextNameProp.stringValue == contextName;
-
-                menu.AddItem(new GUIContent(contextName), selected, () => {
-                    _contextNameProp.stringValue = contextName;
-                    serializedObject.ApplyModifiedProperties();
+                bool selected = _contextNameProp != null && _contextNameProp.stringValue == contextName;
+                
+                menu.AddItem(new GUIContent(contextName), selected, () =>
+                {
+                    _pendingContextName = contextName;
                 });
             }
 
@@ -169,7 +192,7 @@ namespace AES.Tools.Editor
             if (_memberPathModeProp == null || _memberPathProp == null)
                 return;
 
-            var binding = (ContextBindingBase)target;
+            var binding  = (ContextBindingBase)target;
             var provider = ResolveProvider(binding, out var mode, out var ctxNameForLookup);
 
             EditorGUILayout.LabelField("Member Path", EditorStyles.boldLabel);
@@ -181,7 +204,10 @@ namespace AES.Tools.Editor
 
             var pathMode = (MemberPathMode)_memberPathModeProp.enumValueIndex;
 
-            if (pathMode == MemberPathMode.Custom) { EditorGUILayout.PropertyField(_memberPathProp); }
+            if (pathMode == MemberPathMode.Custom)
+            {
+                EditorGUILayout.PropertyField(_memberPathProp);
+            }
             else
             {
                 EditorGUILayout.BeginHorizontal();
@@ -326,7 +352,7 @@ namespace AES.Tools.Editor
                 return;
             }
 
-            var vmType = provider.DesignTimeViewModelType;
+            var vmType     = provider.DesignTimeViewModelType;
             var vmInstance = provider.GetDesignTimeViewModel();
 
             if (vmType == null)
@@ -352,12 +378,13 @@ namespace AES.Tools.Editor
 
             foreach (var c in candidates)
             {
-                string label = c.DisplayLabel;
-                bool selected = _memberPathProp.stringValue == c.Path;
+                string label    = c.DisplayLabel;
+                bool selected   = _memberPathProp != null && _memberPathProp.stringValue == c.Path;
 
-                menu.AddItem(new GUIContent(label), selected, () => {
-                    _memberPathProp.stringValue = c.Path;
-                    serializedObject.ApplyModifiedProperties();
+                // 여기서도 SerializedObject 직접 수정 대신 pending 에만 기록
+                menu.AddItem(new GUIContent(label), selected, () =>
+                {
+                    _pendingMemberPath = c.Path;
                 });
             }
 
@@ -386,7 +413,10 @@ namespace AES.Tools.Editor
                 ProcessMember(p, p.PropertyType, obj => SafeGet(() => p.GetValue(obj)), instance, basePath, depth, acc);
             }
 
-            foreach (var f in type.GetFields(flags)) { ProcessMember(f, f.FieldType, obj => SafeGet(() => f.GetValue(obj)), instance, basePath, depth, acc); }
+            foreach (var f in type.GetFields(flags))
+            {
+                ProcessMember(f, f.FieldType, obj => SafeGet(() => f.GetValue(obj)), instance, basePath, depth, acc);
+            }
         }
 
         void ProcessMember(
@@ -398,12 +428,12 @@ namespace AES.Tools.Editor
             int depth,
             List<PathCandidate> acc)
         {
-            string memberName = m.Name;
+            string memberName  = m.Name;
             string currentPath = string.IsNullOrEmpty(basePath) ? memberName : $"{basePath}.{memberName}";
 
-            bool isObsProp = typeof(IObservableProperty).IsAssignableFrom(memberType);
-            bool isObsList = typeof(IObservableList).IsAssignableFrom(memberType);
-            bool isCommand = typeof(ICommand).IsAssignableFrom(memberType);
+            bool isObsProp  = typeof(IObservableProperty).IsAssignableFrom(memberType);
+            bool isObsList  = typeof(IObservableList).IsAssignableFrom(memberType);
+            bool isCommand  = typeof(ICommand).IsAssignableFrom(memberType);
             bool isAsyncCmd = typeof(IAsyncCommand).IsAssignableFrom(memberType);
 
             bool hasBindingAttr =
@@ -415,7 +445,7 @@ namespace AES.Tools.Editor
                 if (ownerInstance != null)
                 {
                     var ownerVal = ownerInstance;
-                    var dictObj = mInstGetter(ownerVal) as IDictionary;
+                    var dictObj  = mInstGetter(ownerVal) as IDictionary;
 
                     if (dictObj != null)
                     {
@@ -424,11 +454,11 @@ namespace AES.Tools.Editor
                             if (entry.Key is string keyStr)
                             {
                                 string dictPath = $"{currentPath}[\"{keyStr}\"]";
-                                string label = $"{currentPath}/\"{keyStr}\"";
+                                string label    = $"{currentPath}/\"{keyStr}\"";
 
                                 acc.Add(new PathCandidate
                                 {
-                                    Path = dictPath,
+                                    Path        = dictPath,
                                     DisplayLabel = label
                                 });
                             }
@@ -437,15 +467,16 @@ namespace AES.Tools.Editor
                 }
             }
 
-            // 1) 자기 자신을 후보에 추가 (기존과 동일)
+            // 1) 자기 자신을 후보에 추가
             if (isObsProp || isObsList || isCommand || isAsyncCmd || hasBindingAttr)
             {
-                string typeName = GetFriendlyTypeName(memberType);
-                string label = BuildDisplayLabel(currentPath, typeName);
+                // ReflectionExtensions.GetDisplayName 사용
+                string typeName = memberType.GetDisplayName();
+                string label    = BuildDisplayLabel(currentPath, typeName);
 
                 acc.Add(new PathCandidate
                 {
-                    Path = currentPath,
+                    Path         = currentPath,
                     DisplayLabel = label
                 });
             }
@@ -465,7 +496,6 @@ namespace AES.Tools.Editor
             // 2-B) IObservableProperty 인 경우: Value 타입 안으로 한 번 더 들어가기
             else if (isObsProp)
             {
-                // Value 프로퍼티 타입을 기준으로 내려감
                 var valuePropInfo = memberType.GetProperty(
                     "Value",
                     BindingFlags.Instance | BindingFlags.Public);
@@ -482,10 +512,12 @@ namespace AES.Tools.Editor
                         {
                             var obsObj = mInstGetter(ownerInstance);
 
-                            if (obsObj != null) { valueInstance = SafeGet(() => valuePropInfo.GetValue(obsObj)); }
+                            if (obsObj != null)
+                            {
+                                valueInstance = SafeGet(() => valuePropInfo.GetValue(obsObj));
+                            }
                         }
 
-                        // Path: CurrentLevel.Value.xxx ...
                         string valuePath = $"{currentPath}.Value";
 
                         BuildCandidates(valueType, valueInstance, valuePath, depth + 1, acc);
@@ -493,7 +525,6 @@ namespace AES.Tools.Editor
                 }
             }
         }
-
 
         bool IsContainerType(Type t)
         {
@@ -526,76 +557,6 @@ namespace AES.Tools.Editor
             string pathForMenu = fullPath.Replace('.', '/');
             return $"{pathForMenu} ({typeName})";
         }
-
-        static readonly Dictionary<Type, string> s_builtinNames = new()
-        {
-            { typeof(float),   "float" },
-            { typeof(double),  "double" },
-            { typeof(int),     "int" },
-            { typeof(uint),    "uint" },
-            { typeof(long),    "long" },
-            { typeof(ulong),   "ulong" },
-            { typeof(short),   "short" },
-            { typeof(ushort),  "ushort" },
-            { typeof(byte),    "byte" },
-            { typeof(sbyte),   "sbyte" },
-            { typeof(bool),    "bool" },
-            { typeof(char),    "char" },
-            { typeof(string),  "string" },
-            { typeof(decimal), "decimal" },
-            { typeof(void),    "void" },
-        };
-        
-        string GetFriendlyTypeName(Type t)
-        {
-            if (t == null)
-                return "null";
-
-            // 1) 기본 타입: float / int / bool / string 등
-            if (s_builtinNames.TryGetValue(t, out var alias))
-                return alias;
-
-            // 2) 배열
-            if (t.IsArray)
-            {
-                var elemType = t.GetElementType();
-                return $"{GetFriendlyTypeName(elemType)}[]";
-            }
-
-            // 3) 제네릭이 아닌 타입
-            if (!t.IsGenericType)
-                return t.Name;
-
-            // 4) 제네릭 타입: ObservableProperty<float> 등
-            var genericDef = t.IsGenericTypeDefinition ? t : t.GetGenericTypeDefinition();
-
-            // 필요하면 ObservableProperty/IObservableProperty를 "Observable"로 축약
-            string genericName;
-            if (genericDef.Name.StartsWith("ObservableProperty")
-                || genericDef.Name.StartsWith("IObservableProperty"))
-            {
-                genericName = "Observable";
-            }
-            else
-            {
-                genericName = t.Name;
-                int backtickIndex = genericName.IndexOf('`');
-                if (backtickIndex >= 0)
-                    genericName = genericName.Substring(0, backtickIndex);
-            }
-
-            var args     = t.GetGenericArguments();
-            var argNames = new string[args.Length];
-
-            for (int i = 0; i < args.Length; i++)
-            {
-                // 여기서 다시 GetFriendlyTypeName 호출 → float → "float" 로 변환됨
-                argNames[i] = GetFriendlyTypeName(args[i]);
-            }
-
-            return $"{genericName}<{string.Join(", ", argNames)}>";
-        }
-
     }
 }
 #endif

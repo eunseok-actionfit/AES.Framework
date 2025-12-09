@@ -23,7 +23,6 @@ namespace AES.Tools
         public Action<int,T> ItemRemoved = delegate { };
         private void Notify()
         {
-            Debug.Log($"[ObservableList] Notify Count={Count}");
             OnListChanged.Invoke();
         }
 

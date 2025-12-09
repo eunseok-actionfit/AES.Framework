@@ -1,3 +1,6 @@
+using System;
+
+
 namespace AES.Tools
 {
     public interface ICommand
@@ -14,6 +17,11 @@ namespace AES.Tools
 
     public abstract class CommandBase<T> : ICommand<T>
     {
+        public event Action CanExecuteChanged = delegate { };
+
+        protected void RaiseCanExecuteChanged()
+            => CanExecuteChanged?.Invoke();
+        
         public abstract bool CanExecute(T parameter= default);
         public abstract void Execute(T parameter= default);
 
