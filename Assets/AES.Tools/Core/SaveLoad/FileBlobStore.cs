@@ -59,7 +59,7 @@ namespace AES.Tools.Impl
             }
         }
 
-        public async UniTask<Result> DeleteAsync(string key, CancellationToken ct = default)
+        public async UniTask<Result> DeleteAsync(string key, CancellationToken ct)
         {
             try
             {

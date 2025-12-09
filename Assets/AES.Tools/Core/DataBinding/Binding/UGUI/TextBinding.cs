@@ -10,7 +10,7 @@ namespace AES.Tools
         [SerializeField] TMP_Text tmpText;
 
         [Header("Formatting")]
-        [SerializeField] bool useFormat = true;
+        [SerializeField] bool useFormat;
         // 기본값은 "{0}" → 그냥 값만 출력
         [SerializeField, ShowIf(nameof(useFormat))] string format = "{0}";
         [SerializeField, ShowIf(nameof(useFormat))] bool useInvariantCulture = true;
