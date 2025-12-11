@@ -11,55 +11,45 @@ namespace AES.Tools
     {
         public ObservableViewModelContext(object root) : base(root) { }
 
-        public override object RegisterListener(string path, Action<object> onValueChanged)
+        public override object RegisterListener(string path, Action<object> onValueChanged, bool pushInitialValue)
         {
             if (string.IsNullOrEmpty(path) || onValueChanged == null)
                 return null;
 
             var mp    = GetMemberPath(path);
             var value = mp.GetValue(Root);
-
-            // 1) ObservableProperty
+            
             if (value is IObservableProperty op)
             {
                 void Handler(object v) => onValueChanged(v);
-
                 op.OnValueChangedBoxed += Handler;
 
-                // 초기 값 한 번 밀어줌
-                onValueChanged(op.Value);
+                if (pushInitialValue)
+                    onValueChanged(op.Value);
 
-                return new Subscription(() =>
-                {
-                    op.OnValueChangedBoxed -= Handler;
-                });
+                return new Subscription(() => op.OnValueChangedBoxed -= Handler);
             }
 
-            // 2) ObservableList
             if (value is IObservableList list)
             {
-                void Handler()
-                {
-                    onValueChanged(list);
-                }
-
+                void Handler() => onValueChanged(list);
                 list.OnListChanged += Handler;
 
-                // 초기 값 한 번
-                onValueChanged(list);
+                if (pushInitialValue)
+                    onValueChanged(list);
 
-                return new Subscription(() =>
-                {
-                    list.OnListChanged -= Handler;
-                });
+                return new Subscription(() => list.OnListChanged -= Handler);
             }
 
-            // 3) 그 외: 이벤트 없이 현재 값만 한 번
-            onValueChanged(value);
+            if (pushInitialValue)
+                onValueChanged(value);
+
             return null;
         }
 
-        public override void RemoveListener(string path, Action<object> onValueChanged, object token = null)
+        
+
+        public override void RemoveListener(string path, object token = null)
         {
             // 권장 구현: path/callback 은 무시하고 토큰만 Dispose
             if (token is IDisposable d)

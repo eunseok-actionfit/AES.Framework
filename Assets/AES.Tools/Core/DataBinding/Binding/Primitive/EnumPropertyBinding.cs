@@ -35,6 +35,6 @@ public sealed class EnumPropertyBinding : ContextBindingBase
     protected override void OnContextUnavailable()
     {
         if (BindingContext != null && _listener != null)
-            BindingContext.RemoveListener(ResolvedPath, _listener, _token);
+            BindingContext.RemoveListener(ResolvedPath, _token);
     }
 }

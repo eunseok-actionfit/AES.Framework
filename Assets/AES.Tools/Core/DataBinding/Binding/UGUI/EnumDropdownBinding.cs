@@ -38,7 +38,7 @@ public class EnumDropdownBinding : ContextBindingBase
     protected override void OnContextUnavailable()
     {
         if (_ctx != null && _token != null)
-            _ctx.RemoveListener(ResolvedPath, OnModelChanged, _token);
+            _ctx.RemoveListener(ResolvedPath, _token);
 
         if (dropdown != null)
             dropdown.onValueChanged.RemoveListener(OnDropdownChanged);

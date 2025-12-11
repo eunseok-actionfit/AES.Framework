@@ -36,7 +36,7 @@ namespace AES.Tools
             }
         }
 
-        public override object RegisterListener(string path, Action<object> onValueChanged)
+        public override object RegisterListener(string path, Action<object> onValueChanged, bool pushInitialValue = true) 
         {
             if (string.IsNullOrEmpty(path) || onValueChanged == null)
                 return null;
@@ -49,8 +49,8 @@ namespace AES.Tools
 
             list.Add(onValueChanged);
 
-            // 등록 시 현재값 한 번
-            onValueChanged(GetValue(path));
+            if(pushInitialValue)
+                onValueChanged(GetValue(path));
 
             // 이 콜백만 제거하는 Subscription 반환
             return new Subscription(() =>
@@ -63,8 +63,9 @@ namespace AES.Tools
                     _listeners.Remove(path);
             });
         }
+        
 
-        public override void RemoveListener(string path, Action<object> onValueChanged, object token = null)
+        public override void RemoveListener(string path, object token = null)
         {
             // IDisposable 토큰이 있으면 그걸 Dispose 하는 것이 표준
             if (token is IDisposable d)

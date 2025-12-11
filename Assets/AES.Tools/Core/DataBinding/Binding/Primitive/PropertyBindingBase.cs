@@ -30,7 +30,7 @@ public abstract class PropertyBindingBase<T> : ContextBindingBase
     protected override void OnContextUnavailable()
     {
         if (BindingContext != null && _listener != null)
-            BindingContext.RemoveListener(ResolvedPath, _listener, _token);
+            BindingContext.RemoveListener(ResolvedPath, _token);
     }
 
     protected virtual void OnValueChanged(T value)

@@ -43,7 +43,7 @@ public class ToggleBinding : ContextBindingBase
     {
         if (_ctx != null && _listenerToken != null)
         {
-            _ctx.RemoveListener(ResolvedPath, OnSourceValueChanged, _listenerToken);
+            _ctx.RemoveListener(ResolvedPath, _listenerToken);
         }
 
         if (toggle != null)

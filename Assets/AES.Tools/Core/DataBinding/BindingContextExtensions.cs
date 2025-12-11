@@ -23,7 +23,7 @@ public static class BindingContextExtensions
     public static IDisposable SubscribeProperty<TViewModel, TValue>(
         this IBindingContext ctx,
         Expression<Func<TViewModel, IObservableProperty<TValue>>> selector,
-        Action<TValue> onChanged)
+        Action<TValue> onChanged,   bool pushInitialValue = true)
     {
         var lambda = selector;
         string path = GetOrAddPath(lambda);
@@ -34,7 +34,7 @@ public static class BindingContextExtensions
                 onChanged(tv);
         };
 
-        var token = ctx.RegisterListener(path, boxed);
+        var token = ctx.RegisterListener(path, boxed, pushInitialValue);
 
         return new BindingSubscription(ctx, path, boxed, token);
     }
@@ -43,7 +43,7 @@ public static class BindingContextExtensions
         this IBindingContext ctx,
         BindingBehaviour owner,   // ← 추가
         Expression<Func<TViewModel, IObservableProperty<TValue>>> selector,
-        Action<TValue> onChanged)
+        Action<TValue> onChanged,   bool pushInitialValue = true)
     {
         var lambda = selector;
         string path = GetOrAddPath(lambda);
@@ -57,7 +57,7 @@ public static class BindingContextExtensions
                 onChanged(tv);
         };
 
-        var token = ctx.RegisterListener(path, boxed);
+        var token = ctx.RegisterListener(path, boxed,pushInitialValue);
 
         return new BindingSubscription(ctx, path, boxed, token);
     }
@@ -67,7 +67,8 @@ public static class BindingContextExtensions
         Expression<Func<TViewModel, ObservableList<TItem>>> selector,
         Action<ObservableList<TItem>> onReset,
         Action<int, TItem> onItemAdded,
-        Action<int, TItem> onItemRemoved)
+        Action<int, TItem> onItemRemoved, 
+        bool pushInitialValue = true)
     {
         var lambda = selector;
         string path = GetOrAddPath(lambda);
@@ -135,7 +136,7 @@ public static class BindingContextExtensions
             }
         };
 
-        var token = ctx.RegisterListener(path, boxed);
+        var token = ctx.RegisterListener(path, boxed, pushInitialValue);
 
         // Dispose 시: BindingContext 리스너 해제 + 리스트 이벤트 해제
         return new BindingSubscription(
@@ -211,7 +212,7 @@ public static class BindingContextExtensions
             else
             {
                 // 구버전 컨텍스트 호환용
-                _ctx.RemoveListener(_path, _boxed, _token);
+                _ctx.RemoveListener(_path, _token);
             }
         }
     }

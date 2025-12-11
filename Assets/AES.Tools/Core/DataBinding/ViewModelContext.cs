@@ -66,8 +66,9 @@ namespace AES.Tools
             // todo  인덱서/딕셔너리 셋터도 이쪽에서 확장
         }
 
-        public abstract object RegisterListener(string path, Action<object> onValueChanged);
-        public abstract void RemoveListener(string path, Action<object> onValueChanged, object token = null);
+        public abstract object RegisterListener(string path, Action<object> onValueChanged, bool pushInitialValue = true);
+
+        public abstract void RemoveListener(string path, object token = null);
 
         #region Helper
 

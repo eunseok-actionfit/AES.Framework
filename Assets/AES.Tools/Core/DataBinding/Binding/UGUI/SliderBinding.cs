@@ -55,7 +55,7 @@ namespace AES.Tools.Bindings
         {
             if (_ctx != null && _listenerToken != null)
             {
-                _ctx.RemoveListener(ResolvedPath, OnModelChanged, _listenerToken);
+                _ctx.RemoveListener(ResolvedPath, _listenerToken);
             }
 
             if (target != null)

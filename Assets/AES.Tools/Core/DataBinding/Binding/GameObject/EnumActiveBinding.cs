@@ -30,7 +30,7 @@ public class EnumActiveBinding : ContextBindingBase
     protected override void OnContextUnavailable()
     {
         if (_ctx != null && _token != null)
-            _ctx.RemoveListener(ResolvedPath, OnValueChanged, _token);
+            _ctx.RemoveListener(ResolvedPath, _token);
 
         _ctx = null;
         _token = null;

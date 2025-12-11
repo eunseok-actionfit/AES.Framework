@@ -18,12 +18,12 @@ namespace AES.Tools
         /// 값 변경을 구독. 필요하면 토큰을 반환(없으면 null).
         /// 동일 path에 여러 콜백 구독 가능.
         /// </summary>
-        object RegisterListener(string path, Action<object> onValueChanged);
+        object RegisterListener(string path, Action<object> onValueChanged,
+                                bool pushInitialValue = true);
         
-
         /// <summary>
         /// RegisterListener에서 사용한 path/콜백/토큰 조합으로 구독 해제.
         /// </summary>
-        void RemoveListener(string path, Action<object> onValueChanged, object token = null);
+        void RemoveListener(string path, object token = null);
     }
 }

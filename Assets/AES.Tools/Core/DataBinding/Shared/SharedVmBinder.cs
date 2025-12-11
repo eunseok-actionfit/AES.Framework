@@ -70,7 +70,7 @@ namespace AES.Tools
             if (_ctx != null)
             {
                 foreach (var (p, cb, token) in _subscriptions)
-                    _ctx.RemoveListener(p, cb, token);
+                    _ctx.RemoveListener(p, token);
             }
 
             _subscriptions.Clear();

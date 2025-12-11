@@ -79,12 +79,12 @@ namespace AES.Tools.Bindings
         {
             if (_ctx != null && _listListenerToken != null)
             {
-                _ctx.RemoveListener(ResolvedPath, OnListValueChanged, _listListenerToken);
+                _ctx.RemoveListener(ResolvedPath, _listListenerToken);
             }
 
             if (_ctx != null && !string.IsNullOrEmpty(selectedIndexPath) && _selectedIndexListenerToken != null)
             {
-                _ctx.RemoveListener(selectedIndexPath, OnSelectedIndexChanged, _selectedIndexListenerToken);
+                _ctx.RemoveListener(selectedIndexPath, _selectedIndexListenerToken);
             }
 
             if (_scrollRect != null)

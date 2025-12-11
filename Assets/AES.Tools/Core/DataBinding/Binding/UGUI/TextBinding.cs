@@ -40,7 +40,7 @@ namespace AES.Tools
         protected override void OnContextUnavailable()
         {
             if (_ctx != null && _listenerToken != null)
-                _ctx.RemoveListener(ResolvedPath, OnValueChanged, _listenerToken);
+                _ctx.RemoveListener(ResolvedPath, _listenerToken);
 
             _listenerToken = null;
             _ctx = null;

@@ -40,7 +40,7 @@ namespace AES.Tools
             }
             else if (BindingContext != null && _listener != null)
             {
-                BindingContext.RemoveListener(ResolvedPath, _listener, _token);
+                BindingContext.RemoveListener(ResolvedPath, _token);
             }
 
             _listener = null;

@@ -478,16 +478,16 @@ namespace AES.Tools
                 _parent.SetValue(full, value);
             }
 
-            public object RegisterListener(string path, Action<object> onValueChanged)
+            public object RegisterListener(string path, Action<object> onValueChanged, bool pushInitialValue = true)
             {
                 var full = Concat(path);
-                return _parent.RegisterListener(full, onValueChanged);
+                return _parent.RegisterListener(full, onValueChanged, pushInitialValue);
             }
 
-            public void RemoveListener(string path, Action<object> onValueChanged, object token = null)
+            public void RemoveListener(string path, object token = null)
             {
                 var full = Concat(path);
-                _parent.RemoveListener(full, onValueChanged, token);
+                _parent.RemoveListener(full, token);
             }
         }
     }

@@ -60,7 +60,7 @@ namespace AES.Tools.Bindings
         protected override void OnContextUnavailable()
         {
             if (_ctx != null && _listenerToken != null)
-                _ctx.RemoveListener(ResolvedPath, OnModelChanged, _listenerToken);
+                _ctx.RemoveListener(ResolvedPath, _listenerToken);
 
             if (input != null)
             {
