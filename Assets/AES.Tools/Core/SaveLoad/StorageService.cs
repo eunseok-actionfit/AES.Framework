@@ -18,7 +18,7 @@ public sealed class StorageService : IStorageService
         this.local = local;
         this.cloud = cloud;
         this.json = json;
-        this.profile = null;
+        profile = null;
     }
 
     public StorageService(

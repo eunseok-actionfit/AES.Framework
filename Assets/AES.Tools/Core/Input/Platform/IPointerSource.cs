@@ -17,7 +17,7 @@ namespace AES.Tools.Platform
     {
         public readonly int id;           // mouse:-1, touch:fingerId
         public readonly Vector2 position; // screen
-        public Pointer(int id, Vector2 pos) { this.id = id; this.position = pos; }
+        public Pointer(int id, Vector2 pos) { this.id = id; position = pos; }
     }
 }
 

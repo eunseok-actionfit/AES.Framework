@@ -2,7 +2,7 @@ using System;
 using UnityEngine;
 
 
-namespace AES.Tools.VContainer
+namespace AES.Tools.VContainer.Services.Loading
 {
     /// <summary>기존 static 사용처를 위한 얇은 어댑터.</summary>
     public static class LoadingBusFacade

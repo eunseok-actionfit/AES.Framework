@@ -68,7 +68,7 @@ namespace AES.Tools
         public static implicit operator Guid(SerializableGuid serializableGuid) => serializableGuid.ToGuid();  
         public static implicit operator SerializableGuid(Guid guid) => new SerializableGuid(guid);
 
-        public override bool Equals(object obj) => obj is SerializableGuid guid && this.Equals(guid);
+        public override bool Equals(object obj) => obj is SerializableGuid guid && Equals(guid);
 
         public bool Equals(SerializableGuid other) {
             return Part1 == other.Part1 && Part2 == other.Part2 && Part3 == other.Part3 && Part4 == other.Part4;

@@ -1,7 +1,8 @@
 using UnityEngine;
 using UnityEngine.Events;
 
-namespace AES.Tools.View
+
+namespace AES.Tools.UI.Core.View
 {
     public enum UIViewState
     {

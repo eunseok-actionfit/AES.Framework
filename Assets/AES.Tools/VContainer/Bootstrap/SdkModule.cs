@@ -1,45 +1,47 @@
-using AES.Tools.VContainer;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using VContainer.Unity;
 
 
-[CreateAssetMenu(menuName = "Game/Bootstrap Modules/SDK Module", fileName = "SdkModule")]
-public sealed class SdkModule : BootstrapModule
+namespace AES.Tools.VContainer.Bootstrap
 {
-    [Header("Analytics SDK 활성화")]
-    [SerializeField]
-    private bool enableAnalytics = true;
-
-    [Header("리모트 설정(원격 Config) 활성화")]
-    [SerializeField]
-    private bool enableRemoteConfig = false;
-
-    public override UniTask Initialize(LifetimeScope rootScope)
+    [CreateAssetMenu(menuName = "Game/Bootstrap Modules/SDK Module", fileName = "SdkModule")]
+    public sealed class SdkModule : BootstrapModule
     {
-        Debug.Log("[SdkModule] Initialize");
+        [Header("Analytics SDK 활성화")]
+        [SerializeField]
+        private bool enableAnalytics = true;
 
-        if (enableAnalytics)
-            InitializeAnalytics(rootScope);
+        [Header("리모트 설정(원격 Config) 활성화")]
+        [SerializeField]
+        private bool enableRemoteConfig = false;
 
-        if (enableRemoteConfig)
-            InitializeRemoteConfig(rootScope);
+        public override UniTask Initialize(LifetimeScope rootScope)
+        {
+            Debug.Log("[SdkModule] Initialize");
 
-        return UniTask.CompletedTask;
-    }
+            if (enableAnalytics)
+                InitializeAnalytics(rootScope);
 
-    private void InitializeAnalytics(LifetimeScope rootScope)
-    {
-        Debug.Log("[SdkModule] Analytics SDK init");
-        // AnalyticsSdk.Initialize();
-        // var analytics = rootScope?.Container.Resolve<IAnalyticsService>();
-        // analytics?.SetUserId(...);
-    }
+            if (enableRemoteConfig)
+                InitializeRemoteConfig(rootScope);
 
-    private void InitializeRemoteConfig(LifetimeScope rootScope)
-    {
-        Debug.Log("[SdkModule] Remote Config init");
-        // RemoteConfigSdk.Initialize();
-        // await RemoteConfigSdk.FetchAndActivateAsync();
+            return UniTask.CompletedTask;
+        }
+
+        private void InitializeAnalytics(LifetimeScope rootScope)
+        {
+            Debug.Log("[SdkModule] Analytics SDK init");
+            // AnalyticsSdk.Initialize();
+            // var analytics = rootScope?.Container.Resolve<IAnalyticsService>();
+            // analytics?.SetUserId(...);
+        }
+
+        private void InitializeRemoteConfig(LifetimeScope rootScope)
+        {
+            Debug.Log("[SdkModule] Remote Config init");
+            // RemoteConfigSdk.Initialize();
+            // await RemoteConfigSdk.FetchAndActivateAsync();
+        }
     }
 }

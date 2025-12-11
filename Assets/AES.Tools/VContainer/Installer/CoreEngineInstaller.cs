@@ -9,6 +9,10 @@ namespace AES.Tools.VContainer.Installer
     {
         public void Install(IContainerBuilder builder)
         {
+            // TimerScheduler 등록
+            builder.Register<TimerScheduler>(Lifetime.Singleton)
+                .As<ITimerScheduler>();
+            
             builder.Register<CommandHistory>(Lifetime.Singleton)
                 .As<ICommandHistory>();
             builder.Register<CommandBus>(Lifetime.Singleton)

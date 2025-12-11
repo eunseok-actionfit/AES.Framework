@@ -1,8 +1,13 @@
-using UnityEngine;
-using Cysharp.Threading.Tasks;
 using System.Threading;
+using AES.Tools.UI.Core.Factory;
+using AES.Tools.UI.Core.Registry;
+using AES.Tools.UI.Core.View;
+using AES.Tools.UI.Services;
+using Cysharp.Threading.Tasks;
+using UnityEngine;
 
-namespace AES.Tools
+
+namespace AES.Tools.UI.Managers
 {
     public sealed class PopupManager : Singleton<PopupManager>
     {

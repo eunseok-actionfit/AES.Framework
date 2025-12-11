@@ -2,7 +2,7 @@ using System;
 using UnityEngine;
 
 
-namespace AES.Tools
+namespace AES.Tools.UI.Core.Registry
 {
     /// Show 전에 필요한 정보만 보관
     [Serializable]

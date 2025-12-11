@@ -1,16 +1,17 @@
-using System;
-using System.Collections.Generic;
-using AES.Tools.SerializedDictionary;
-using AES.Tools.View;
-using UnityEngine;
-
 #if ODIN_INSPECTOR
 using Sirenix.OdinInspector;
 #else
 using AYellowpaper.SerializedCollections;
 #endif
+using System;
+using System.Collections.Generic;
+using AES.Tools.SerializedDictionary;
+using AES.Tools.UI.Core.View;
+using AES.Tools.View;
+using UnityEngine;
 
-namespace AES.Tools
+
+namespace AES.Tools.UI.Core.Registry
 {
 #if ODIN_INSPECTOR
     public abstract class UIRegistrySO : SerializedScriptableObject, IURegistry 

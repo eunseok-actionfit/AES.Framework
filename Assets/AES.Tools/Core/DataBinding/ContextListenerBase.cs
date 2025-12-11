@@ -64,7 +64,7 @@ namespace AES.Tools
             OnContextUnavailable();
         }
 
-        protected abstract void OnContextAvailable(IBindingContext context);
+        protected abstract void OnContextAvailable(IBindingContext ctx);
         protected abstract void OnContextUnavailable();
 
         // 아래 Provider 찾기 로직은 ContextBindingBase와 동일

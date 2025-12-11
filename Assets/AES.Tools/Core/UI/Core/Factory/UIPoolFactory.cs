@@ -1,10 +1,11 @@
 using System.Threading;
-using AES.Tools.View;
+using AES.Tools.UI.Core.Registry;
+using AES.Tools.UI.Core.View;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 
-namespace AES.Tools
+namespace AES.Tools.UI.Core.Factory
 {
     //  Namespace Properties ------------------------------
 

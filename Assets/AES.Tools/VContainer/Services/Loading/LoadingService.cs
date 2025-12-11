@@ -4,7 +4,7 @@ using UnityEngine;
 using Object = UnityEngine.Object;
 
 
-namespace AES.Tools.VContainer
+namespace AES.Tools.VContainer.Services.Loading
 {
     public sealed class LoadingService : ILoadingService
     {

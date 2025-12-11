@@ -6,7 +6,7 @@ using VContainer;
 using VContainer.Unity;
 
 
-namespace AES.Tools.VContainer
+namespace AES.Tools.VContainer.Bootstrap
 {
     [CreateAssetMenu(menuName = "Game/Bootstrap Settings", fileName = "BootstrapSettings")]
     public sealed class BootstrapSettings : ScriptableObject

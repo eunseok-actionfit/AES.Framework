@@ -1,5 +1,8 @@
 using System;
 using System.Threading;
+using AES.Tools.UI.Core.Factory;
+using AES.Tools.UI.Core.Registry;
+using AES.Tools.UI.Core.View;
 using AES.Tools.View;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
@@ -8,7 +11,7 @@ using VContainer;
 using VContainer.Unity;
 using Object = UnityEngine.Object;
 
-namespace AES.Tools
+namespace AES.Tools.VContainer.UI
 {
     public class UIFactoryVC : IUIFactory
     {

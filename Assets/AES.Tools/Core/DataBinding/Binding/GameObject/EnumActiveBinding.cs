@@ -24,7 +24,7 @@ public class EnumActiveBinding : ContextBindingBase
         _token = context.RegisterListener(path, OnValueChanged);
 
         if (target == null)
-            target = this.gameObject; // 기본 자기 자신
+            target = gameObject; // 기본 자기 자신
     }
 
     protected override void OnContextUnavailable()

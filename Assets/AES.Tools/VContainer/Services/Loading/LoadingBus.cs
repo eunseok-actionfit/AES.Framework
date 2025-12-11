@@ -1,7 +1,7 @@
 using System;
 
 
-namespace AES.Tools.VContainer
+namespace AES.Tools.VContainer.Services.Loading
 {
     public sealed class LoadingBus : ILoadingBus
     {

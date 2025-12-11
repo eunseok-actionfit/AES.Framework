@@ -1,5 +1,6 @@
 using AES.Tools.Core;
 using AES.Tools.Platform;
+using AES.Tools.VContainer.Bootstrap;
 using VContainer;
 using VContainer.Unity;
 

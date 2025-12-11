@@ -2,7 +2,7 @@ using System;
 using Cysharp.Threading.Tasks;
 
 
-namespace AES.Tools.VContainer
+namespace AES.Tools.VContainer.Services.Loading
 {
     public interface ILoadingService
     {

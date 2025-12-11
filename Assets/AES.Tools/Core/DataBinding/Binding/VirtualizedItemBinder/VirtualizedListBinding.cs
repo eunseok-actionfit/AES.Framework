@@ -207,7 +207,7 @@ namespace AES.Tools.Bindings
             int insertIndex = _topSpacer.transform.GetSiblingIndex() + 1;
             for (int i = 0; i < _poolSize; i++)
             {
-                var go = Object.Instantiate(itemPrefab, content);
+                var go = Instantiate(itemPrefab, content);
                 go.transform.SetSiblingIndex(insertIndex + i);
 
                 var rt = go.GetComponent<RectTransform>();
@@ -225,7 +225,7 @@ namespace AES.Tools.Bindings
             foreach (var rt in _pool)
             {
                 if (rt != null)
-                    Object.Destroy(rt.gameObject);
+                    Destroy(rt.gameObject);
             }
             _pool.Clear();
         }

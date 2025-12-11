@@ -1,11 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using AES.Tools.UI.Core.Factory;
+using AES.Tools.UI.Core.Registry;
+using AES.Tools.UI.Core.View;
 using Cysharp.Threading.Tasks;
-using AES.Tools.View;
 using UnityEngine;
 
-namespace AES.Tools
+
+namespace AES.Tools.UI.Services
 {
     public sealed class PopupService
     {

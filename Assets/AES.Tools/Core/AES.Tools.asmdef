@@ -8,7 +8,8 @@
     "Unity.ResourceManager",
     "Unity.InputSystem",
     "Unity.TextMeshPro",
-    "AYellowpaper.SerializedCollections"
+    "AYellowpaper.SerializedCollections",
+    "MaxSdk.Scripts"
   ],
   "includePlatforms": [],
   "excludePlatforms": [],

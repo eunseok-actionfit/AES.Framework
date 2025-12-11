@@ -2,7 +2,7 @@ using VContainer;
 using VContainer.Unity;
 
 
-namespace AES.Tools.VContainer
+namespace AES.Tools.VContainer.Extensions
 {
     public static class ContainerBuilderExtensions
     {

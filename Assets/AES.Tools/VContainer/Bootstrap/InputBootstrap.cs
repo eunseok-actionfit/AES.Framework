@@ -2,7 +2,7 @@ using AES.Tools.Core;
 using VContainer.Unity;
 
 
-namespace AES.Tools.VContainer
+namespace AES.Tools.VContainer.Bootstrap
 {
     public class InputBootstrap : IStartable, ITickable
     {

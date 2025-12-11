@@ -1,28 +1,31 @@
-using AES.Tools;
-using AES.Tools.View;
+using AES.Tools.UI.Managers;
 using UnityEngine;
 
-[RequireComponent(typeof(MonoContext))]
-public abstract class PopupViewBase : UIView
+
+namespace AES.Tools.UI.Core.View
 {
-    protected override void Awake()
+    [RequireComponent(typeof(MonoContext))]
+    public abstract class PopupViewBase : UIView
     {
-        base.Awake();
-        OnHideCompleted.AddListener(NotifyClosed);
-    }
+        protected override void Awake()
+        {
+            base.Awake();
+            OnHideCompleted.AddListener(NotifyClosed);
+        }
 
-    void NotifyClosed()
-    {
-        PopupManager.Instance.OnPopupClosed(this);
-    }
+        void NotifyClosed()
+        {
+            PopupManager.Instance.OnPopupClosed(this);
+        }
 
-    /// <summary>
-    /// PopupService에서 넘겨주는 viewModel을 MonoContext로 전달.
-    /// </summary>
-    public virtual void BindModelObject(object viewModel)
-    {
-        var ctx = GetComponent<MonoContext>();
-        if (ctx != null)
-            ctx.SetViewModel(viewModel);
+        /// <summary>
+        /// PopupService에서 넘겨주는 viewModel을 MonoContext로 전달.
+        /// </summary>
+        public virtual void BindModelObject(object viewModel)
+        {
+            var ctx = GetComponent<MonoContext>();
+            if (ctx != null)
+                ctx.SetViewModel(viewModel);
+        }
     }
 }

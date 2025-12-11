@@ -1,6 +1,7 @@
 #if UNITY_EDITOR && !ODIN_INSPECTOR
 using System;
 using System.Collections.Generic;
+using AES.Tools.UI.Core.Registry;
 using UnityEditor;
 using UnityEditor.AddressableAssets;
 using UnityEngine;

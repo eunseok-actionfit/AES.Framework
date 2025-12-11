@@ -87,14 +87,14 @@ namespace AES.Tools
         /// This method iterates over all child transforms in reverse order and executes a given action on them.
         /// The action is a delegate that takes a Transform as parameter.
         /// </remarks>
-        public static void ForEveryChild(this Transform parent, System.Action<Transform> action) {
+        public static void ForEveryChild(this Transform parent, Action<Transform> action) {
             for (var i = parent.childCount - 1; i >= 0; i--) {
                 action(parent.GetChild(i));
             }
         }
 
         [Obsolete("Renamed to ForEveryChild")]
-        static void PerformActionOnChildren(this Transform parent, System.Action<Transform> action) {
+        static void PerformActionOnChildren(this Transform parent, Action<Transform> action) {
             parent.ForEveryChild(action);
         }
     }

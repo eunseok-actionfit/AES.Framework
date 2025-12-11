@@ -1,3 +1,4 @@
+using AES.Tools.VContainer.Bootstrap;
 using AES.Tools.VContainer.Installer;
 using AES.Tools.VContainer.Installer.App;
 using UnityEngine;
@@ -40,15 +41,7 @@ namespace AES.Tools.VContainer.Scope
             
             // Save / Load (앱)
             new SaveAndLoadInstaller(config.storageProfile).Install(builder);
-
             
-            builder.Register<AdsService>(Lifetime.Singleton)
-                .As<IAdsService>();
-            // // Input (엔진 Installer, config 넘김)
-            // new InputInstaller(config.inputConfig).Install(builder);
-            
-            // UI (엔진 Installer)
-          //  new UIInstaller(config.uiRegistrySO).Install(builder);
             
             // UX (앱 UX)
             new UXServicesInstaller().Install(builder);

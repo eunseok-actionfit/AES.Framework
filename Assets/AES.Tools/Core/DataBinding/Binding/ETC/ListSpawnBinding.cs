@@ -51,7 +51,6 @@ namespace AES.Tools
 
         private void OnListChanged(object value)
         {
-            Debug.Log($"[ListSpawnBinding] OnListChanged value={value}");
 #if UNITY_EDITOR
             Debug_OnValueUpdated(value, ResolvedPath);
 #endif

@@ -156,7 +156,7 @@ namespace AES.Tools
                 return null;
 
 #if UNITY_2022_2_OR_NEWER
-            var all = UnityEngine.Object.FindObjectsByType<MonoBehaviour>(
+            var all = FindObjectsByType<MonoBehaviour>(
                 FindObjectsInactive.Include,
                 FindObjectsSortMode.None);
 #else

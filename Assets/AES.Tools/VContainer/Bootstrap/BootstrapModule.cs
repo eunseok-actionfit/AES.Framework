@@ -3,7 +3,7 @@ using UnityEngine;
 using VContainer.Unity;
 
 
-namespace AES.Tools.VContainer
+namespace AES.Tools.VContainer.Bootstrap
 {
     /// <summary>
     /// 부트스트랩 모듈 베이스.

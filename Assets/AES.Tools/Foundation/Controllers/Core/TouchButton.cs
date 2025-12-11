@@ -218,7 +218,7 @@ namespace AES.Tools
 					if (_selectable != null)
 					{
 						_selectable.interactable = true;
-						if (EventSystem.current.currentSelectedGameObject == this.gameObject)
+						if (EventSystem.current.currentSelectedGameObject == gameObject)
 						{
 							if ((_image != null) && HighlightedChangeColor)
 							{

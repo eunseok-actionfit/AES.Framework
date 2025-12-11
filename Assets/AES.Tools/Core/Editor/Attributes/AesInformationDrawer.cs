@@ -32,12 +32,12 @@ namespace AES.Tools.Editor
 
                 // 2) HelpBox
                 helpRect.y = propRect.yMax + spacing;
-                EditorGUI.HelpBox(helpRect, attr.Message, attr.Type);
+                EditorGUI.HelpBox(helpRect, attr.Message, ToUnityMessageType(attr.Type));
             }
             else
             {
                 // 1) HelpBox
-                EditorGUI.HelpBox(helpRect, attr.Message, attr.Type);
+                EditorGUI.HelpBox(helpRect, attr.Message, ToUnityMessageType(attr.Type));
 
                 // 2) Property
                 propRect.y = helpRect.yMax + spacing;
@@ -70,6 +70,21 @@ namespace AES.Tools.Editor
                 EditorGUIUtility.singleLineHeight *
                 (1f + attr.Message.Split('\n').Length * 0.6f)
             );
+        }
+        
+        private MessageType ToUnityMessageType(AesInformationAttribute.InfoType type)
+        {
+            switch (type)
+            {
+                case AesInformationAttribute.InfoType.Info:
+                    return MessageType.Info;
+                case AesInformationAttribute.InfoType.Warning:
+                    return MessageType.Warning;
+                case AesInformationAttribute.InfoType.Error:
+                    return MessageType.Error;
+                default:
+                    return MessageType.None;
+            }
         }
     }
 }

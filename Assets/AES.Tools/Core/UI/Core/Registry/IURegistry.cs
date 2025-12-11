@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using AES.Tools.View;
 
 
-namespace AES.Tools
+namespace AES.Tools.UI.Core.Registry
 {
     public interface IURegistry
     {

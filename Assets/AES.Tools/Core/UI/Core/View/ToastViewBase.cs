@@ -1,8 +1,7 @@
-using AES.Tools.View;
 using UnityEngine;
 
 
-namespace AES.Tools
+namespace AES.Tools.UI.Core.View
 {
     [RequireComponent(typeof(MonoContext))]
     public abstract class ToastViewBase : UIView

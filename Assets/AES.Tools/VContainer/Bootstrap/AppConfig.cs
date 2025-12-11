@@ -1,7 +1,7 @@
 using UnityEngine;
 
 
-namespace AES.Tools.VContainer
+namespace AES.Tools.VContainer.Bootstrap
 {
     [CreateAssetMenu(menuName = "App/AppConfig (VContainer)")]
     public class AppConfig : ScriptableObject

@@ -1,4 +1,7 @@
 using UnityEngine;
+using AES.Tools;
+using AES.Tools.UI;
+
 
 [RequireComponent(typeof(RectTransform))]
 public sealed class SafeAreaFitter : MonoBehaviour
@@ -21,18 +24,37 @@ public sealed class SafeAreaFitter : MonoBehaviour
     float _timer;
 
     bool _isApplying;
+    
+    EventBinding<BannerHeightChangedEvent> _bannerBinding;
 
     void Awake()
     {
         _rect = GetComponent<RectTransform>();
 
-        // 인스펙터에서 padding 비워놨을 때 NRE 방지
         if (padding == null)
             padding = new RectOffset(0, 0, 0, 0);
     }
 
     void OnEnable()
     {
+        ForceApply();
+
+        // ★ 배너 높이 변경 이벤트 구독
+        _bannerBinding = new EventBinding<BannerHeightChangedEvent>()
+            .Add(OnBannerEvent)
+            .Register();
+    }
+
+    void OnDisable()
+    {
+        _bannerBinding?.Deregister();
+        _bannerBinding = null;
+    }
+
+    void OnBannerEvent(BannerHeightChangedEvent e)
+    {
+        // 배너가 보이면 px만큼 bottom 패딩, 숨기면 0
+        padding.bottom = e.Visible ? e.HeightPx : 0;
         ForceApply();
     }
 
@@ -47,12 +69,10 @@ public sealed class SafeAreaFitter : MonoBehaviour
     void Update()
     {
 #if UNITY_EDITOR
-        // 에디터는 GameView 변경을 바로 보고 싶은 경우가 많으니 매 프레임 체크
         CheckAndApply();
 #else
         const float POLL_INTERVAL = 0.2f;
 
-        // 모바일/런타임은 폴링 주기에 맞춰 체크
         _timer += Time.unscaledDeltaTime;
         if (_timer >= POLL_INTERVAL)
         {
@@ -71,7 +91,6 @@ public sealed class SafeAreaFitter : MonoBehaviour
         var res  = new Vector2Int(Screen.width, Screen.height);
         var ori  = Screen.orientation;
 
-        // SafeArea / 해상도 / 방향이 그대로면 스킵
         if (safe == _lastSafeArea &&
             res  == _lastResolution &&
             ori  == _lastOrientation)
@@ -104,8 +123,6 @@ public sealed class SafeAreaFitter : MonoBehaviour
         if (w <= 0f || h <= 0f)
             return;
 
-        // --- SafeArea + padding 보정 ---
-
         var adjusted = safe;
 
         if (padding != null)
@@ -116,7 +133,6 @@ public sealed class SafeAreaFitter : MonoBehaviour
             adjusted.yMax -= padding.top;
         }
 
-        // 화면 경계를 넘지 않도록 clamp
         adjusted.xMin = Mathf.Clamp(adjusted.xMin, 0f, w);
         adjusted.xMax = Mathf.Clamp(adjusted.xMax, 0f, w);
         adjusted.yMin = Mathf.Clamp(adjusted.yMin, 0f, h);
@@ -124,11 +140,8 @@ public sealed class SafeAreaFitter : MonoBehaviour
 
         if (adjusted.width <= 0f || adjusted.height <= 0f)
         {
-            // padding/보정으로 SafeArea가 말려버리면 전체 화면 사용
             adjusted = new Rect(0f, 0f, w, h);
         }
-
-        // --- Rect → Anchor 비율로 변환 ---
 
         Vector2 anchorMin = adjusted.position;
         Vector2 anchorMax = adjusted.position + adjusted.size;
@@ -149,22 +162,8 @@ public sealed class SafeAreaFitter : MonoBehaviour
         _rect.anchorMin = finalMin;
         _rect.anchorMax = finalMax;
 
-
         _lastSafeArea    = safe;
         _lastResolution  = resolution;
         _lastOrientation = orientation;
     }
-
-    // 배너 광고 예시
-    // public void OnBannerLoaded(int bannerHeightPx)
-    // {
-    //     padding.bottom = bannerHeightPx;
-    //     ForceApply();
-    // }
-    //
-    // public void OnBannerHidden()
-    // {
-    //     padding.bottom = 0;
-    //     ForceApply();
-    // }
 }
