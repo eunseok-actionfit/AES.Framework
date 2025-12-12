@@ -1,47 +1,78 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-
 
 namespace AES.Tools
 {
-    public class StateMachine
+    /// <summary>
+    /// 상태 전이를 평가하고 현재 상태를 관리하는 상태 머신.<br/>
+    /// 우선순위 기반 전이, 전역 전이(Any)를 지원한다.
+    /// </summary>
+    public sealed class StateMachine
     {
-        StateNode currentNode;
-        readonly Dictionary<Type, StateNode> nodes = new();
-        readonly HashSet<Transition> anyTransitions = new();
+        private StateNode currentNode;
 
-        public IState CurrentState => currentNode?.State;
+        private readonly Dictionary<Type, StateNode> nodes = new();
+        private readonly HashSet<Transition> anyTransitions = new();
+
+        // ===========================
+        // Observable outputs
+        // ===========================
+        public ObservableProperty<IState> CurrentState { get; } = new();
+        public ObservableProperty<string> LastTransitionName { get; } = new("SetState");
+        public IState CurrentStateRaw => CurrentState.Value;
+
+        // ===========================
+        // Time (for HasExitTime)
+        // ===========================
+        private float _now;
+        private float _stateEnterTime;
+
+        public float Now => _now;
+        public float TimeInState => _now - _stateEnterTime;
 
         /// <summary>
-        /// 상태 변경 이벤트 (이전 상태, 다음 상태, 사용된 전이).
+        /// 현재 시간을 주입하며 업데이트.
         /// </summary>
-        public event Action<IState, IState, Transition> OnStateChanged;
+        public void Update(float now)
+        {
+            _now = now;
+            Update();
+        }
 
         /// <summary>
-        /// 상태 진입 이벤트.
+        /// 현재 시간을 주입하며 FixedUpdate.
+        /// (TimeInState를 FixedUpdate 로직에서도 일관되게 쓰고 싶을 때 사용)
         /// </summary>
-        public event Action<IState> OnStateEntered;
+        public void FixedUpdate(float now)
+        {
+            _now = now;
+            FixedUpdate();
+        }
 
-        /// <summary>
-        /// 상태 종료 이벤트.
-        /// </summary>
-        public event Action<IState> OnStateExited;
+        public void SetState(IState state)
+        {
+            if (state == null) throw new ArgumentNullException(nameof(state));
 
-        /// <summary>
-        /// 디버그 로그 콜백.
-        /// 예: sm.Logger = msg => Debug.Log(msg);
-        /// </summary>
-        public Action<string> Logger { get; set; }
+            var previous = currentNode?.State;
+            previous?.OnExit();
+
+            currentNode = GetOrAddNode(state);
+            currentNode.State?.OnEnter();
+
+            _stateEnterTime = _now; // ★ 진입 시점 기록
+
+            LastTransitionName.Value = "SetState";
+            CurrentState.Value = currentNode.State;
+        }
 
         public void Update()
         {
-            var transition = GetTransition();
+            var t = GetTransition();
 
-            if (transition != null)
+            if (t != null)
             {
-                ChangeState(transition);
+                ChangeState(t);
+
                 foreach (var node in nodes.Values)
                     ResetActionPredicateFlags(node.Transitions);
 
@@ -51,116 +82,82 @@ namespace AES.Tools
             currentNode?.State?.Update();
         }
 
-        static void ResetActionPredicateFlags(IEnumerable<Transition> transitions)
-        {
-            foreach (var transition in transitions.OfType<Transition<ActionPredicate>>())
-                transition.condition.flag = false;
-        }
-
         public void FixedUpdate()
+            => currentNode?.State?.FixedUpdate();
+
+        public void AddTransition(IState from, IState to, IPredicate condition, int priority = 0, string name = null)
         {
-            currentNode?.State?.FixedUpdate();
-        }
+            if (from == null) throw new ArgumentNullException(nameof(from));
+            if (to == null) throw new ArgumentNullException(nameof(to));
+            if (condition == null) throw new ArgumentNullException(nameof(condition));
 
-        public void SetState(IState state)
-        {
-            var previous = currentNode?.State;
-            currentNode  = GetOrAddNode(state);
-            currentNode.State?.OnEnter();
-
-            OnStateEntered?.Invoke(currentNode.State);
-            OnStateChanged?.Invoke(previous, currentNode.State, null);
-
-            Logger?.Invoke($"[StateMachine] {previous?.GetType().Name ?? "null"} -> {currentNode.State?.GetType().Name ?? "null"} (SetState)");
-        }
-
-        void ChangeState(Transition transition)
-        {
-            var nextState = transition.To;
-            if (currentNode != null && nextState == currentNode.State)
-                return;
-
-            var previousState = currentNode?.State;
-            var nextNode      = GetOrAddNode(nextState);
-
-            previousState?.OnExit();
-            OnStateExited?.Invoke(previousState);
-
-            nextNode.State?.OnEnter();
-            OnStateEntered?.Invoke(nextNode.State);
-
-            currentNode = nextNode;
-
-            OnStateChanged?.Invoke(previousState, nextNode.State, transition);
-
-            var fromName = previousState != null ? previousState.GetType().Name : "null";
-            var toName   = nextNode.State != null ? nextNode.State.GetType().Name : "null";
-            var transStr = string.IsNullOrEmpty(transition.Name)
-                ? transition.GetType().Name
-                : transition.Name;
-            Logger?.Invoke($"[StateMachine] {fromName} -> {toName} via {transStr} (prio {transition.Priority})");
-        }
-
-        //========================
-        // 전이 등록 (Priority 포함)
-        //========================
-
-        public void AddTransition<T>(IState from, IState to, T condition, int priority = 0, string name = null)
-        {
             GetOrAddNode(from).AddTransition(GetOrAddNode(to).State, condition, priority, name);
         }
 
-        public void AddAnyTransition<T>(IState to, T condition, int priority = 0, string name = null)
+        public void AddAnyTransition(IState to, IPredicate condition, int priority = 0, string name = null)
         {
-            var t = new Transition<T>(GetOrAddNode(to).State, condition)
-            {
-                Priority = priority,
-                Name     = name
-            };
-            anyTransitions.Add(t);
+            if (to == null) throw new ArgumentNullException(nameof(to));
+            if (condition == null) throw new ArgumentNullException(nameof(condition));
+
+            anyTransitions.Add(new Transition(GetOrAddNode(to).State, condition, priority, name));
         }
 
-        //========================
-        // 전이 선택 (우선순위)
-        //========================
-
-        Transition GetTransition()
+        private Transition GetTransition()
         {
-            Transition winner   = null;
-            int        bestPrio = int.MinValue;
+            Transition best = null;
+            int prio = int.MinValue;
 
-            // AnyState 전이 먼저
             foreach (var t in anyTransitions)
+                if (t.Evaluate() && t.Priority >= prio)
+                    (best, prio) = (t, t.Priority);
+
+            if (currentNode != null)
             {
-                if (t.Evaluate() && t.Priority >= bestPrio)
-                {
-                    bestPrio = t.Priority;
-                    winner   = t;
-                }
+                foreach (var t in currentNode.Transitions)
+                    if (t.Evaluate() && t.Priority >= prio)
+                        (best, prio) = (t, t.Priority);
             }
 
-            if (currentNode == null)
-                return winner;
-
-            // 현재 상태 전이
-            foreach (var t in currentNode.Transitions)
-            {
-                if (t.Evaluate() && t.Priority >= bestPrio)
-                {
-                    bestPrio = t.Priority;
-                    winner   = t;
-                }
-            }
-
-            return winner;
+            return best;
         }
 
-        StateNode GetOrAddNode(IState state)
+        private void ChangeState(Transition t)
         {
-            if (state == null)
-                throw new ArgumentNullException(nameof(state));
+            if (t == null) return;
+
+            var next = t.To;
+            if (next == null) return;
+
+            if (currentNode != null && ReferenceEquals(next, currentNode.State))
+                return;
+
+            var previous = currentNode?.State;
+            previous?.OnExit();
+
+            currentNode = GetOrAddNode(next);
+            currentNode.State?.OnEnter();
+
+            _stateEnterTime = _now; // ★ 전이 진입 시점 기록
+
+            LastTransitionName.Value = string.IsNullOrEmpty(t.Name) ? "Transition" : t.Name;
+            CurrentState.Value = currentNode.State;
+        }
+
+        private static void ResetActionPredicateFlags(IEnumerable<Transition> transitions)
+        {
+            foreach (var t in transitions)
+            {
+                if (t.Condition is ActionPredicate ap)
+                    ap.flag = false;
+            }
+        }
+
+        private StateNode GetOrAddNode(IState state)
+        {
+            if (state == null) throw new ArgumentNullException(nameof(state));
 
             var type = state.GetType();
+
             if (!nodes.TryGetValue(type, out var node))
             {
                 node = new StateNode(state);
@@ -170,36 +167,20 @@ namespace AES.Tools
             return node;
         }
 
-        //========================
-        // 내부 노드
-        //========================
-
-        class StateNode
+        private sealed class StateNode
         {
             public IState State { get; }
-            public HashSet<Transition> Transitions { get; }
+            public HashSet<Transition> Transitions { get; } = new();
 
-            public StateNode(IState state)
-            {
-                State       = state;
-                Transitions = new HashSet<Transition>();
-            }
+            public StateNode(IState state) => State = state;
 
-            public void AddTransition<T>(IState to, T predicate, int priority, string name)
-            {
-                var t = new Transition<T>(to, predicate)
-                {
-                    Priority = priority,
-                    Name     = name
-                };
-                Transitions.Add(t);
-            }
+            public void AddTransition(IState to, IPredicate pred, int prio, string name)
+                => Transitions.Add(new Transition(to, pred, prio, name));
         }
 
-        //========================
-        // 디버그/시각화용 스냅샷 API
-        //========================
-
+        // ===========================
+        // GraphWindow 호환용 디버그 API (유지)
+        // ===========================
         public struct StateInfo
         {
             public string Name;
@@ -211,86 +192,68 @@ namespace AES.Tools
             public string From;
             public string To;
             public string ConditionType;
-            public int    Priority;
+            public int Priority;
             public string Name;
         }
 
-        public void GetDebugSnapshot(
-            List<StateInfo> statesOut,
-            List<TransitionInfo> transitionsOut)
+        public void GetDebugSnapshot(List<StateInfo> statesOut, List<TransitionInfo> transitionsOut)
         {
             statesOut.Clear();
             transitionsOut.Clear();
 
-            foreach (var kv in nodes)
+            foreach (var node in nodes.Values)
             {
-                var node = kv.Value;
                 statesOut.Add(new StateInfo
                 {
-                    Name     = node.State.GetType().Name,
+                    Name = node.State.GetType().Name,
                     Instance = node.State
                 });
 
                 foreach (var t in node.Transitions)
                 {
-                    var condType = GetConditionLabel(t);
-
                     transitionsOut.Add(new TransitionInfo
                     {
-                        From          = node.State.GetType().Name,
-                        To            = t.To.GetType().Name,
-                        ConditionType = condType,
-                        Priority      = t.Priority,
-                        Name          = t.Name
+                        From = node.State.GetType().Name,
+                        To = t.To.GetType().Name,
+                        ConditionType = GetConditionLabel(t),
+                        Priority = t.Priority,
+                        Name = t.Name
                     });
                 }
             }
 
             foreach (var t in anyTransitions)
             {
-                var condType = GetConditionLabel(t);
-
                 transitionsOut.Add(new TransitionInfo
                 {
-                    From          = "Any",
-                    To            = t.To.GetType().Name,
-                    ConditionType = condType,
-                    Priority      = t.Priority,
-                    Name          = t.Name
+                    From = "Any",
+                    To = t.To.GetType().Name,
+                    ConditionType = GetConditionLabel(t),
+                    Priority = t.Priority,
+                    Name = t.Name
                 });
-
             }
         }
-        static string GetConditionLabel(Transition t)
+
+        private static string GetConditionLabel(Transition t)
         {
-            // Transition<T> 안의 "condition" 필드를 reflection으로 꺼냄
-            var type  = t.GetType();
-            var field = type.GetField("condition",
-                BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            var typeName = t.ConditionTypeName ?? t.Condition?.GetType().Name ?? "None";
 
-            var condObj = field?.GetValue(t);
-            if (condObj == null)
-                return type.Name;
-
-            var typeName = condObj.GetType().Name;
-
-            // 제네릭이면 `1 같은 suffix 제거
             var backtick = typeName.IndexOf('`');
-            if (backtick > 0)
-                typeName = typeName[..backtick];
+            if (backtick > 0) typeName = typeName.Substring(0, backtick);
 
-            // 자주 쓰는 Predicate들은 짧고 보기 좋게 치환
             return typeName switch
             {
-                "BoolParameterPredicate" => "BoolParam",
-                "TriggerPredicate"       => "Trigger",
-                "DelegatePredicate"      => "Func",
-                "AndPredicate"           => "AND",
-                "OrPredicate"            => "OR",
-                "NotPredicate"           => "NOT",
-                _                        => typeName
+                nameof(ObservableBoolPredicate) => "ObservableBoolParam",
+                nameof(BoolParameterPredicate) => "BoolParam",
+                nameof(TriggerPredicate) => "Trigger",
+                nameof(DelegatePredicate) => "Func",
+                nameof(AndPredicate) => "AND",
+                nameof(OrPredicate) => "OR",
+                nameof(NotPredicate) => "NOT",
+                nameof(ActionPredicate) => "Action",
+                _ => typeName
             };
         }
-
     }
 }

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 
+
 namespace AES.Tools
 {
     /// <summary>
@@ -40,11 +41,12 @@ namespace AES.Tools
     /// </summary>
     public interface IObservableProperty<T> : IObservableProperty, IValidatableProperty
     {
-        /// <summary>현재 값 (strongly typed)</summary>
         new T Value { get; set; }
 
-        /// <summary>값이 변경될 때 호출 (strongly typed)</summary>
         event Action<T> OnValueChanged;
+
+        /// <summary>이전 값, 현재 값</summary>
+        event Action<T, T> OnValueChangedWithPrev;
     }
 
     /// <summary>
@@ -61,6 +63,7 @@ namespace AES.Tools
 
         // --- Events ---
         public event Action<T> OnValueChanged = delegate { };
+        public event Action<T, T> OnValueChangedWithPrev = delegate { };
         public event Action<object> OnValueChangedBoxed = delegate { };
         public event Action<IValidatableProperty> OnValidationChanged = delegate { };
 
@@ -86,8 +89,11 @@ namespace AES.Tools
                 if (_comparer.Equals(_value, value))
                     return;
 
+                var prev = _value;
                 _value = value;
-                OnValueChanged(_value);
+
+                OnValueChanged(_value);            
+                OnValueChangedWithPrev(prev, _value);      // 신규 이벤트
                 OnValueChangedBoxed(_value);
 
                 if (_validator != null)
@@ -103,14 +109,9 @@ namespace AES.Tools
         public void SetBoxedValue(object value)
         {
             T cast;
-            if (value is T v)
-            {
-                cast = v;
-            }
-            else if (value == null && default(T) == null)
-            {
-                cast = default;
-            }
+
+            if (value is T v) { cast = v; }
+            else if (value == null && default(T) == null) { cast = default; }
             else
             {
                 string targetName = TypeNameUtil.GetFriendlyTypeName(typeof(T));
@@ -159,16 +160,29 @@ namespace AES.Tools
                 OnValidationChanged(this);
         }
 
+        public IDisposable Subscribe(Action<T, T> action)
+        {
+            OnValueChangedWithPrev += action;
+
+            return new Subscription(() => { OnValueChangedWithPrev -= action; });
+        }
+        
         public IDisposable Subscribe(Action<T> action)
         {
             OnValueChanged += action;
 
-            return new Subscription(() =>
-            {
-                OnValueChanged -= action;
-            });
+            return new Subscription(() => { OnValueChanged -= action; });
+        }
+
+        /// <summary>
+        /// 값 변경 없이 현재 값을 다시 알린다.
+        /// (이벤트성 재발행용)
+        /// </summary>
+        public void Notify()
+        {
+            OnValueChanged(_value);
+            OnValueChangedWithPrev(_value, _value);
+            OnValueChangedBoxed(_value);
         }
     }
 }
-
-

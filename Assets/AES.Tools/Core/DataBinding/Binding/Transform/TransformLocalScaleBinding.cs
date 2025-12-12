@@ -1,7 +1,7 @@
 // 4) TransformLocalScaleBinding.cs
 using UnityEngine;
 using DG.Tweening;
-using AES.Tools.Editor;
+
 
 namespace AES.Tools
 {

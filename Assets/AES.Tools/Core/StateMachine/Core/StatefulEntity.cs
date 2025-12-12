@@ -1,41 +1,58 @@
 ﻿using UnityEngine;
 
-
 namespace AES.Tools
 {
-    public abstract class StatefulEntity : MonoBehaviour, IStateMachineOwner {
+    /// <summary>
+    /// Unity <see cref="MonoBehaviour"/> 기반 상태 머신 소유자.<br/>
+    /// Update / FixedUpdate 루프를 자동으로 연결한다.
+    /// </summary>
+    /// <remarks>
+    /// <para><b>전형적인 파생 클래스 예</b></para>
+    /// <code>
+    /// public class Player : StatefulEntity
+    /// {
+    ///     IdleState idle = new();
+    ///     MoveState move = new();
+    ///
+    ///     TriggerParameter moveTrigger = new();
+    ///
+    ///     protected override void Awake()
+    ///     {
+    ///         base.Awake();
+    ///
+    ///         stateMachine.SetState(idle);
+    ///
+    ///         At(idle, move, moveTrigger.AsTrigger(), 5, "Idle-&gt;Move");
+    ///     }
+    ///
+    ///     void Update()
+    ///     {
+    ///         if (Input.GetKeyDown(KeyCode.Space))
+    ///             moveTrigger.Fire();
+    ///     }
+    /// }
+    /// </code>
+    /// </remarks>
+    public abstract class StatefulEntity : MonoBehaviour, IStateMachineOwner
+    {
         protected StateMachine stateMachine;
         public StateMachine Machine => stateMachine;
 
-        /// <summary>
-        /// Awake or Start can be used to declare all states and transitions.
-        /// </summary>
-        /// <example>
-        /// <code>
-        /// protected override void Awake() {
-        ///     base.Awake();
-        /// 
-        ///     var state = new State1(this);
-        ///     var anotherState = new State2(this);
-        ///
-        ///     At(state, anotherState, () => true);
-        ///     At(state, anotherState, myFunc);
-        ///     At(state, anotherState, myPredicate);
-        /// 
-        ///     Any(anotherState, () => true);
-        ///
-        ///     stateMachine.SetState(state);
-        /// </code> 
-        /// </example>
-        protected virtual void Awake() {
+        protected virtual void Awake()
+        {
             stateMachine = new StateMachine();
         }
 
-        protected virtual void Update() => stateMachine.Update();
-        protected virtual void FixedUpdate() => stateMachine.FixedUpdate();
+        protected virtual void Update()
+            => stateMachine.Update();
 
-        protected void At<T>(IState from, IState to, T condition) => stateMachine.AddTransition(from, to, condition);
+        protected virtual void FixedUpdate()
+            => stateMachine.FixedUpdate();
 
-        protected void Any<T>(IState to, T condition) => stateMachine.AddAnyTransition(to, condition);
+        protected void At(IState from, IState to, IPredicate condition, int priority = 0, string name = null)
+            => stateMachine.AddTransition(from, to, condition, priority, name);
+
+        protected void Any(IState to, IPredicate condition, int priority = 0, string name = null)
+            => stateMachine.AddAnyTransition(to, condition, priority, name);
     }
 }

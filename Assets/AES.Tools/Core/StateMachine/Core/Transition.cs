@@ -2,84 +2,30 @@
 
 namespace AES.Tools
 {
-    public abstract class Transition
+    public sealed class Transition : ITransition
     {
-        public IState To { get; protected set; }
+        public IState To { get; }
+        public IPredicate Condition { get; }
 
-        /// <summary>
-        /// 전이 우선순위. 클수록 우선.
-        /// 같은 프레임에 여러 전이가 true면 Priority 최대값 하나만 사용.
-        /// </summary>
-        public int Priority { get; set; }
+        public int Priority { get; }
+        public string Name { get; }
 
-        /// <summary>
-        /// 디버깅용 이름 (없으면 null).
-        /// </summary>
-        public string Name { get; set; }
+        internal string ConditionTypeName { get; }
 
-        public abstract bool Evaluate();
-    }
-
-    public class Transition<T> : Transition
-    {
-        public readonly T condition;
-
-        public Transition(IState to, T condition)
+        public Transition(
+            IState to,
+            IPredicate condition,
+            int priority = 0,
+            string name = null,
+            string conditionTypeName = null)
         {
-            To = to;
-            this.condition = condition;
+            To = to ?? throw new ArgumentNullException(nameof(to));
+            Condition = condition ?? throw new ArgumentNullException(nameof(condition));
+            Priority = priority;
+            Name = name;
+            ConditionTypeName = conditionTypeName ?? condition.GetType().Name;
         }
 
-        public override bool Evaluate()
-        {
-            // Func<bool>
-            if (condition is Func<bool> func)
-                return func();
-
-            // ActionPredicate
-            if (condition is ActionPredicate ap)
-                return ap.Evaluate();
-
-            // IPredicate
-            if (condition is IPredicate pred)
-                return pred.Evaluate();
-
-            // 그 외 타입은 false
-            return false;
-        }
-    }
-
-    /// <summary>
-    /// Func<bool> 기반 Predicate.
-    /// </summary>
-    public class FuncPredicate : IPredicate
-    {
-        readonly Func<bool> func;
-
-        public FuncPredicate(Func<bool> func)
-        {
-            this.func = func ?? throw new ArgumentNullException(nameof(func));
-        }
-
-        public bool Evaluate() => func.Invoke();
-    }
-
-    /// <summary>
-    /// Action 기반 Trigger 느낌의 Predicate.
-    /// 한 번 true 반환 후 flag를 자동으로 false로 리셋.
-    /// </summary>
-    public class ActionPredicate : IPredicate
-    {
-        public bool flag;
-
-        public ActionPredicate(ref Action eventReaction)
-            => eventReaction += () => { flag = true; };
-
-        public bool Evaluate()
-        {
-            bool result = flag;
-            flag = false;
-            return result;
-        }
+        public bool Evaluate() => Condition.Evaluate();
     }
 }

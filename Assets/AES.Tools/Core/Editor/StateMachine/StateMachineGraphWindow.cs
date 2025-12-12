@@ -5,7 +5,6 @@ using AES.Tools.Debugging;
 using UnityEditor;
 using UnityEngine;
 
-
 public sealed class StateMachineGraphWindow : EditorWindow
 {
     IStateMachineOwner _owner;
@@ -139,8 +138,7 @@ public sealed class StateMachineGraphWindow : EditorWindow
             if (tr.From == "Any") // Any는 루트로 취급
                 continue;
 
-            if (!indegree.ContainsKey(tr.To))
-                indegree[tr.To] = 0;
+            indegree.TryAdd(tr.To, 0);
 
             if (!children.ContainsKey(tr.From))
                 children[tr.From] = new List<string>();
@@ -165,7 +163,7 @@ public sealed class StateMachineGraphWindow : EditorWindow
 
         foreach (var s in _stateInfos)
         {
-            int d = depthByState.TryGetValue(s.Name, out var v) ? v : 0;
+            int d = depthByState.GetValueOrDefault(s.Name, 0);
             if (!depthGroups.ContainsKey(d))
                 depthGroups[d] = new List<string>();
 
@@ -206,10 +204,11 @@ public sealed class StateMachineGraphWindow : EditorWindow
             }
         }
 
-        // 현재 활성 상태 이름
-        string activeStateName = _machine.CurrentState != null
-            ? _machine.CurrentState.GetType().Name
-            : null;
+        // ----------------------------
+        // FIX 1) 활성 상태 이름 가져오기 버그 수정
+        // 기존 코드: _machine.CurrentState.GetType().Name (ObservableProperty 타입)
+        // ----------------------------
+        string activeStateName = _machine.CurrentStateRaw?.GetType().Name;
 
         // Any 노드 (있으면 위쪽에 고정)
         bool hasAny = _transInfos.Exists(t => t.From == "Any");
@@ -235,7 +234,7 @@ public sealed class StateMachineGraphWindow : EditorWindow
         var nodeRects = new Dictionary<string, Rect>();
 
         // ----------------------------
-        // 3) 노드 박스 + 활성 강조
+        // 3) 노드 박스 + 활성 색상 변경(배경 채우기)
         // ----------------------------
         foreach (var info in _stateInfos)
         {
@@ -251,6 +250,19 @@ public sealed class StateMachineGraphWindow : EditorWindow
             var rect = new Rect(drawPos, nodeSize);
             nodeRects[info.Name] = rect;
 
+            bool isActive = (info.Name == activeStateName);
+
+            // FIX 2) 배경색 실제로 칠하기
+            // - 비활성: 옅게 상태 고유색
+            // - 활성: 더 진하게 + 노란 테두리
+            Color baseCol = GetColorForState(info.Name);
+            Color fillCol = isActive
+                ? new Color(baseCol.r, baseCol.g, baseCol.b, 0.28f)
+                : new Color(baseCol.r, baseCol.g, baseCol.b, 0.10f);
+
+            EditorGUI.DrawRect(rect, fillCol);
+
+            // 프레임/레이아웃은 Box로 유지
             GUI.Box(rect, GUIContent.none);
 
             var innerRect = new Rect(
@@ -262,13 +274,13 @@ public sealed class StateMachineGraphWindow : EditorWindow
             var labelStyle = new GUIStyle(GUI.skin.label)
             {
                 alignment = TextAnchor.MiddleCenter,
-                fontStyle = info.Name == activeStateName ? FontStyle.Bold : FontStyle.Normal
+                fontStyle = isActive ? FontStyle.Bold : FontStyle.Normal
             };
 
             GUI.Box(innerRect, GUIContent.none);
             GUI.Label(innerRect, info.Name, labelStyle);
 
-            if (info.Name == activeStateName)
+            if (isActive)
             {
                 Handles.BeginGUI();
                 var prevColor = Handles.color;
@@ -283,6 +295,9 @@ public sealed class StateMachineGraphWindow : EditorWindow
         if (anyRect.HasValue)
         {
             var rect = anyRect.Value;
+
+            // Any도 배경 살짝
+            EditorGUI.DrawRect(rect, new Color(1f, 1f, 1f, 0.06f));
 
             GUI.Box(rect, GUIContent.none);
             var innerRect = new Rect(
@@ -307,8 +322,7 @@ public sealed class StateMachineGraphWindow : EditorWindow
         HandleNodeDragging(nodeRects);
 
         // ----------------------------
-        // 5) 전이: 각 변 방향으로 나가고(밖), 반대 방향으로 들어오는(안) 직각 경로 + 색상
-        //         + 전이별 laneOffset으로 T자/겹침 줄이기
+        // 5) 전이: 직각 경로 + 색상
         // ----------------------------
         Handles.BeginGUI();
         var prevCol = Handles.color;
@@ -333,18 +347,13 @@ public sealed class StateMachineGraphWindow : EditorWindow
             int laneIndex = Mathf.Abs(hash) % 5 - 2;
             float laneOffset = laneIndex * laneStep;
 
-            Vector2 fromPort, toPort;
-            int fromSide, toSide;
-
             ChooseDirectionalPorts(fromRect, toRect, portMargin, laneOffset, extendLength,
-                out fromPort, out toPort, out fromSide, out toSide);
-
+                out var fromPort, out var toPort, out int fromSide, out int toSide);
 
             var path = BuildPathWithSideDirections(
                 fromPort, fromSide,
                 toPort, toSide,
-                extendLength,
-                laneOffset);
+                extendLength);
 
             Handles.color = lineColor;
 
@@ -355,7 +364,7 @@ public sealed class StateMachineGraphWindow : EditorWindow
 
                 bool isLast = (i == path.Count - 2);
 
-                if (!isLast) { Handles.DrawAAPolyLine(lineWidth, new Vector3[] { p0, p1 }); }
+                if (!isLast) { Handles.DrawAAPolyLine(lineWidth, new[] { p0, p1 }); }
                 else { DrawArrow(p0, p1, 8f * _zoom, lineWidth, lineColor); }
             }
 
@@ -408,15 +417,15 @@ public sealed class StateMachineGraphWindow : EditorWindow
                 Vector2 mouse = e.mousePosition;
 
                 // 현재 줌 기준 월드 좌표
-                Vector2 worldBefore = (mouse - (Vector2)canvasRect.position) / _zoom - _pan;
+                Vector2 worldBefore = (mouse - canvasRect.position) / _zoom - _pan;
 
-                float zoomDelta = 1f - e.delta.y * 0.1f; // 필요하면 부호 반대로
+                float zoomDelta = 1f - e.delta.y * 0.1f;
                 float newZoom = Mathf.Clamp(_zoom * zoomDelta, 0.3f, 3f);
 
                 if (!Mathf.Approximately(newZoom, _zoom))
                 {
                     _zoom = newZoom;
-                    _pan = (mouse - (Vector2)canvasRect.position) / _zoom - worldBefore;
+                    _pan = (mouse - canvasRect.position) / _zoom - worldBefore;
 
                     Repaint();
                     e.Use();
@@ -477,20 +486,15 @@ public sealed class StateMachineGraphWindow : EditorWindow
 
             foreach (var next in list)
             {
-                if (visited.Contains(next))
+                if (!visited.Add(next))
                     continue;
 
-                visited.Add(next);
                 depth[next] = curDepth + 1;
                 q.Enqueue(next);
             }
         }
 
-        foreach (var s in states)
-        {
-            if (!depth.ContainsKey(s.Name))
-                depth[s.Name] = 0;
-        }
+        foreach (var s in states) { depth.TryAdd(s.Name, 0); }
 
         return depth;
     }
@@ -522,7 +526,6 @@ public sealed class StateMachineGraphWindow : EditorWindow
                         }
                     }
                 }
-
                 break;
 
             case EventType.MouseDrag:
@@ -533,7 +536,6 @@ public sealed class StateMachineGraphWindow : EditorWindow
                     Repaint();
                     e.Use();
                 }
-
                 break;
 
             case EventType.MouseUp:
@@ -542,7 +544,6 @@ public sealed class StateMachineGraphWindow : EditorWindow
                     _draggingNode = null;
                     e.Use();
                 }
-
                 break;
         }
     }
@@ -609,10 +610,7 @@ public sealed class StateMachineGraphWindow : EditorWindow
         return Vector2.zero;
     }
 
-    // 상대 위치 + 거리 기준으로 들어/나가는 변 선택
-// fromPort = 박스 밖, toPort = 박스 안쪽
-// laneOffset: 변을 따라 평행 이동(레인 분리)
-// extendLength: 나가는/들어오는 세그먼트 기본 길이
+    // fromPort = 박스 밖, toPort = 박스 안쪽
     void ChooseDirectionalPorts(
         Rect fromRect,
         Rect toRect,
@@ -628,89 +626,76 @@ public sealed class StateMachineGraphWindow : EditorWindow
         Vector2 toCenter = toRect.center;
         Vector2 delta = toCenter - fromCenter;
 
-        // 기본: 더 많이 벌어진 축을 우선 축으로 설정
         bool horizontalDominant = Mathf.Abs(delta.x) >= Mathf.Abs(delta.y);
 
-        // 실제 두 박스 사이의 중심 거리
         float gapX = Mathf.Abs(delta.x);
         float gapY = Mathf.Abs(delta.y);
 
-        // 너무 가까우면 축을 뒤집는다.
-        // 예: 수평 우세인데 gapX < extendLength * 2 이면,
-        //     수평으로 뻗을 공간이 거의 없으니 수직 축(위/아래 변) 사용
         if (horizontalDominant)
         {
             if (gapX < extendLength * 2f)
-                horizontalDominant = false; // 수평 대신 수직 사용
+                horizontalDominant = false;
         }
         else
         {
             if (gapY < extendLength * 2f)
-                horizontalDominant = true; // 수직 대신 수평 사용
+                horizontalDominant = true;
         }
 
         if (horizontalDominant)
         {
-            // 수평 기준
             if (delta.x > 0f)
             {
                 fromSide = 1; // Right
-                toSide = 0; // Left
+                toSide = 0;   // Left
             }
             else
             {
                 fromSide = 0; // Left
-                toSide = 1; // Right
+                toSide = 1;   // Right
             }
         }
         else
         {
-            // 수직 기준
             if (delta.y > 0f)
             {
                 fromSide = 3; // Bottom
-                toSide = 2; // Top
+                toSide = 2;   // Top
             }
             else
             {
                 fromSide = 2; // Top
-                toSide = 3; // Bottom
+                toSide = 3;   // Bottom
             }
         }
 
         var fCenter = GetSideCenter(fromRect, fromSide);
         var tCenter = GetSideCenter(toRect, toSide);
 
-        // 변을 따라 레인 오프셋 적용
         Vector2 fTan = GetSideTangent(fromSide).normalized;
         Vector2 tTan = GetSideTangent(toSide).normalized;
         fCenter += fTan * laneOffset;
         tCenter += tTan * laneOffset;
 
-        // 밖/안 방향 적용
-        var fN = GetSideNormal(fromSide); // 밖
-        var tN = GetSideNormal(toSide); // 밖
+        var fN = GetSideNormal(fromSide);
+        var tN = GetSideNormal(toSide);
 
-        fromPort = fCenter + fN * margin; // 밖
-        toPort = tCenter + tN * margin; // 안
+        fromPort = fCenter + fN * margin;
+        toPort = tCenter + tN * margin;
     }
 
-// 변 방향을 살린 경로 구성 (전부 수평/수직 세그먼트만 사용)
-// extendLength vs 축별 거리(좌우면 x, 상하면 y) 중 더 짧은 값을 사용
     List<Vector3> BuildPathWithSideDirections(
         Vector2 fromPort,
         int fromSide,
         Vector2 toPort,
         int toSide,
-        float extendLength,
-        float laneOffset) // laneOffset은 포트 위치에서만 사용, 여기서는 별도 사용 안 함
+        float extendLength)
     {
         var list = new List<Vector3>();
 
-        Vector2 fromNormal = GetSideNormal(fromSide); // 밖 방향
-        Vector2 toNormal = GetSideNormal(toSide); // 밖 방향
+        Vector2 fromNormal = GetSideNormal(fromSide);
+        Vector2 toNormal = GetSideNormal(toSide);
 
-        // 어떤 축 기준 전이인지: 좌/우면 X, 상/하면 Y
         bool horizontal =
             (fromSide == 0 || fromSide == 1) &&
             (toSide == 0 || toSide == 1);
@@ -719,35 +704,23 @@ public sealed class StateMachineGraphWindow : EditorWindow
             ? Mathf.Abs(toPort.x - fromPort.x)
             : Mathf.Abs(toPort.y - fromPort.y);
 
-        // 너무 가까우면 0으로
         if (axisDist < 0.001f)
             axisDist = 0f;
 
-        // 축 기준 거리의 절반까지만 쓰도록 (최대 extendLength)
         float usedExtend = Mathf.Min(extendLength, axisDist * 0.5f);
 
-        // p0: from 포트 (박스 밖)
         Vector3 p0 = fromPort;
-
-        // p1: from 변 법선 방향(밖)으로 usedExtend 만큼
         Vector3 p1 = p0 + (Vector3)(fromNormal * usedExtend);
 
-        // p3: to 포트 (박스 안쪽)
         Vector3 p3 = toPort;
-
-        // p2: p3에서 toNormal 방향으로 usedExtend 만큼 밖으로 나간 점
-        //     마지막 세그먼트 p2 -> p3 가 항상 박스 안쪽(-toNormal)으로 향하게 됨
         Vector3 p2 = p3 + (Vector3)(toNormal * usedExtend);
 
         list.Add(p0);
         list.Add(p1);
 
-        // p1 ~ p2 를 직각(H-V 또는 V-H)으로 연결
         if (!Approximately(p1.x, p2.x) && !Approximately(p1.y, p2.y))
         {
-            // 후보 1: 수평 뒤 수직 (H-V)
             Vector3 mid1 = new Vector3(p2.x, p1.y, 0f);
-            // 후보 2: 수직 뒤 수평 (V-H)
             Vector3 mid2 = new Vector3(p1.x, p2.y, 0f);
 
             float len1 = Vector3.Distance(p1, mid1) + Vector3.Distance(mid1, p2);
@@ -766,11 +739,7 @@ public sealed class StateMachineGraphWindow : EditorWindow
         return list;
     }
 
-
-    bool Approximately(float a, float b)
-    {
-        return Mathf.Abs(a - b) < 0.001f;
-    }
+    bool Approximately(float a, float b) => Mathf.Abs(a - b) < 0.001f;
 
     void RemoveRedundantPoints(List<Vector3> pts)
     {
@@ -784,12 +753,11 @@ public sealed class StateMachineGraphWindow : EditorWindow
         }
     }
 
-    // 직선 + 화살표 (색/두께 포함)
     void DrawArrow(Vector3 from, Vector3 to, float headSize, float lineWidth, Color color)
     {
         Handles.color = color;
 
-        Handles.DrawAAPolyLine(lineWidth, new Vector3[] { from, to });
+        Handles.DrawAAPolyLine(lineWidth, new[] { from, to });
 
         Vector3 dir = (to - from).normalized;
         Vector3 perp = new Vector3(-dir.y, dir.x, 0f);
@@ -797,8 +765,8 @@ public sealed class StateMachineGraphWindow : EditorWindow
         Vector3 left = to - dir * headSize + perp * (headSize * 0.5f);
         Vector3 right = to - dir * headSize - perp * (headSize * 0.5f);
 
-        Handles.DrawAAPolyLine(lineWidth, new Vector3[] { to, left });
-        Handles.DrawAAPolyLine(lineWidth, new Vector3[] { to, right });
+        Handles.DrawAAPolyLine(lineWidth, new[] { to, left });
+        Handles.DrawAAPolyLine(lineWidth, new[] { to, right });
     }
 
     void LoadPositionsFromAsset()

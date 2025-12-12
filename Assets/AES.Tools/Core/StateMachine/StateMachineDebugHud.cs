@@ -7,6 +7,7 @@ using Input = UnityEngine.Input;
 using UnityEditor;
 #endif
 
+
 public sealed class StateMachineDebugHud : MonoBehaviour
 {
     [Tooltip("IStateMachineOwner를 구현한 컴포넌트 (직접 지정 or 클릭 자동 선택)")]
@@ -14,7 +15,7 @@ public sealed class StateMachineDebugHud : MonoBehaviour
 
     [Header("HUD")]
     public Vector2 screenPosition = new(10, 10);
-    public int     fontSize       = 14;
+    public int fontSize = 14;
 
     [Header("Click Picking")]
     [Tooltip("클릭으로 target 자동 선택")]
@@ -29,24 +30,24 @@ public sealed class StateMachineDebugHud : MonoBehaviour
     [Tooltip("클릭 가능한 레이어 마스크")]
     public LayerMask pickLayerMask = ~0;
 
-    StateMachine _machine;
+    private StateMachine _machine;
 
-    string _current   = "";
-    string _previous  = "";
-    string _transition = "";
+    private string _current = "";
+    private string _previous = "";
+    private string _transition = "";
 
-    void OnEnable()
+    private void OnEnable()
     {
         AttachTarget(target);
     }
 
-    void OnValidate()
+    private void OnValidate()
     {
         if (Application.isPlaying)
             AttachTarget(target);
     }
 
-    void OnDestroy()
+    private void OnDestroy()
     {
         Detach();
     }
@@ -55,7 +56,7 @@ public sealed class StateMachineDebugHud : MonoBehaviour
     // 런타임 클릭으로 target 자동 선택
     //========================================================
 
-    void Update()
+    private void Update()
     {
         if (!Application.isPlaying)
             return;
@@ -67,11 +68,9 @@ public sealed class StateMachineDebugHud : MonoBehaviour
             TryPickTargetFromClick();
     }
 
-
-    bool WasPointerDownThisFrame()
+    private bool WasPointerDownThisFrame()
     {
 #if ENABLE_INPUT_SYSTEM
-        // 1) New Input System - Touch
         if (Touchscreen.current != null)
         {
             var ts = Touchscreen.current;
@@ -79,7 +78,6 @@ public sealed class StateMachineDebugHud : MonoBehaviour
                 return true;
         }
 
-        // 2) New Input System - Mouse
         if (Mouse.current != null)
         {
             var m = Mouse.current;
@@ -87,28 +85,23 @@ public sealed class StateMachineDebugHud : MonoBehaviour
                 return true;
         }
 
-        // New Input System 전용 모드에서는 여기서 종료
         return false;
 
 #elif ENABLE_LEGACY_INPUT_MANAGER
-    // 3) Legacy Input System - Touch
-    if (UnityEngine.Input.touchCount > 0)
-    {
-        var t = UnityEngine.Input.GetTouch(0);
-        if (t.phase == TouchPhase.Began)
-            return true;
-    }
+        if (UnityEngine.Input.touchCount > 0)
+        {
+            var t = UnityEngine.Input.GetTouch(0);
+            if (t.phase == TouchPhase.Began)
+                return true;
+        }
 
-    // 4) Legacy Input System - Mouse
-    return UnityEngine.Input.GetMouseButtonDown(0);
+        return UnityEngine.Input.GetMouseButtonDown(0);
 #else
-    // 둘 다 아닐 경우(이론상)
-    return false;
+        return false;
 #endif
     }
 
-    
-    void TryPickTargetFromClick()
+    private void TryPickTargetFromClick()
     {
         var cam = raycastCamera != null ? raycastCamera : Camera.main;
         if (cam == null)
@@ -116,32 +109,22 @@ public sealed class StateMachineDebugHud : MonoBehaviour
 
         Vector3 pointerPos;
 
-// New Input System
 #if ENABLE_INPUT_SYSTEM
         if (Touchscreen.current != null)
-        {
             pointerPos = Touchscreen.current.primaryTouch.position.ReadValue();
-        }
         else if (Mouse.current != null)
-        {
             pointerPos = Mouse.current.position.ReadValue();
-        }
         else
         {
-            // fallback to legacy
-            if (Input.touchCount > 0)
-                pointerPos = Input.GetTouch(0).position;
-            else
-                pointerPos = Input.mousePosition;
+            if (Input.touchCount > 0) pointerPos = Input.GetTouch(0).position;
+            else pointerPos = Input.mousePosition;
         }
 #else
-// Legacy만 쓸 때
-if (UnityEngine.Input.touchCount > 0)
-    pointerPos = UnityEngine.Input.GetTouch(0).position;
-else
-    pointerPos = UnityEngine.Input.mousePosition;
+        if (UnityEngine.Input.touchCount > 0)
+            pointerPos = UnityEngine.Input.GetTouch(0).position;
+        else
+            pointerPos = UnityEngine.Input.mousePosition;
 #endif
-
 
         if (use2DPhysics)
         {
@@ -171,7 +154,7 @@ else
     // Target 연결 / 해제
     //========================================================
 
-    void AttachTarget(MonoBehaviour newTarget)
+    private void AttachTarget(MonoBehaviour newTarget)
     {
         Detach();
 
@@ -184,22 +167,33 @@ else
         }
 
         _machine = owner.Machine;
+        if (_machine == null)
+            return;
 
-        if (_machine != null)
-            _machine.OnStateChanged += OnStateChanged;
+        // (prev, cur) 이벤트로 구독
+        _machine.CurrentState.OnValueChangedWithPrev += OnStateChangedWithPrev;
+
+        // transition은 StateMachine에서 따로 프로퍼티로 노출된 걸로 구독
+        _machine.LastTransitionName.OnValueChanged += OnTransitionChanged;
+
+        // 초기 HUD 값 세팅
+        _current = _machine.CurrentState.Value?.GetType().Name ?? "null";
+        _previous = "null";
+        _transition = _machine.LastTransitionName.Value ?? "SetState";
 
 #if UNITY_EDITOR
-        // 에디터에서 Hierarchy/Scene Selection도 같이 맞춰준다.
         if (newTarget != null)
             Selection.activeGameObject = newTarget.gameObject;
 #endif
     }
 
-
-    void Detach()
+    private void Detach()
     {
         if (_machine != null)
-            _machine.OnStateChanged -= OnStateChanged;
+        {
+            _machine.CurrentState.OnValueChangedWithPrev -= OnStateChangedWithPrev;
+            _machine.LastTransitionName.OnValueChanged -= OnTransitionChanged;
+        }
 
         _machine = null;
     }
@@ -208,37 +202,38 @@ else
     // 상태 변경 이벤트 처리
     //========================================================
 
-    void OnStateChanged(IState from, IState to, Transition t)
+    private void OnStateChangedWithPrev(IState from, IState to)
     {
-        _previous   = from?.GetType().Name ?? "null";
-        _current    = to?.GetType().Name   ?? "null";
-        _transition = t?.Name ?? t?.GetType().Name ?? "SetState";
+        _previous = from?.GetType().Name ?? "null";
+        _current = to?.GetType().Name ?? "null";
+    }
+
+    private void OnTransitionChanged(string name)
+    {
+        _transition = string.IsNullOrEmpty(name) ? "SetState" : name;
     }
 
     //========================================================
     // HUD 표시
     //========================================================
 
-    void OnGUI()
+    private void OnGUI()
     {
         if (_machine == null)
             return;
 
-        // 박스 스타일
         var boxStyle = new GUIStyle(GUI.skin.box);
-    
-        // 텍스트 스타일
+
         var labelStyle = new GUIStyle(GUI.skin.label)
         {
             fontSize = fontSize,
             alignment = TextAnchor.UpperLeft
         };
+
         labelStyle.normal.textColor = Color.white;
 
-        // Unity IMGUI의 실제 줄 높이 (fontSize + 내부기반 lineSpacing)
         float lineHeight = labelStyle.lineHeight;
 
-        // 출력할 텍스트 목록
         string[] lines =
         {
             $"Target    : {target?.name}",
@@ -247,18 +242,16 @@ else
             $"Transition: {_transition}"
         };
 
-        // 가장 긴 텍스트 width 계산 (fontSize 포함)
         float maxTextWidth = 0f;
+
         foreach (var line in lines)
         {
             float w = labelStyle.CalcSize(new GUIContent(line)).x;
             if (w > maxTextWidth) maxTextWidth = w;
         }
 
-        // 텍스트 부분 실제 높이 (줄 수 × 줄 높이)
         float totalTextHeight = lines.Length * lineHeight;
 
-        // labelStyle.padding과 boxStyle.padding 자동 반영
         float width =
             maxTextWidth +
             boxStyle.padding.left +
@@ -280,7 +273,7 @@ else
         GUILayout.BeginArea(rect, boxStyle);
         foreach (var line in lines)
             GUILayout.Label(line, labelStyle);
+
         GUILayout.EndArea();
     }
-
 }

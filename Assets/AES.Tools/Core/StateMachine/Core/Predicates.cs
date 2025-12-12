@@ -1,72 +1,30 @@
 using System;
 
+
 namespace AES.Tools
 {
-    public sealed class DelegatePredicate : IPredicate
-    {
-        readonly Func<bool> _func;
-
-        public DelegatePredicate(Func<bool> func)
-        {
-            _func = func ?? throw new ArgumentNullException(nameof(func));
-        }
-
-        public bool Evaluate() => _func();
-    }
-
-    public sealed class AndPredicate : IPredicate
-    {
-        readonly IPredicate _a;
-        readonly IPredicate _b;
-
-        public AndPredicate(IPredicate a, IPredicate b)
-        {
-            _a = a ?? throw new ArgumentNullException(nameof(a));
-            _b = b ?? throw new ArgumentNullException(nameof(b));
-        }
-
-        public bool Evaluate() => _a.Evaluate() && _b.Evaluate();
-    }
-
-    public sealed class OrPredicate : IPredicate
-    {
-        readonly IPredicate _a;
-        readonly IPredicate _b;
-
-        public OrPredicate(IPredicate a, IPredicate b)
-        {
-            _a = a ?? throw new ArgumentNullException(nameof(a));
-            _b = b ?? throw new ArgumentNullException(nameof(b));
-        }
-
-        public bool Evaluate() => _a.Evaluate() || _b.Evaluate();
-    }
-
-    public sealed class NotPredicate : IPredicate
-    {
-        readonly IPredicate _inner;
-
-        public NotPredicate(IPredicate inner)
-        {
-            _inner = inner ?? throw new ArgumentNullException(nameof(inner));
-        }
-
-        public bool Evaluate() => !_inner.Evaluate();
-    }
-
-    public static class Predicates
+    /// <summary>
+    /// <see cref="IPredicate"/> 생성을 돕는 확장 메서드 모음.<br/>
+    /// 논리 조합(AND / OR / NOT)을 간결하게 표현할 수 있다.
+    /// </summary>
+    /// <remarks>
+    /// <para><b>Predicate 조합 예</b></para>
+    /// <code>
+    /// IPredicate canMove =
+    ///     isGrounded.IsTrue()
+    ///               .And(moveTrigger.AsTrigger())
+    ///               .And(() =&gt; stamina &gt; 0)
+    ///               .And(isDead.IsFalse().Not());
+    /// </code>
+    ///
+    /// <para>
+    /// 모든 Predicate는 <see cref="IPredicate.Evaluate"/>를 통해 평가된다.
+    /// </para>
+    /// </remarks>
+    public static partial class Predicates
     {
         public static IPredicate ToPredicate(this Func<bool> func)
             => new DelegatePredicate(func);
-
-        public static IPredicate IsTrue(this BoolParameter param)
-            => new BoolParameterPredicate(param, true);
-
-        public static IPredicate IsFalse(this BoolParameter param)
-            => new BoolParameterPredicate(param, false);
-
-        public static IPredicate AsTrigger(this TriggerParameter param)
-            => new TriggerPredicate(param);
 
         public static IPredicate And(this IPredicate a, IPredicate b)
             => new AndPredicate(a, b);
@@ -80,13 +38,11 @@ namespace AES.Tools
         public static IPredicate And(this IPredicate a, Func<bool> b)
             => new AndPredicate(a, b.ToPredicate());
 
-        public static IPredicate And(this Func<bool> a, IPredicate b)
-            => new AndPredicate(a.ToPredicate(), b);
-
         public static IPredicate Or(this IPredicate a, Func<bool> b)
             => new OrPredicate(a, b.ToPredicate());
 
-        public static IPredicate Or(this Func<bool> a, IPredicate b)
-            => new OrPredicate(a.ToPredicate(), b);
+
+        public static IPredicate HasExitTime(this StateMachine sm, float seconds)
+            => new DelegatePredicate(() => sm.TimeInState >= seconds);
     }
 }

@@ -13,7 +13,7 @@ namespace AES.Tools
     {
         [Tooltip("Update/FixedUpdate에서 FSM.Update/FixedUpdate를 자동 호출할지 여부")]
         [SerializeField]
-        bool _autoTick = true;
+        private bool _autoTick = true;
 
         /// <summary>
         /// 실제 FSM 인스턴스 (순수 StatefulObject).
