@@ -1,17 +1,18 @@
 using System;
 using System.IO;
 using System.Threading;
-using AES.Tools.Core;    
+using AES.Tools.TBC.Result;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
-namespace AES.Tools.Impl
+
+namespace AES.Tools
 {
     public class FileBlobStore : ILocalBlobStore
     {
         private readonly string rootPath = Application.persistentDataPath;
 
-        string GetPath(string key) => Path.Combine(rootPath, key + ".bin");
+        string GetPath(string key) => System.IO.Path.Combine(rootPath, key + ".bin");
 
         // IBlobStore 구현: CancellationToken 포함
         public async UniTask<byte[]> LoadOrNullAsync(string key, CancellationToken ct = default)
@@ -32,7 +33,7 @@ namespace AES.Tools.Impl
             try
             {
                 var path = GetPath(key);
-                var dir = Path.GetDirectoryName(path);
+                var dir = System.IO.Path.GetDirectoryName(path);
                 if (!string.IsNullOrEmpty(dir))
                 {
                     Directory.CreateDirectory(dir);

@@ -1,10 +1,10 @@
 using System;
 using System.Globalization;
-using AES.Tools.Commands;
 using TMPro;
 using UnityEngine;
 
-namespace AES.Tools.Bindings
+
+namespace AES.Tools
 {
     [RequireComponent(typeof(TMP_InputField))]
     public class InputFieldCommandBinding : ContextBindingBase

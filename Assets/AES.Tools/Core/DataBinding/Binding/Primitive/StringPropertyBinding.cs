@@ -1,1 +1,4 @@
-public sealed class StringPropertyBinding : PropertyBindingBase<string> { }
+namespace AES.Tools
+{
+    public sealed class StringPropertyBinding : PropertyBindingBase<string> { }
+}

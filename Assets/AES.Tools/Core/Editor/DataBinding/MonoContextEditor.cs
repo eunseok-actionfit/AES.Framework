@@ -4,11 +4,12 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using AES.Tools.Editor.Util;
 using UnityEditor;
 using UnityEngine;
 
 
-namespace AES.Tools.Editor.DataBinding
+namespace AES.Tools.Editor
 {
     [CustomEditor(typeof(MonoContext))]
     public class MonoContextEditor : UnityEditor.Editor

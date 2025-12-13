@@ -1,7 +1,7 @@
 using System;
 
 
-namespace AES.Tools.Policies
+namespace AES.Tools.UI_Regacy_.Core.Policies
 {
     /// <summary>
     /// 동일 UI ID의 인스턴스 생성 정책

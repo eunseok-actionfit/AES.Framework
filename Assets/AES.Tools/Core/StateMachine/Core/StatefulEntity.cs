@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 
-namespace AES.Tools
+
+namespace AES.Tools.StateMachine.Core
 {
     /// <summary>
     /// Unity <see cref="MonoBehaviour"/> 기반 상태 머신 소유자.<br/>

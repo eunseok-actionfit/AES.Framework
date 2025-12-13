@@ -3,7 +3,8 @@ using System.Linq;
 using System.Reflection;
 using UnityEditor;
 
-namespace AES.Tools.Editor
+
+namespace AES.Tools.Editor.Util
 {
     public static class AesFoldoutGroupUtil
     {

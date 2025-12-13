@@ -1,11 +1,11 @@
 using System.Collections.Generic;
 using System.Threading;
-using AES.Tools.View;
+using AES.Tools.UI_Regacy_.Core.View;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 
-namespace AES.Tools.Assets.Group
+namespace AES.Tools.UI_Regacy_.Components.Transitions.Assets.Group
 {
 
 

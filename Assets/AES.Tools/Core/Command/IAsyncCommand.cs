@@ -1,7 +1,7 @@
 using Cysharp.Threading.Tasks;
 
 
-namespace AES.Tools.Commands
+namespace AES.Tools
 {
     public interface IAsyncCommand : ICommand
     {

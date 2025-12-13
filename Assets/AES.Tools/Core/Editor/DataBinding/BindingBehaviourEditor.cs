@@ -2,7 +2,7 @@
 using UnityEditor;
 
 
-namespace AES.Tools.Editor.DataBinding
+namespace AES.Tools.Editor
 {
     [CustomEditor(typeof(BindingBehaviour), true)]
     public class BindingBehaviourEditor : UnityEditor.Editor

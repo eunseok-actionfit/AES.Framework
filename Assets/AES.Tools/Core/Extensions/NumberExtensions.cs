@@ -1,5 +1,4 @@
-﻿using System;
-using UnityEngine;
+﻿using UnityEngine;
 #if ENABLED_UNITY_MATHEMATICS
 using Unity.Mathematics;
 #endif
@@ -58,7 +57,7 @@ namespace AES.Tools
 
         static string ToCompactInternal(double value, int decimalDigits)
         {
-            double abs = Math.Abs(value);
+            double abs = System.Math.Abs(value);
             string suffix = "";
             double shortNumber = value;
 
@@ -79,8 +78,8 @@ namespace AES.Tools
             }
 
             // 내림 (floor) 적용
-            double factor = Math.Pow(10, decimalDigits);
-            shortNumber = Math.Floor(shortNumber * factor) / factor;
+            double factor = System.Math.Pow(10, decimalDigits);
+            shortNumber = System.Math.Floor(shortNumber * factor) / factor;
             
             // 소수 자릿수만큼 포맷 (예: 1.2k)
             string format = decimalDigits > 0 ? $"0.{new string('0', decimalDigits)}" : "0";

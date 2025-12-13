@@ -1,11 +1,12 @@
 using UnityEngine;
 
+
 namespace AES.Tools
 {
-    [RequireComponent(typeof(SpriteRenderer))]
+    [RequireComponent(typeof(UnityEngine.SpriteRenderer))]
     public sealed class SpriteColorBinding : ContextBindingBase
     {
-        [SerializeField] private SpriteRenderer renderer;
+        [SerializeField] private UnityEngine.SpriteRenderer renderer;
         
         [Header("Value Converter")]
         [SerializeField] bool useConverter;
@@ -15,7 +16,7 @@ namespace AES.Tools
         private System.Action<object> _listener;
         private object _token;
 
-        private void Reset() => renderer = GetComponent<SpriteRenderer>();
+        private void Reset() => renderer = GetComponent<UnityEngine.SpriteRenderer>();
 
         protected override void OnContextAvailable(IBindingContext context, string path)
         {

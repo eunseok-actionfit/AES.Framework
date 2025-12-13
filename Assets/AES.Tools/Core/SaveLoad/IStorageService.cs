@@ -1,8 +1,9 @@
 using System.Threading;
+using AES.Tools.TBC.Result;
 using Cysharp.Threading.Tasks;
 
 
-namespace AES.Tools.Core
+namespace AES.Tools
 {
     public interface IStorageService
     {

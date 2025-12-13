@@ -1,11 +1,12 @@
 // SharedDrawer.cs
 #if UNITY_EDITOR
 using System.Collections.Generic;
+using AES.Tools.Shared;
 using UnityEditor;
 using UnityEngine;
 
 
-namespace AES.Tools.Editor.DataBinding
+namespace AES.Tools.Editor
 {
     [CustomPropertyDrawer(typeof(Shared<>))]
     public sealed class SharedDrawer : PropertyDrawer

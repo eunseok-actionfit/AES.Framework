@@ -1,56 +1,58 @@
 using System;
 using System.Threading;
-using AES.Tools;
-using AES.Tools.Core;
-using AES.Tools.Commands;
+using AES.Tools.TBC.Result;
 using Cysharp.Threading.Tasks;
-using UnityEngine; 
+using UnityEngine;
 
-public sealed class SaveAllCommand : IAsyncCommand
+
+namespace AES.Tools.Commands
 {
-
-    private readonly ISaveCoordinator _coord; 
-
-    public SaveAllCommand(ISaveCoordinator coord)
+    public sealed class SaveAllCommand : IAsyncCommand
     {
-        _coord = coord ?? throw new ArgumentNullException(nameof(coord));
-    }
 
-    public bool CanExecute(object parameter = null)
-    {
-        // 저장 가능 여부 체크가 필요하면 여기에 추가
-        return true;
-    }
+        private readonly ISaveCoordinator _coord; 
 
-    public void Execute(object parameter = null)
-    {
-        _ = ExecuteAsync(parameter);
-    }
-
-    public async UniTask ExecuteAsync(object parameter = null)
-    {
-        var ct = parameter is CancellationToken token ? token : CancellationToken.None;
-
-        Debug.Log("[SaveAllCommand] Start SaveAll");
-
-        Result result;
-        try
+        public SaveAllCommand(ISaveCoordinator coord)
         {
-            result = await _coord.SaveAllAsync(ct);
-        }
-        catch (Exception ex)
-        {
-            Debug.LogError($"[SaveAllCommand] Exception while saving: {ex}");
-            throw;
+            _coord = coord ?? throw new ArgumentNullException(nameof(coord));
         }
 
-        if (result.IsSuccess)
+        public bool CanExecute(object parameter = null)
         {
-            Debug.Log($"[SaveAllCommand] Success: {result}");
+            // 저장 가능 여부 체크가 필요하면 여기에 추가
+            return true;
         }
-        else
+
+        public void Execute(object parameter = null)
         {
-            Debug.LogError($"[SaveAllCommand] Fail: {result}");
+            _ = ExecuteAsync(parameter);
+        }
+
+        public async UniTask ExecuteAsync(object parameter = null)
+        {
+            var ct = parameter is CancellationToken token ? token : CancellationToken.None;
+
+            Debug.Log("[SaveAllCommand] Start SaveAll");
+
+            Result result;
+            try
+            {
+                result = await _coord.SaveAllAsync(ct);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"[SaveAllCommand] Exception while saving: {ex}");
+                throw;
+            }
+
+            if (result.IsSuccess)
+            {
+                Debug.Log($"[SaveAllCommand] Success: {result}");
+            }
+            else
+            {
+                Debug.LogError($"[SaveAllCommand] Fail: {result}");
+            }
         }
     }
 }

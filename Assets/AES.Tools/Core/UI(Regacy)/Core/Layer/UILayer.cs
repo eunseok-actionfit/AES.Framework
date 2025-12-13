@@ -1,9 +1,9 @@
-
+using AES.Tools.UI_Regacy_.Components.Transitions;
 using UnityEngine;
 using UnityEngine.UI;
 
 
-namespace AES.Tools.Layer
+namespace AES.Tools.UI_Regacy_.Core.Layer
 {
     public enum LayerSortingPolicy { ByZPriority, ByTime }
 

@@ -3,7 +3,7 @@ using System.Threading;
 using Cysharp.Threading.Tasks;
 
 
-namespace AES.Tools
+namespace AES.Tools.TimeManager.Schedulers
 {
     /// <summary>
     /// 타이머 스케줄러 인터페이스

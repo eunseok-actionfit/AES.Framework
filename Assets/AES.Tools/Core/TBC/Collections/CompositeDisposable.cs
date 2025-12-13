@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 
 
-namespace AES.Tools
+namespace AES.Tools.TBC.Collections
 {
     /// <summary>
     /// 여러 IDisposable을 묶어서 한 번에 해제하는 컨테이너.

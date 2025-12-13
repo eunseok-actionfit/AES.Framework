@@ -1,35 +1,39 @@
 using UnityEngine;
 using UnityEngine.Events;
 
-public class SimpleToggle : MonoBehaviour
+
+namespace AES.Tools.SwitchToggle
 {
-    [Header("Initial State")]
-    [SerializeField] private bool startOn = false;
-
-    public bool IsOn { get; private set; }
-
-    [Header("Events")]
-    public UnityEvent onTurnOn = new UnityEvent();
-    public UnityEvent onTurnOff = new UnityEvent();
-
-    protected virtual void Awake()
+    public class SimpleToggle : MonoBehaviour
     {
-        IsOn = startOn;
-    }
+        [Header("Initial State")]
+        [SerializeField] private bool startOn = false;
 
-    public void Toggle() => SetState(!IsOn);
+        public bool IsOn { get; private set; }
 
-    public void TurnOn() => SetState(true);
+        [Header("Events")]
+        public UnityEvent onTurnOn = new UnityEvent();
+        public UnityEvent onTurnOff = new UnityEvent();
 
-    public void TurnOff() => SetState(false);
+        protected virtual void Awake()
+        {
+            IsOn = startOn;
+        }
 
-    private void SetState(bool value)
-    {
-        if (IsOn == value) return;
+        public void Toggle() => SetState(!IsOn);
 
-        IsOn = value;
+        public void TurnOn() => SetState(true);
 
-        if (IsOn) onTurnOn?.Invoke();
-        else      onTurnOff?.Invoke();
+        public void TurnOff() => SetState(false);
+
+        private void SetState(bool value)
+        {
+            if (IsOn == value) return;
+
+            IsOn = value;
+
+            if (IsOn) onTurnOn?.Invoke();
+            else      onTurnOff?.Invoke();
+        }
     }
 }

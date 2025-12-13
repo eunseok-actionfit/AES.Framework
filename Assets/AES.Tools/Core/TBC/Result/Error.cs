@@ -1,7 +1,7 @@
 using System;
 
 
-namespace AES.Tools
+namespace AES.Tools.TBC.Result
 {
     /// <summary>
     /// 에러 정보 구조체 <br/>

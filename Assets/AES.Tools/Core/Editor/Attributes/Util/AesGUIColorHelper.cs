@@ -3,7 +3,8 @@ using System;
 using System.Reflection;
 using UnityEngine;
 
-namespace AES.Tools.Editor
+
+namespace AES.Tools.Editor.Util
 {
     public static class AesGUIColorHelper
     {

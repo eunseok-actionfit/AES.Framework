@@ -2,217 +2,219 @@ using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
-using AES.Tools;
 
 
-public static class BindingContextExtensions
+namespace AES.Tools
 {
-    private static readonly ConditionalWeakTable<LambdaExpression, string> PathCache
-        = new();
-
-    private static string GetOrAddPath(LambdaExpression lambda)
+    public static class BindingContextExtensions
     {
-        if (!PathCache.TryGetValue(lambda, out var path))
+        private static readonly ConditionalWeakTable<LambdaExpression, string> PathCache
+            = new();
+
+        private static string GetOrAddPath(LambdaExpression lambda)
         {
-            path = ExtractPath(lambda.Body);
-            PathCache.Add(lambda, path);
+            if (!PathCache.TryGetValue(lambda, out var path))
+            {
+                path = ExtractPath(lambda.Body);
+                PathCache.Add(lambda, path);
+            }
+            return path;
         }
-        return path;
-    }
 
-    public static IDisposable SubscribeProperty<TViewModel, TValue>(
-        this IBindingContext ctx,
-        Expression<Func<TViewModel, IObservableProperty<TValue>>> selector,
-        Action<TValue> onChanged,   bool pushInitialValue = true)
-    {
-        var lambda = selector;
-        string path = GetOrAddPath(lambda);
-
-        Action<object> boxed = v =>
+        public static IDisposable SubscribeProperty<TViewModel, TValue>(
+            this IBindingContext ctx,
+            Expression<Func<TViewModel, IObservableProperty<TValue>>> selector,
+            Action<TValue> onChanged,   bool pushInitialValue = true)
         {
-            if (v is TValue tv)
-                onChanged(tv);
-        };
+            var lambda = selector;
+            string path = GetOrAddPath(lambda);
 
-        var token = ctx.RegisterListener(path, boxed, pushInitialValue);
+            Action<object> boxed = v =>
+            {
+                if (v is TValue tv)
+                    onChanged(tv);
+            };
 
-        return new BindingSubscription(ctx, path, boxed, token);
-    }
+            var token = ctx.RegisterListener(path, boxed, pushInitialValue);
 
-    public static IDisposable SubscribeProperty<TViewModel, TValue>(
-        this IBindingContext ctx,
-        BindingBehaviour owner,   // ← 추가
-        Expression<Func<TViewModel, IObservableProperty<TValue>>> selector,
-        Action<TValue> onChanged,   bool pushInitialValue = true)
-    {
-        var lambda = selector;
-        string path = GetOrAddPath(lambda);
+            return new BindingSubscription(ctx, path, boxed, token);
+        }
 
-        Action<object> boxed = v =>
+        public static IDisposable SubscribeProperty<TViewModel, TValue>(
+            this IBindingContext ctx,
+            BindingBehaviour owner,   // ← 추가
+            Expression<Func<TViewModel, IObservableProperty<TValue>>> selector,
+            Action<TValue> onChanged,   bool pushInitialValue = true)
         {
+            var lambda = selector;
+            string path = GetOrAddPath(lambda);
+
+            Action<object> boxed = v =>
+            {
 #if UNITY_EDITOR
-            owner?.Debug_OnValueUpdated(v, path);
+                owner?.Debug_OnValueUpdated(v, path);
 #endif
-            if (v is TValue tv)
-                onChanged(tv);
-        };
+                if (v is TValue tv)
+                    onChanged(tv);
+            };
 
-        var token = ctx.RegisterListener(path, boxed,pushInitialValue);
+            var token = ctx.RegisterListener(path, boxed,pushInitialValue);
 
-        return new BindingSubscription(ctx, path, boxed, token);
-    }
-
-     public static IDisposable SubscribeList<TViewModel, TItem>(
-        this IBindingContext ctx,
-        Expression<Func<TViewModel, ObservableList<TItem>>> selector,
-        Action<ObservableList<TItem>> onReset,
-        Action<int, TItem> onItemAdded,
-        Action<int, TItem> onItemRemoved, 
-        bool pushInitialValue = true)
-    {
-        var lambda = selector;
-        string path = GetOrAddPath(lambda);
-
-        ObservableList<TItem> current = null;
-
-        // 이벤트 핸들러 정의
-        void HandleReset()
-        {
-            if (current != null)
-                onReset?.Invoke(current);
+            return new BindingSubscription(ctx, path, boxed, token);
         }
 
-        void HandleItemAdded(int index, TItem item)
+        public static IDisposable SubscribeList<TViewModel, TItem>(
+            this IBindingContext ctx,
+            Expression<Func<TViewModel, ObservableList<TItem>>> selector,
+            Action<ObservableList<TItem>> onReset,
+            Action<int, TItem> onItemAdded,
+            Action<int, TItem> onItemRemoved, 
+            bool pushInitialValue = true)
         {
-            onItemAdded?.Invoke(index, item);
-        }
+            var lambda = selector;
+            string path = GetOrAddPath(lambda);
 
-        void HandleItemRemoved(int index, TItem item)
-        {
-            onItemRemoved?.Invoke(index, item);
-        }
+            ObservableList<TItem> current = null;
 
-        // 리스트 교체 + 핸들러 재연결
-        void AttachToList(ObservableList<TItem> list)
-        {
-            // 이전 리스트 Detach
-            if (current != null)
+            // 이벤트 핸들러 정의
+            void HandleReset()
             {
-                current.OnListChanged -= HandleReset;
-                current.ItemAdded     -= HandleItemAdded;
-                current.ItemRemoved   -= HandleItemRemoved;
+                if (current != null)
+                    onReset?.Invoke(current);
             }
 
-            current = list;
-
-            if (current == null)
-                return;
-
-            // 필요할 때만 구독
-            if (onReset != null)
-                current.OnListChanged += HandleReset;
-
-            if (onItemAdded != null)
-                current.ItemAdded += HandleItemAdded;
-
-            if (onItemRemoved != null)
-                current.ItemRemoved += HandleItemRemoved;
-
-            // 초기 상태 한 번 알려줌
-            onReset?.Invoke(current);
-        }
-
-        // BindingContext에서 해당 경로 값이 바뀔 때마다 호출
-        Action<object> boxed = v =>
-        {
-            // null 이거나 타입이 다르면 Detach만 하고 끝
-            if (v is ObservableList<TItem> list)
+            void HandleItemAdded(int index, TItem item)
             {
-                AttachToList(list);
+                onItemAdded?.Invoke(index, item);
             }
-            else
+
+            void HandleItemRemoved(int index, TItem item)
             {
-                AttachToList(null);
+                onItemRemoved?.Invoke(index, item);
             }
-        };
 
-        var token = ctx.RegisterListener(path, boxed, pushInitialValue);
-
-        // Dispose 시: BindingContext 리스너 해제 + 리스트 이벤트 해제
-        return new BindingSubscription(
-            ctx,
-            path,
-            boxed,
-            token,
-            onDispose: () =>
+            // 리스트 교체 + 핸들러 재연결
+            void AttachToList(ObservableList<TItem> list)
             {
+                // 이전 리스트 Detach
                 if (current != null)
                 {
                     current.OnListChanged -= HandleReset;
                     current.ItemAdded     -= HandleItemAdded;
                     current.ItemRemoved   -= HandleItemRemoved;
-                    current = null;
                 }
-            });
-    }
 
-    private static string ExtractPath(Expression expr)
-    {
-        if (expr is UnaryExpression u && u.NodeType == ExpressionType.Convert)
-            expr = u.Operand;
+                current = list;
 
-        var parts = new Stack<string>();
-        var cur = expr;
+                if (current == null)
+                    return;
 
-        while (cur is MemberExpression m)
-        {
-            parts.Push(m.Member.Name);
-            cur = m.Expression;
-        }
+                // 필요할 때만 구독
+                if (onReset != null)
+                    current.OnListChanged += HandleReset;
 
-        return string.Join(".", parts);
-    }
+                if (onItemAdded != null)
+                    current.ItemAdded += HandleItemAdded;
 
-    private sealed class BindingSubscription : IDisposable
-    {
-        private readonly IBindingContext _ctx;
-        private readonly string          _path;
-        private readonly Action<object>  _boxed;
-        private readonly object          _token;
-        private readonly Action          _onDispose;
-        private bool                     _disposed;
+                if (onItemRemoved != null)
+                    current.ItemRemoved += HandleItemRemoved;
 
-        public BindingSubscription(
-            IBindingContext ctx,
-            string path,
-            Action<object> boxed,
-            object token,
-            Action onDispose = null)
-        {
-            _ctx       = ctx;
-            _path      = path;
-            _boxed     = boxed;
-            _token     = token;
-            _onDispose = onDispose;
-        }
-
-        public void Dispose()
-        {
-            if (_disposed) return;
-            _disposed = true;
-
-            // 리스트 등 부가 자원 정리
-            _onDispose?.Invoke();
-
-            // 1순위: IDisposable 토큰이면 그냥 Dispose()
-            if (_token is IDisposable d)
-            {
-                d.Dispose();
+                // 초기 상태 한 번 알려줌
+                onReset?.Invoke(current);
             }
-            else
+
+            // BindingContext에서 해당 경로 값이 바뀔 때마다 호출
+            Action<object> boxed = v =>
             {
-                // 구버전 컨텍스트 호환용
-                _ctx.RemoveListener(_path, _token);
+                // null 이거나 타입이 다르면 Detach만 하고 끝
+                if (v is ObservableList<TItem> list)
+                {
+                    AttachToList(list);
+                }
+                else
+                {
+                    AttachToList(null);
+                }
+            };
+
+            var token = ctx.RegisterListener(path, boxed, pushInitialValue);
+
+            // Dispose 시: BindingContext 리스너 해제 + 리스트 이벤트 해제
+            return new BindingSubscription(
+                ctx,
+                path,
+                boxed,
+                token,
+                onDispose: () =>
+                {
+                    if (current != null)
+                    {
+                        current.OnListChanged -= HandleReset;
+                        current.ItemAdded     -= HandleItemAdded;
+                        current.ItemRemoved   -= HandleItemRemoved;
+                        current = null;
+                    }
+                });
+        }
+
+        private static string ExtractPath(Expression expr)
+        {
+            if (expr is UnaryExpression u && u.NodeType == ExpressionType.Convert)
+                expr = u.Operand;
+
+            var parts = new Stack<string>();
+            var cur = expr;
+
+            while (cur is MemberExpression m)
+            {
+                parts.Push(m.Member.Name);
+                cur = m.Expression;
+            }
+
+            return string.Join(".", parts);
+        }
+
+        private sealed class BindingSubscription : IDisposable
+        {
+            private readonly IBindingContext _ctx;
+            private readonly string          _path;
+            private readonly Action<object>  _boxed;
+            private readonly object          _token;
+            private readonly Action          _onDispose;
+            private bool                     _disposed;
+
+            public BindingSubscription(
+                IBindingContext ctx,
+                string path,
+                Action<object> boxed,
+                object token,
+                Action onDispose = null)
+            {
+                _ctx       = ctx;
+                _path      = path;
+                _boxed     = boxed;
+                _token     = token;
+                _onDispose = onDispose;
+            }
+
+            public void Dispose()
+            {
+                if (_disposed) return;
+                _disposed = true;
+
+                // 리스트 등 부가 자원 정리
+                _onDispose?.Invoke();
+
+                // 1순위: IDisposable 토큰이면 그냥 Dispose()
+                if (_token is IDisposable d)
+                {
+                    d.Dispose();
+                }
+                else
+                {
+                    // 구버전 컨텍스트 호환용
+                    _ctx.RemoveListener(_path, _token);
+                }
             }
         }
     }

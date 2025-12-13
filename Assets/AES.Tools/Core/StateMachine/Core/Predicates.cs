@@ -1,7 +1,7 @@
 using System;
 
 
-namespace AES.Tools
+namespace AES.Tools.StateMachine.Core
 {
     /// <summary>
     /// <see cref="IPredicate"/> 생성을 돕는 확장 메서드 모음.<br/>

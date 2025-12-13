@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using AES.Tools.TBC.Diagnostics;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -102,7 +103,7 @@ namespace AES.Tools
         {
             ThrowIfDisposed();
 
-            var target = Math.Clamp(warmUp, 0, Capacity);
+            var target = System.Math.Clamp(warmUp, 0, Capacity);
             var need = target - (CountFree + CountInUse);
             if (need <= 0) return;
 

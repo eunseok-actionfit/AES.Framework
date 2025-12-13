@@ -1,7 +1,7 @@
 using System.Text;
 
 
-namespace AES.Tools.Helpers
+namespace AES.Tools
 {
     public static class HexUtils
     {

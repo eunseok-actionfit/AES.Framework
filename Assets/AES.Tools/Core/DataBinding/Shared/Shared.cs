@@ -2,7 +2,8 @@
 using System;
 using UnityEngine;
 
-namespace AES.Tools   // 프로젝트 네임스페이스에 맞게
+
+namespace AES.Tools.Shared   // 프로젝트 네임스페이스에 맞게
 {
     public enum SharedScope
     {

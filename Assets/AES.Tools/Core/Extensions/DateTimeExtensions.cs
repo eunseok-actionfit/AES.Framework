@@ -21,7 +21,7 @@ namespace AES.Tools
 
             // Ensure the new date is valid by clamping day if necessary
             int daysInMonth = DateTime.DaysInMonth(newYear, newMonth);
-            newDay = Math.Min(newDay, daysInMonth);
+            newDay = System.Math.Min(newDay, daysInMonth);
 
             return new DateTime(newYear, newMonth, newDay, dt.Hour, dt.Minute, dt.Second, dt.Millisecond);
         }

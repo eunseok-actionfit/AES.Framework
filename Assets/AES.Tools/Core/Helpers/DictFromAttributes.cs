@@ -1,52 +1,53 @@
 using System;
 using System.Reflection;
-using AES.Tools;
 using AYellowpaper.SerializedCollections;
 
 
-public static class DictFromAttributes
+namespace AES.Tools
 {
-    public static SerializedDictionary<string, TValue> CreateFromStringKeys<TValue>(Type keysType)
+    public static class DictFromAttributes
     {
-        var dict = new SerializedDictionary<string, TValue>();
-
-        var fields = keysType.GetFields(
-            BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy);
-
-        foreach (var field in fields)
+        public static SerializedDictionary<string, TValue> CreateFromStringKeys<TValue>(Type keysType)
         {
-            if (!field.IsLiteral || field.FieldType != typeof(string))
-                continue;
+            var dict = new SerializedDictionary<string, TValue>();
 
-            var attr = field.GetCustomAttribute<DictKeyAttribute>();
-            if (attr == null)
-                continue;
+            var fields = keysType.GetFields(
+                BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy);
 
-            var key = (string)field.GetRawConstantValue();
-
-            TValue defaultValue = default;
-
-            if (attr.DefaultValue is TValue typed)
+            foreach (var field in fields)
             {
-                defaultValue = typed;
-            }
-            else if (attr.DefaultValue != null)
-            {
-                try
+                if (!field.IsLiteral || field.FieldType != typeof(string))
+                    continue;
+
+                var attr = field.GetCustomAttribute<DictKeyAttribute>();
+                if (attr == null)
+                    continue;
+
+                var key = (string)field.GetRawConstantValue();
+
+                TValue defaultValue = default;
+
+                if (attr.DefaultValue is TValue typed)
                 {
-                    defaultValue = (TValue)Convert.ChangeType(attr.DefaultValue, typeof(TValue));
+                    defaultValue = typed;
                 }
-                catch
+                else if (attr.DefaultValue != null)
                 {
-                    // 변환 실패 시 default(TValue) 유지
+                    try
+                    {
+                        defaultValue = (TValue)Convert.ChangeType(attr.DefaultValue, typeof(TValue));
+                    }
+                    catch
+                    {
+                        // 변환 실패 시 default(TValue) 유지
+                    }
                 }
+
+                dict[key] = defaultValue;
             }
 
-            dict[key] = defaultValue;
+            return dict;
         }
-
-        return dict;
-    }
     
 
         public static SerializedDictionary<TEnum, TValue> CreateFromEnum<TEnum, TValue>()
@@ -91,4 +92,5 @@ public static class DictFromAttributes
             return dict;
         }
 
+    }
 }

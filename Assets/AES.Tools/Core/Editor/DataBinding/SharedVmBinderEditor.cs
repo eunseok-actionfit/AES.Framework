@@ -4,12 +4,12 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
-using AES.Tools.Commands;
+using AES.Tools.Shared;
 using UnityEditor;
 using UnityEngine;
 
 
-namespace AES.Tools.Editor.DataBinding
+namespace AES.Tools.Editor
 {
     [CustomEditor(typeof(SharedVmBinder))]
     public class SharedVmBinderEditor : UnityEditor.Editor

@@ -5,7 +5,7 @@ using UnityEngine;
 
 // ContextBindingBaseEditor 네임스페이스 맞춰서
 
-namespace AES.Tools.Editor.DataBinding
+namespace AES.Tools.Editor
 {
     [CustomEditor(typeof(EnumActiveBinding))]
     public class EnumActiveBindingEditor : ContextBindingBaseEditor

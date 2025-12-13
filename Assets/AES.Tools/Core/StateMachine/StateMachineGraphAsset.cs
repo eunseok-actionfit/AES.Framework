@@ -2,7 +2,8 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace AES.Tools.Debugging
+
+namespace AES.Tools.StateMachine
 {
     [CreateAssetMenu(menuName = "FSM/State Machine Graph", fileName = "StateMachineGraph")]
     public sealed class StateMachineGraphAsset : ScriptableObject

@@ -2,7 +2,8 @@
 using System;
 using UnityEngine;
 
-namespace AES.Tools
+
+namespace AES.Tools.Shared
 {
     public enum VmBindingDirection
     {

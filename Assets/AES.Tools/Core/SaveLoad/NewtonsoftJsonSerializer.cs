@@ -1,8 +1,7 @@
-using AES.Tools.Core;
 using Newtonsoft.Json;
 
 
-namespace AES.Tools.Impl
+namespace AES.Tools
 {
     public sealed class NewtonsoftJsonSerializer : IJsonSerializer
     {

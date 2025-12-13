@@ -7,7 +7,7 @@ using UnityEditor.AddressableAssets;
 using UnityEngine;
 
 
-namespace AES.Tools.Editor.UI
+namespace AES.Tools.Editor
 {
     [CustomPropertyDrawer(typeof(UIRegistryEntry))]
     public sealed class UIRegistryEntryDrawer : PropertyDrawer

@@ -3,7 +3,7 @@ using UnityEditor;
 using UnityEngine;
 
 
-namespace AES.Tools.Editor.EditorExtensions {
+namespace AES.Tools.Editor {
     /// <summary>
     /// Provides extension methods for various editor functionalities.
     /// </summary>

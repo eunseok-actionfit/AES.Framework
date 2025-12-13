@@ -1,7 +1,8 @@
 using System;
 using System.Collections.Generic;
 
-namespace AES.Tools
+
+namespace AES.Tools.StateMachine.Core
 {
     /// <summary>
     /// 상태 전이를 평가하고 현재 상태를 관리하는 상태 머신.<br/>

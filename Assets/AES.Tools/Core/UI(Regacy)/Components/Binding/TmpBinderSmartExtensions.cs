@@ -4,7 +4,7 @@ using TMPro;
 using UnityEngine.Localization.SmartFormat;
 
 
-namespace AES.Tools
+namespace AES.Tools.UI_Regacy_.Components.Binding
 {
     /// <summary>
     /// <see cref="TMP_Text"/>와 <see cref="Bindable{T}"/>를 연결해 SmartFormat 기반 문자열 바인딩을 제공합니다.

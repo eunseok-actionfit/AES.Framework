@@ -2,7 +2,7 @@ using System;
 using AES.Tools.UI.Utility;
 
 
-namespace AES.Tools.View
+namespace AES.Tools.UI_Regacy_.Core.View
 {
     [Serializable]
     public readonly struct UIWindowKey : IEquatable<UIWindowKey>

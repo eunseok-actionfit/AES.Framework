@@ -6,7 +6,7 @@ using UnityEditor;
 using UnityEngine;
 
 
-namespace AES.Tools.Editor.DataBinding
+namespace AES.Tools.Editor
 {
     [CustomEditor(typeof(ContextListenerBase), true)]
     public class ContextListenerBaseEditor : UnityEditor.Editor

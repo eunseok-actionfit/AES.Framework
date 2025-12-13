@@ -1,3 +1,4 @@
-using UnityEngine;
-
-public sealed class GameObjectPropertyBinding : ObjectPropertyBinding<GameObject> { }
+namespace AES.Tools
+{
+    public sealed class GameObjectPropertyBinding : ObjectPropertyBinding<UnityEngine.GameObject> { }
+}

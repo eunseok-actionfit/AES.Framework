@@ -1,4 +1,7 @@
 using UnityEngine;
 
 
-public sealed class ColorPropertyBinding : PropertyBindingBase<Color> { }
+namespace AES.Tools
+{
+    public sealed class ColorPropertyBinding : PropertyBindingBase<Color> { }
+}

@@ -1,7 +1,7 @@
 using UnityEngine;
 
 
-namespace AES.Tools.View
+namespace AES.Tools.UI_Regacy_.Core.View
 {
     public interface IUIView
     {

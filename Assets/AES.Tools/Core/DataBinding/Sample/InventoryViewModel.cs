@@ -1,6 +1,3 @@
-using AES.Tools.Commands;
-
-
 namespace AES.Tools.Sample
 {
     public class InventoryViewModel

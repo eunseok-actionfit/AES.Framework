@@ -1,11 +1,12 @@
 using System;
 using UnityEngine;
 
+
 namespace AES.Tools
 {
     public class ValidationStateBinding : ContextBindingBase
     {
-        [SerializeField] GameObject target;
+        [SerializeField] UnityEngine.GameObject target;
         [SerializeField] bool activeWhenError = true;
 
         IValidatableProperty _validatable;

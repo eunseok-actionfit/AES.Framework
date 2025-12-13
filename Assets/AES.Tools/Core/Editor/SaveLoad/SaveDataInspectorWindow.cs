@@ -5,15 +5,13 @@ using System.Linq;
 using System.Numerics;
 using System.Text;
 using System.Threading;
-using AES.Tools.Core;
-using AES.Tools.Impl;
 using Cysharp.Threading.Tasks;
 using UnityEditor;
 using UnityEngine;
 using Vector2 = UnityEngine.Vector2;
 
 
-namespace AES.Tools.Editor.SaveLoad
+namespace AES.Tools.Editor
 {
     public sealed class SaveDataInspectorWindow : EditorWindow
     {

@@ -1,10 +1,10 @@
 using System.Threading;
-using AES.Tools.View;
+using AES.Tools.UI_Regacy_.Core.View;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 
-namespace AES.Tools.Assets
+namespace AES.Tools.UI_Regacy_.Components.Transitions.Assets
 {
     [CreateAssetMenu(menuName="UI/Transition/Fade")]
     public sealed class FadeTransitionAsset : TransitionAsset

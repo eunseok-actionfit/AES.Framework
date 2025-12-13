@@ -1,6 +1,4 @@
-using System;
-
-namespace AES.Tools
+namespace AES.Tools.StateMachine.Core
 {
     /// <summary>
     /// 불리언 값을 저장하는 상태 머신 파라미터.<br/>

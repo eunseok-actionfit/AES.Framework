@@ -2,6 +2,7 @@ using System;
 using System.Globalization;
 using UnityEngine;
 
+
 namespace AES.Tools
 {
     [CreateAssetMenu(menuName = "AES/ValueConverters/Coin Compact Format")]

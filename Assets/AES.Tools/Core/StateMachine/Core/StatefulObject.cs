@@ -1,4 +1,4 @@
-namespace AES.Tools
+namespace AES.Tools.StateMachine.Core
 {
     /// <summary>
     /// Unity 의존성이 없는 상태 머신 소유자.<br/>

@@ -1,7 +1,7 @@
 using Cysharp.Threading.Tasks;
 
 
-namespace AES.Tools.Core
+namespace AES.Tools
 {
     public interface ISaveUnit
     {

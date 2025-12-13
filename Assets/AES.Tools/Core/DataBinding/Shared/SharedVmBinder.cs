@@ -4,7 +4,8 @@ using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
 
-namespace AES.Tools
+
+namespace AES.Tools.Shared
 {
     [DisallowMultipleComponent]
     public sealed class SharedVmBinder : MonoBehaviour

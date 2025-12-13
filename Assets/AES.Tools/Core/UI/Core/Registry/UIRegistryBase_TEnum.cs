@@ -6,8 +6,8 @@ using AYellowpaper.SerializedCollections;
 using System;
 using System.Collections.Generic;
 using AES.Tools.SerializedDictionary;
+using AES.Tools.UI_Regacy_.Core.View;
 using AES.Tools.UI.Core.View;
-using AES.Tools.View;
 using UnityEngine;
 
 

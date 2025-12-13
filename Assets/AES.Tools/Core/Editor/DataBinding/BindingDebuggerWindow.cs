@@ -6,7 +6,7 @@ using UnityEditor;
 using UnityEngine;
 
 
-namespace AES.Tools.Editor.DataBinding
+namespace AES.Tools.Editor
 {
     public class BindingDebuggerWindow : EditorWindow
     {

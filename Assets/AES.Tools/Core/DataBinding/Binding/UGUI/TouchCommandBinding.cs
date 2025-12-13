@@ -1,10 +1,10 @@
 using System;
 using System.Globalization;
-using AES.Tools.Commands;
+using AES.Tools.Controllers.Core;
 using UnityEngine;
 
 
-namespace AES.Tools.Bindings
+namespace AES.Tools
 {
     public enum ButtonTriggerMode
     {

@@ -1,7 +1,7 @@
 using System;
 
 
-namespace AES.Tools
+namespace AES.Tools.TBC.Unit
 {
     public readonly struct Unit : IEquatable<Unit>
     {

@@ -1,16 +1,17 @@
 // SpriteSpriteBinding.cs
 using UnityEngine;
 
+
 namespace AES.Tools
 {
-    [RequireComponent(typeof(SpriteRenderer))]
+    [RequireComponent(typeof(UnityEngine.SpriteRenderer))]
     public sealed class SpriteSpriteBinding : ContextBindingBase
     {
-        private SpriteRenderer _renderer;
+        private UnityEngine.SpriteRenderer _renderer;
         private System.Action<object> _listener;
         private object _token;
 
-        private void Awake() => _renderer = GetComponent<SpriteRenderer>();
+        private void Awake() => _renderer = GetComponent<UnityEngine.SpriteRenderer>();
 
         protected override void OnContextAvailable(IBindingContext context, string path)
         {

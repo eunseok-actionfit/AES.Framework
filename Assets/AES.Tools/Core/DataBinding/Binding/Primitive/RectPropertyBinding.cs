@@ -1,3 +1,7 @@
 using UnityEngine;
 
-public sealed class RectPropertyBinding : PropertyBindingBase<Rect> { }
+
+namespace AES.Tools
+{
+    public sealed class RectPropertyBinding : PropertyBindingBase<Rect> { }
+}

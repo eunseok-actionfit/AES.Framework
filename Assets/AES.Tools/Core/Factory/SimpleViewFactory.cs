@@ -1,10 +1,10 @@
 using System;
 using System.Threading;
-using AES.Tools;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
-namespace Core.Engine.Factory
+
+namespace AES.Tools
 {
     public sealed class SimpleViewFactory<T> : IAsyncFactory<T> where T : Component
     {

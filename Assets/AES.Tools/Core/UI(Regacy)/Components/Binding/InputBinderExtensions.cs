@@ -4,7 +4,7 @@ using TMPro;
 using UnityEngine.UI;
 
 
-namespace AES.Tools
+namespace AES.Tools.UI_Regacy_.Components.Binding
 {
     public static class InputBinderExtensions
     {

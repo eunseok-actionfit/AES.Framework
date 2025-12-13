@@ -1,7 +1,8 @@
+using GoogleMobileAds.Api;
 using UnityEngine;
-using GoogleMobileAds.Api;  
 
-namespace AES.Tools.VContainer
+
+namespace AES.Tools.UI.Utility
 {
     public static class BannerHeightUtil
     {

@@ -1,7 +1,9 @@
 using System.Threading;
+using AES.Tools.TBC.Result;
 using Cysharp.Threading.Tasks;
 
-namespace AES.Tools.TBC.CommandSystem
+
+namespace AES.Tools
 {
     public interface ICommandBus
     {

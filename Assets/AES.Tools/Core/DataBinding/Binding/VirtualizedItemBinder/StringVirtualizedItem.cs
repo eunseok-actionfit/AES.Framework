@@ -2,7 +2,7 @@ using TMPro;
 using UnityEngine;
 
 
-namespace AES.Tools.Bindings
+namespace AES.Tools
 {
 
     public class StringVirtualizedItem : MonoBehaviour, IVirtualizedItemBinder

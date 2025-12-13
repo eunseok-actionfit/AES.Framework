@@ -1,5 +1,8 @@
-public enum SaveBackend
+namespace AES.Tools
 {
-    LocalOnly,
-    CloudFirst
+    public enum SaveBackend
+    {
+        LocalOnly,
+        CloudFirst
+    }
 }

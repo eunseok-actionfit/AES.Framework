@@ -1,7 +1,7 @@
 using System;
 
 
-namespace AES.Tools
+namespace AES.Tools.TBC.Result
 {
     /// <summary>
     /// 성공/실패만 표현하는 결과 타입

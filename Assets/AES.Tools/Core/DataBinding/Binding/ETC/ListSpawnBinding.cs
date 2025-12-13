@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 
+
 namespace AES.Tools
 {
     // 뷰가 재사용될 때 상태를 초기화하고 싶으면 구현
@@ -13,7 +14,7 @@ namespace AES.Tools
 
     public sealed class ListSpawnBinding : ContextBindingBase
     {
-        [SerializeField] private Transform   root;
+        [SerializeField] private UnityEngine.Transform   root;
         [SerializeField] private MonoContext itemPrefab;
 
         [Header("Events")]

@@ -3,7 +3,6 @@ using System.Threading;
 using AES.Tools.UI.Core.Factory;
 using AES.Tools.UI.Core.Registry;
 using AES.Tools.UI.Core.View;
-using AES.Tools.View;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.AddressableAssets;

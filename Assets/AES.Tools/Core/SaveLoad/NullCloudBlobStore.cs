@@ -1,10 +1,10 @@
 using System.Threading;
-using AES.Tools.Core;
+using AES.Tools.TBC.Result;
 using Cysharp.Threading.Tasks;
 
 
 // TODO GPGS, FirebaseStorge 등 클라우드 서비스 구현
-namespace AES.Tools.Impl
+namespace AES.Tools
 {
     public class NullCloudBlobStore : ICloudBlobStore
     {

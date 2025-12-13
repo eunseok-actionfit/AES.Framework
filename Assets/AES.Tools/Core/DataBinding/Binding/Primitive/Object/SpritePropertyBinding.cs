@@ -1,4 +1,7 @@
 using UnityEngine;
 
 
-public sealed class SpritePropertyBinding : ObjectPropertyBinding<Sprite> { }
+namespace AES.Tools
+{
+    public sealed class SpritePropertyBinding : ObjectPropertyBinding<Sprite> { }
+}

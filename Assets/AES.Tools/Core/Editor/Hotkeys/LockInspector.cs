@@ -3,7 +3,7 @@ using UnityEditor;
 using UnityEngine;
 
 
-namespace AES.Tools.Editor.Hotkeys
+namespace AES.Tools.Editor
 {
     public static class LockInspector {
         static readonly MethodInfo flipLocked;

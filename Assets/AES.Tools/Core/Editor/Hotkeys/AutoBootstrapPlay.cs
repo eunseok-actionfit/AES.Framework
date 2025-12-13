@@ -4,7 +4,7 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 
 
-namespace AES.Tools.Editor.Hotkeys
+namespace AES.Tools.Editor
 {
     /// <summary>
     /// AutoBootstrapPlay 관련 에디터 환경설정 저장소

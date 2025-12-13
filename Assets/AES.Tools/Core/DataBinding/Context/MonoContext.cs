@@ -1,10 +1,7 @@
 using System;
 using System.Collections;
-using UnityEngine;
-
-#if UNITY_EDITOR
 using System.Reflection;
-#endif
+using UnityEngine;
 
 
 namespace AES.Tools

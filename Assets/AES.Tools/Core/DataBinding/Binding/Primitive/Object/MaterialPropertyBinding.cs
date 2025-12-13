@@ -1,4 +1,7 @@
 using UnityEngine;
 
 
-public sealed class MaterialPropertyBinding : ObjectPropertyBinding<Material> { }
+namespace AES.Tools
+{
+    public sealed class MaterialPropertyBinding : ObjectPropertyBinding<Material> { }
+}

@@ -1,7 +1,7 @@
 using UnityEngine;
 
 
-namespace AES.Tools
+namespace AES.Tools.StateMachine.Core
 {
     /// <summary>
     /// 순수 StatefulObject(T)를 감싸서 씬에 올리는 래퍼.

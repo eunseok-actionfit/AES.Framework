@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 
-namespace AES.Tools.TBC.CommandSystem
+
+namespace AES.Tools
 {
     public sealed class CommandHistory : ICommandHistory
     {

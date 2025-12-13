@@ -4,7 +4,7 @@ using UnityEngine;
 
 
 // TMP_Text 바인딩 (단방향)
-namespace AES.Tools
+namespace AES.Tools.UI_Regacy_.Components.Binding
 {
     public static class TmpBinderExtensions
     {

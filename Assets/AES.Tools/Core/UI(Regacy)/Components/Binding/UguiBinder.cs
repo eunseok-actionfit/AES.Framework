@@ -10,7 +10,7 @@ using UnityEngine.UI;
 // binder.BindText(hpText, vm.Health);              // 모델→UI
 // binder.BindSliderValue(hpSlider, vm.Health, 0, 100); // 양방향
 // binder.BindInputFieldText(nameInput, vm.Name);   // 양방향
-namespace AES.Tools
+namespace AES.Tools.UI_Regacy_.Components.Binding
 {
     /// <summary>
     /// UguiBinder는 Unity UI와 ViewModel 사이의 데이터 바인딩을 간편하게 구현하기 위한 헬퍼 클래스입니다.

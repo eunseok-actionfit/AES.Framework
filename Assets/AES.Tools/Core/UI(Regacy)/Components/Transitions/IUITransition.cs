@@ -1,9 +1,9 @@
 using System.Threading;
-using AES.Tools.View;
+using AES.Tools.UI_Regacy_.Core.View;
 using Cysharp.Threading.Tasks;
 
 
-namespace AES.Tools
+namespace AES.Tools.UI_Regacy_.Components.Transitions
 {
     public interface IUITransition
     {

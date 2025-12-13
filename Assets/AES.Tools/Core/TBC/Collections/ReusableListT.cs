@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 
 
-namespace AES.Tools
+namespace AES.Tools.TBC.Collections
 {
     /// <summary>
     /// 임시 리스트를 재사용하기 위한 내부 유틸리티.<br/>

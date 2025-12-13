@@ -1,6 +1,7 @@
 // 파일: SingleSpawnBinding.cs
 using UnityEngine;
 
+
 namespace AES.Tools
 {
     /// <summary>
@@ -8,7 +9,7 @@ namespace AES.Tools
     /// </summary>
     public sealed class SingleSpawnBinding : ContextBindingBase
     {
-        [SerializeField] private Transform root;
+        [SerializeField] private UnityEngine.Transform root;
         [SerializeField] private MonoContext itemPrefab;
 
         private System.Action<object> _listener;

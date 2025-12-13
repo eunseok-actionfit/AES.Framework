@@ -1,25 +1,25 @@
-using AES.Tools;
-
-
-public class ViewCommandInvoker : ContextBindingBase
+namespace AES.Tools
 {
-    ICommand _command;
-
-    protected override void OnContextAvailable(IBindingContext ctx, string path)
+    public class ViewCommandInvoker : ContextBindingBase
     {
-        _command = ctx.GetValue(path) as ICommand;
-    }
+        ICommand _command;
 
-    protected override void OnContextUnavailable()
-    {
-        _command = null;
-    }
+        protected override void OnContextAvailable(IBindingContext ctx, string path)
+        {
+            _command = ctx.GetValue(path) as ICommand;
+        }
 
-    public void Invoke()
-    {
-        if (_command == null) return;
-        if (!_command.CanExecute(null)) return;
+        protected override void OnContextUnavailable()
+        {
+            _command = null;
+        }
 
-        _command.Execute(null);
+        public void Invoke()
+        {
+            if (_command == null) return;
+            if (!_command.CanExecute(null)) return;
+
+            _command.Execute(null);
+        }
     }
 }

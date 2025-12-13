@@ -1,4 +1,8 @@
 
 using UnityEngine;
 
-public sealed class TexturePropertyBinding : ObjectPropertyBinding<Texture> { }
+
+namespace AES.Tools
+{
+    public sealed class TexturePropertyBinding : ObjectPropertyBinding<Texture> { }
+}

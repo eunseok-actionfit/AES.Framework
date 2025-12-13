@@ -6,7 +6,7 @@ using UnityEditor;
 using UnityEngine;
 
 
-namespace AES.Tools.Editor.SaveLoad
+namespace AES.Tools.Editor
 {
     [CustomEditor(typeof(StorageProfile))]
     public sealed class StorageProfileEditor : UnityEditor.Editor

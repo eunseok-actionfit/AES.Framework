@@ -1,4 +1,8 @@
 
 using UnityEngine;
 
-public sealed class AudioClipPropertyBinding : ObjectPropertyBinding<AudioClip> { }
+
+namespace AES.Tools
+{
+    public sealed class AudioClipPropertyBinding : ObjectPropertyBinding<AudioClip> { }
+}

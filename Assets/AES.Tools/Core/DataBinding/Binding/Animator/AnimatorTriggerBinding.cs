@@ -1,19 +1,20 @@
 // AnimatorTriggerBinding.cs
 using UnityEngine;
 
+
 namespace AES.Tools
 {
-    [RequireComponent(typeof(Animator))]
+    [RequireComponent(typeof(UnityEngine.Animator))]
     public sealed class AnimatorTriggerBinding : ContextBindingBase
     {
         [SerializeField] private string parameterName;
         [SerializeField] private string fireOnValue;
 
-        private Animator _animator;
+        private UnityEngine.Animator _animator;
         private System.Action<object> _listener;
         private object _token;
 
-        private void Awake() => _animator = GetComponent<Animator>();
+        private void Awake() => _animator = GetComponent<UnityEngine.Animator>();
 
         protected override void OnContextAvailable(IBindingContext context, string path)
         {

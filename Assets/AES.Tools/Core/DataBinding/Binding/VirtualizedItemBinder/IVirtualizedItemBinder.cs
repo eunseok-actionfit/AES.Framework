@@ -1,4 +1,4 @@
-namespace AES.Tools.Bindings
+namespace AES.Tools
 {
     public interface IVirtualizedItemBinder
     {

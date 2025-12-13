@@ -1,4 +1,4 @@
-namespace AES.Tools.Core
+namespace AES.Tools
 {
     public interface ISlotService
     {

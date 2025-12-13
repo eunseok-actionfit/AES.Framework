@@ -1,8 +1,10 @@
 // AES.Tools.TBC.CommandSystem/IGameCommand.cs
 using System.Threading;
+using AES.Tools.TBC.Result;
 using Cysharp.Threading.Tasks;
 
-namespace AES.Tools.TBC.CommandSystem
+
+namespace AES.Tools
 {
     /// <summary>
     /// 도메인(게임) 전용 커맨드. UI와 분리된 계층.

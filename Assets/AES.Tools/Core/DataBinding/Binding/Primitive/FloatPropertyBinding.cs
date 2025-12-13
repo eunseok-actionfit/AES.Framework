@@ -1,1 +1,4 @@
-public sealed class FloatPropertyBinding : PropertyBindingBase<float> { }
+namespace AES.Tools
+{
+    public sealed class FloatPropertyBinding : PropertyBindingBase<float> { }
+}

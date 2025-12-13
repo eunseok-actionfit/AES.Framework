@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using AES.Tools.View;
+using AES.Tools.UI_Regacy_.Core.View;
 
 
 namespace AES.Tools.UI.Core.Registry

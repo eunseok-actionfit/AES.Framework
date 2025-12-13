@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
 
 
-namespace AES.Tools.Commands
+namespace AES.Tools
 {
 
 

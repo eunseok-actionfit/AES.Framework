@@ -1,6 +1,7 @@
 using System;
 using System.Globalization;
 
+
 namespace AES.Tools
 {
     public static class TextFormatHelper

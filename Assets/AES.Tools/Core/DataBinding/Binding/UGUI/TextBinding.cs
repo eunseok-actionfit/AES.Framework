@@ -2,6 +2,7 @@ using System.Globalization;
 using TMPro;
 using UnityEngine;
 
+
 namespace AES.Tools
 {
     [RequireComponent(typeof(TMP_Text))]

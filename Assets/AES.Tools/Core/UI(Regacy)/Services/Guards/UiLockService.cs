@@ -1,7 +1,7 @@
 using System;
 
 
-namespace AES.Tools
+namespace AES.Tools.UI_Regacy_.Services.Guards
 {
     /// <summary>
     /// 화면 전환/로딩 등 동안 전체 UI 입력을 잠그는 전역 락.
@@ -11,7 +11,7 @@ namespace AES.Tools
         private int _count;
         public bool IsLocked => _count > 0;
         public void Lock() => _count++;
-        public void Unlock() => _count = Math.Max(0, _count - 1);
+        public void Unlock() => _count = System.Math.Max(0, _count - 1);
         public IDisposable ScopedLock() => new Scope(this);
         private sealed class Scope : IDisposable
         {

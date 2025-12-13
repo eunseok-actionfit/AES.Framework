@@ -1,9 +1,9 @@
 using System;
 using System.Globalization;
-using AES.Tools.Commands;
 using UnityEngine;
 
-namespace AES.Tools.Bindings
+
+namespace AES.Tools
 {
     [RequireComponent(typeof(UIClickCatcher))]
     public sealed class UIClickCatcherCommandBinding : ContextBindingBase

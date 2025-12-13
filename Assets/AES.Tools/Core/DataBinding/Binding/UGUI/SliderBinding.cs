@@ -3,7 +3,8 @@ using System.Globalization;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace AES.Tools.Bindings
+
+namespace AES.Tools
 {
     [RequireComponent(typeof(Slider))]
     public class SliderBinding : ContextBindingBase

@@ -5,7 +5,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 
-namespace AES.Tools
+namespace AES.Tools.SwitchToggle
 {
     [RequireComponent(typeof(Toggle))]
     public class SwitchToggle : MonoBehaviour

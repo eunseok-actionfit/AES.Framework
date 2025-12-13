@@ -1,7 +1,7 @@
 using UnityEngine;
 
 
-namespace AES.Tools.Util
+namespace AES.Tools.UI_Regacy_.Components.Transitions.Util
 {
     public static class Easing
     {

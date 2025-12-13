@@ -1,10 +1,11 @@
 #if UNITY_EDITOR && !ODIN_INSPECTOR
 using System.Collections.Generic;
-using AES.Tools.Editor;
+using AES.Tools.Editor.Util;
 using UnityEditor;
 using UnityEngine;
 
-namespace AES.Tools.Gui.Editor
+
+namespace AES.Tools.Editor
 {
     [CustomPropertyDrawer(typeof(AesFoldoutGroupAttribute))]
     public class AesFoldoutGroupDrawer : PropertyDrawer

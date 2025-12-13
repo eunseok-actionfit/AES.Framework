@@ -1,4 +1,4 @@
-namespace AES.Tools.TBC.CommandSystem
+namespace AES.Tools
 {
     public interface ICommandHistory
     {

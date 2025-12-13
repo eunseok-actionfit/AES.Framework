@@ -1,4 +1,4 @@
-namespace AES.Tools
+namespace AES.Tools.UI_Regacy_.Services.Guards
 {
     public interface IUiLockService
     {

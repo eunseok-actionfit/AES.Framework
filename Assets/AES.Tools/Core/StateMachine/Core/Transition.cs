@@ -1,6 +1,7 @@
 ﻿using System;
 
-namespace AES.Tools
+
+namespace AES.Tools.StateMachine.Core
 {
     public sealed class Transition : ITransition
     {

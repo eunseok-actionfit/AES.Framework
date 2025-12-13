@@ -2,14 +2,15 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace AES.Tools.Bindings
+
+namespace AES.Tools
 {
     [RequireComponent(typeof(ScrollRect))]
     public class VirtualizedListBinding : ContextBindingBase
     {
         [Header("Core")]
         [SerializeField] RectTransform content;
-        [SerializeField] GameObject itemPrefab;
+        [SerializeField] UnityEngine.GameObject itemPrefab;
 
         [Tooltip("뷰포트에 필요한 수 + 여유 버퍼")]
         [SerializeField] int extraBuffer = 2;
@@ -119,7 +120,7 @@ namespace AES.Tools.Bindings
         {
             if (_topSpacer == null)
             {
-                var go = new GameObject("TopSpacer", typeof(RectTransform));
+                var go = new UnityEngine.GameObject("TopSpacer", typeof(RectTransform));
                 go.transform.SetParent(content, false);
                 _topSpacer = go.AddComponent<LayoutElement>();
                 _topSpacer.preferredHeight = 0;
@@ -127,7 +128,7 @@ namespace AES.Tools.Bindings
 
             if (_bottomSpacer == null)
             {
-                var go = new GameObject("BottomSpacer", typeof(RectTransform));
+                var go = new UnityEngine.GameObject("BottomSpacer", typeof(RectTransform));
                 go.transform.SetParent(content, false);
                 _bottomSpacer = go.AddComponent<LayoutElement>();
                 _bottomSpacer.preferredHeight = 0;

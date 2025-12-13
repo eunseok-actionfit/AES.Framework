@@ -3,13 +3,14 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
-using AES.Tools.Commands;
 using UnityEditor;
 using UnityEngine;
+
+
 // ← 추가: GetDisplayName 확장 메서드
 
 
-namespace AES.Tools.Editor.DataBinding
+namespace AES.Tools.Editor
 {
     [CustomEditor(typeof(ContextBindingBase), true)]
     public class ContextBindingBaseEditor : UnityEditor.Editor

@@ -1,6 +1,7 @@
 using UnityEditor;
 
-namespace AES.Tools.Editor
+
+namespace AES.Tools.Editor.Util
 {
     /// <summary>
     /// 인스펙터 도움말 표시 기능을 메뉴에서 켜고 끄도록 관리한다.<br/>

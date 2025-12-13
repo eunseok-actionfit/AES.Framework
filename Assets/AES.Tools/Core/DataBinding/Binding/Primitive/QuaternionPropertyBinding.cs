@@ -1,3 +1,7 @@
 using UnityEngine;
 
-public sealed class QuaternionPropertyBinding : PropertyBindingBase<Quaternion> { }
+
+namespace AES.Tools
+{
+    public sealed class QuaternionPropertyBinding : PropertyBindingBase<Quaternion> { }
+}

@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
-namespace AES.Tools
+namespace AES.Tools.TBC.Diagnostics
 {
 #if UNITY_EDITOR
     /// <summary>

@@ -1,1 +1,4 @@
-public sealed class BoolPropertyBinding : PropertyBindingBase<bool> { }
+namespace AES.Tools
+{
+    public sealed class BoolPropertyBinding : PropertyBindingBase<bool> { }
+}
