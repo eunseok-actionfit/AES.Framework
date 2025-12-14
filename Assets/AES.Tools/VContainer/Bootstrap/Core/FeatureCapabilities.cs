@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 
+
 namespace AES.Tools.VContainer.Bootstrap.Framework
 {
     public interface IFeatureCapability { }
@@ -25,13 +26,12 @@ namespace AES.Tools.VContainer.Bootstrap.Framework
             return false;
         }
     }
-    
 
-    public interface IIapCatalogProvider : IFeatureCapability
+    public interface IIapRewardApplierCapability : IFeatureCapability
     {
-        IReadOnlyList<IAP.IapStoreCatalogEntry> GetCatalog();
+        IIapRewardApplier RewardApplier { get; }
     }
-
+    
     public interface IAnalyticsBootstrap : IFeatureCapability { void Initialize(); }
     public interface IRemoteConfigBootstrap : IFeatureCapability { Cysharp.Threading.Tasks.UniTask InitializeAsync(); }
 }

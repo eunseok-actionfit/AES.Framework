@@ -3,12 +3,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Google.Apis.Auth.OAuth2;
-using Google.Apis.Auth.OAuth2.Responses;
-using Google.Apis.Auth.OAuth2.Flows;
 using Google.Apis.Services;
 using Google.Apis.Sheets.v4;
 using Google.Apis.Sheets.v4.Data;
-using Google.Apis.Util.Store;
+
 public static class GoogleSheetsPrivateDownloader
 {
     public static IList<IList<object>> DownloadValuesOptimized(string spreadsheetId, string gid, string serviceAccountJson)
@@ -17,10 +15,9 @@ public static class GoogleSheetsPrivateDownloader
             throw new Exception($"Invalid gid '{gid}'. gid must be an integer.");
 
         var service = CreateService(serviceAccountJson);
-
         string title = ResolveSheetTitle(service, spreadsheetId, gidInt);
 
-        // 1) 헤더만 가져와서 마지막 컬럼 인덱스 찾기 (A1:ZZ1)
+        // 헤더만 가져와 마지막 컬럼 인덱스 찾기 (A1:ZZ1)
         var headerReq = service.Spreadsheets.Values.Get(spreadsheetId, $"{title}!A1:ZZ1");
         var headerVr = headerReq.Execute();
 
@@ -32,9 +29,9 @@ public static class GoogleSheetsPrivateDownloader
         if (lastColIndex < 0)
             return new List<IList<object>>();
 
-        string lastColLetter = ToA1Column(lastColIndex + 1); // 1-based col number
+        string lastColLetter = ToA1Column(lastColIndex + 1);
 
-        // 2) 실제 데이터는 A1:lastColLetter (end row 미지정 → API가 사용중인 행만 내려주는 편)
+        // 실제 데이터: A1:lastColLetter (end row 미지정)
         var dataReq = service.Spreadsheets.Values.Get(spreadsheetId, $"{title}!A1:{lastColLetter}");
         var dataVr = dataReq.Execute();
 
@@ -43,24 +40,16 @@ public static class GoogleSheetsPrivateDownloader
 
     private static SheetsService CreateService(string serviceAccountJson)
     {
-        // 1) FromJson은 1개 인자만
+       
         var specific = CredentialFactory.FromJson<ServiceAccountCredential>(serviceAccountJson);
-
-
-        // 2) GoogleCredential로 변환 후 스코프 적용
-        var googleCredential = specific
-            .ToGoogleCredential()
-            .CreateScoped(SheetsService.Scope.SpreadsheetsReadonly);
-
+        
         return new SheetsService(new BaseClientService.Initializer
         {
-            HttpClientInitializer = googleCredential,
+            HttpClientInitializer = specific,
             ApplicationName = "UnitySheetImporter"
         });
     }
 
-
-    // gid(=SheetId) -> 시트 탭 제목(title) 찾기
     private static string ResolveSheetTitle(SheetsService service, string spreadsheetId, int gid)
     {
         var req = service.Spreadsheets.Get(spreadsheetId);
@@ -85,14 +74,13 @@ public static class GoogleSheetsPrivateDownloader
         return -1;
     }
 
-    // col=1 -> A, 26 -> Z, 27 -> AA ...
     private static string ToA1Column(int col)
     {
         if (col <= 0) throw new ArgumentOutOfRangeException(nameof(col));
         string s = "";
         while (col > 0)
         {
-            col--; // 0-based
+            col--;
             s = (char)('A' + (col % 26)) + s;
             col /= 26;
         }

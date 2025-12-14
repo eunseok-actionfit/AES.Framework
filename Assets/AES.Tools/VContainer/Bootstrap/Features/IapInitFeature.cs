@@ -1,41 +1,69 @@
+using System.Linq;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.Purchasing;
 using VContainer;
 using VContainer.Unity;
-using AES.IAP;
-using AES.IAP.Unity;
 
 namespace AES.Tools.VContainer.Bootstrap.Framework
 {
+    [CreateAssetMenu(menuName = "Game/Bootstrap/Features/IAP Init Feature", fileName = "IapInitFeature")]
     public sealed class IapInitFeature : AppFeatureSO
     {
-        public override UniTask Initialize(LifetimeScope rootScope,  FeatureContext ctx)
-            => InitializeImpl(rootScope,  ctx);
+        [SerializeField] private string generatedFolder = "IAP/Generated";
+        [SerializeField] private bool enablePlayerPrefsTx = true;
 
-        private async static UniTask InitializeImpl(LifetimeScope rootScope,  FeatureContext ctx)
+        public override void Install(IContainerBuilder builder, in FeatureContext ctx)
         {
-            // “통합 없으면 조용히 스킵” 정책 유지: catalog가 비면 종료
-            if (!ctx.Capabilities.TryGetCapability<IIapCatalogProvider>(out var p))
+            builder.Register<IapFacade>(Lifetime.Singleton).As<IIap>();
+        }
+
+        public override async UniTask Initialize(LifetimeScope rootScope, FeatureContext ctx)
+        {
+            if (!ctx.Capabilities.TryGetCapability<IIapRewardApplierCapability>(out var cap) || cap?.RewardApplier == null)
             {
-                Debug.Log("[IAP] Disabled (no catalog capability).");
+                Debug.Log("[IAP] Disabled (no reward applier capability).");
                 return;
             }
 
-            var catalog = p.GetCatalog();
-            if (catalog == null || catalog.Count == 0)
+            var facade = rootScope.Container.Resolve<IIap>() as IapFacade;
+            if (facade == null) return;
+
+            IapDatabase db;
+            try
+            {
+                db = IapDatabaseLoader_Resources.Load(generatedFolder);
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogWarning($"[IAP] Disabled (load failed): {e.Message}");
+                return;
+            }
+
+            var entries = IapUnityCatalogBuilder.Build(db);
+            if (entries == null || entries.Count == 0)
             {
                 Debug.Log("[IAP] Disabled (catalog empty).");
                 return;
             }
 
-           
-            var tx = rootScope.Container.Resolve<IIapTransactionStore>();
-            var store = rootScope.Container.Resolve<UnityIapService>();
+            var products = entries
+                .Select(e => new ProductDefinition(e.StoreProductId, e.ProductType))
+                .ToList();
 
-            await tx.LoadAsync();
-            await store.InitializeAsync();
+            IIapTransactionStore tx = enablePlayerPrefsTx ? new TransactionStore_PlayerPrefs() : null;
+            if (tx != null) await tx.LoadAsync();
 
-            Debug.Log("[IAP] Ready");
+            var router = new PurchaseProcessorRouter();
+
+            var processor = new IapPurchaseProcessor(db, cap.RewardApplier, tx, verifier: null);
+            router.Target = processor;
+
+            var backend = new UnityIapBackend(products, router);
+            await backend.InitializeAsync();
+
+            facade.SetReady(db, backend);
+            IAP.Bind(facade);
         }
     }
 }

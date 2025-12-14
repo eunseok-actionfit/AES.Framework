@@ -1,20 +1,23 @@
 using UnityEngine;
 
 
-public sealed class AesListLabelAttribute : PropertyAttribute
+namespace AES.Tools
 {
-    public readonly string[] Members;
-    public readonly string Format;
-
-    public AesListLabelAttribute(string format, params string[] members)
+    public sealed class AesListLabelAttribute : PropertyAttribute
     {
-        Format = format;
-        Members = members;
-    }
+        public readonly string[] Members;
+        public readonly string Format;
 
-    public AesListLabelAttribute(params string[] members)
-    {
-        Members = members;
-        Format = null;
+        public AesListLabelAttribute(string format, params string[] members)
+        {
+            Format = format;
+            Members = members;
+        }
+
+        public AesListLabelAttribute(params string[] members)
+        {
+            Members = members;
+            Format = null;
+        }
     }
 }

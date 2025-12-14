@@ -22,21 +22,18 @@ namespace AES.IAP.Editor.Sheets
             IapProductJson,
             IapStoreProductJson,
             IapBundleContentJson,
+            EconomyValueJson,
+            IapLimitJson,
         }
 
         [Serializable]
         public sealed class SheetInfo
         {
+            [Tooltip("Sheet display name AND json file name (without .json)")]
             public string name;
+
             public string gid;
             public SheetMode mode;
-
-            [Header("JSON Output")]
-            [Tooltip("Output folder under Assets. Recommended: Assets/Resources/IAP/Generated")]
-            public UnityEngine.Object jsonOutputFolder;
-
-            [Tooltip("File name. ex: IapProduct.json")]
-            public string jsonFileName;
         }
     }
 }

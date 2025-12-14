@@ -1,4 +1,4 @@
-namespace AES.IAP.Data
+namespace AES.Tools
 {
     public static class IapPlatform
     {

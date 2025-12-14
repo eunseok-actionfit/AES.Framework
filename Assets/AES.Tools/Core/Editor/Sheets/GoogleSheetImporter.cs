@@ -4,7 +4,7 @@ using UnityEngine;
 
 public static class GoogleSheetImporter
 {
-    // 기존 TSV 파서는 유지(혹시 다른데서 쓰면)
+    // TSV 파서(유지)
     public static List<Dictionary<string, string>> ParseTSV(string raw)
     {
         string[] lines = raw.Split('\n').Where(line => !string.IsNullOrWhiteSpace(line)).ToArray();
@@ -21,6 +21,7 @@ public static class GoogleSheetImporter
 
         List<Dictionary<string, string>> rows = new();
 
+        // 규칙: 0=헤더, 1줄 스킵, 2줄부터 데이터
         for (int i = 2; i < lines.Length; i++)
         {
             string[] cols = lines[i].Split('\t');
@@ -30,10 +31,10 @@ public static class GoogleSheetImporter
             Dictionary<string, string> row = new();
             bool isCommentedRow = false;
 
-            for (int j = 0; j < headers.Length && j < cols.Length; j++)
+            for (int j = 0; j < headers.Length; j++)
             {
                 string key = headers[j];
-                string val = cols[j].Trim();
+                string val = (j < cols.Length ? cols[j] : "").Trim();
 
                 if (val.StartsWith("@"))
                     isCommentedRow = true;
@@ -49,7 +50,8 @@ public static class GoogleSheetImporter
     }
 
 #if UNITY_EDITOR
-    // Google Sheets Values(API) 결과를 TSV 없이 직접 파싱 (기존 규칙 유지: 0=헤더, 1줄 스킵, 2줄부터 데이터)
+    // Google Sheets Values(API) 결과 파싱
+    // 규칙 유지: 0=헤더, 1줄 스킵, 2줄부터 데이터, '@'로 시작하는 셀이 있으면 행 스킵
     public static List<Dictionary<string, string>> ParseValues(IList<IList<object>> values)
     {
         if (values == null || values.Count < 2)
@@ -58,7 +60,6 @@ public static class GoogleSheetImporter
             return new List<Dictionary<string, string>>();
         }
 
-        // 1) 헤더 (BOM 제거 + trim)
         var headers = values[0]
             .Select(v => (v?.ToString() ?? "").Trim().Replace("\uFEFF", ""))
             .ToList();
@@ -71,14 +72,11 @@ public static class GoogleSheetImporter
 
         var rows = new List<Dictionary<string, string>>();
 
-        // 2) 데이터는 3번째 줄부터 (index 2부터) - TSV 파서와 동일
         for (int i = 2; i < values.Count; i++)
         {
             var line = values[i];
-            if (line == null || line.Count == 0)
-                continue;
+            if (line == null || line.Count == 0) continue;
 
-            // 완전 빈 행 스킵
             bool allEmpty = true;
             for (int c = 0; c < line.Count; c++)
             {
@@ -105,7 +103,7 @@ public static class GoogleSheetImporter
                 row[key] = val;
             }
 
-            // headers는 있는데 값이 누락된 컬럼은 빈 문자열로 채워두면 이후 로직이 안정적
+            // 누락 컬럼은 빈 문자열로 채움
             for (int j = colCount; j < headers.Count; j++)
                 row[headers[j]] = "";
 

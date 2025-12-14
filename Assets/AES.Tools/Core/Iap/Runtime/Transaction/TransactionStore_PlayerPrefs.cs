@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
-namespace AES.IAP.Transaction
+
+namespace AES.Tools
 {
     /// <summary>
     /// Simple transaction store backed by PlayerPrefs.

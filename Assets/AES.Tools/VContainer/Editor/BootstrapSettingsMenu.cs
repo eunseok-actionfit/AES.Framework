@@ -11,7 +11,7 @@ namespace AES.Tools.VContainer
     {
         const string DefaultResourcesPath = "BootstrapSettings";
 
-        [MenuItem("AES/Game/Open Bootstrap Settings")]
+        [MenuItem("AES/Bootstrap/Open Bootstrap Settings")]
         static void OpenBootstrapSettings()
         {
             var settings = FindBootstrapSettingsAsset();

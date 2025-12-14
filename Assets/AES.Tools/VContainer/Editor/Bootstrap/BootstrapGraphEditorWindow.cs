@@ -34,7 +34,7 @@ namespace AES.Tools.VContainer.Bootstrap.Framework.Editor
         // cycle 노드 강조용
         private HashSet<string> cycleNodes;
 
-        [MenuItem("Tools/Bootstrap/Graph Window")]
+        [MenuItem("AES/Bootstrap/Graph Window")]
         public static void Open() => GetWindow<BootstrapGraphEditorWindow>("Bootstrap Graph");
 
         private void OnGUI()
@@ -75,7 +75,7 @@ namespace AES.Tools.VContainer.Bootstrap.Framework.Editor
 
             // plan(사이클/이슈)
             var profiles = graph.Profiles?.ToArray();
-            var profile = profiles is { Length: > 0 }
+            var profile = (profiles != null && profiles.Length > 0)
                 ? profiles[Mathf.Clamp(profileIndex, 0, profiles.Length - 1)]
                 : null;
 
@@ -84,11 +84,11 @@ namespace AES.Tools.VContainer.Bootstrap.Framework.Editor
 
             DrawToolbar(plan);
 
-            if (plan is { Issues: { Count: > 0 } })
+            if (plan != null && plan.Issues != null && plan.Issues.Count > 0)
                 EditorGUILayout.HelpBox(string.Join("\n", plan.Issues), MessageType.Error);
 
             scroll = EditorGUILayout.BeginScrollView(scroll);
-            if (list != null) list.DoLayoutList();
+            list.DoLayoutList();
             EditorGUILayout.EndScrollView();
 
             graphSO.ApplyModifiedProperties();
@@ -188,107 +188,109 @@ namespace AES.Tools.VContainer.Bootstrap.Framework.Editor
         {
             if (list != null) return;
 
-            list = new ReorderableList(graphSO, featuresProp, draggable: true, displayHeader: true, displayAddButton: true, displayRemoveButton: true)
+            list = new ReorderableList(graphSO, featuresProp, draggable: true, displayHeader: true, displayAddButton: true, displayRemoveButton: true);
+
+            list.drawHeaderCallback = rect =>
             {
-                drawHeaderCallback = rect =>
+                EditorGUI.LabelField(rect, "Features (drag to reorder)  |  Enabled toggle  |  Fix MissingFeature");
+            };
+
+            list.onAddDropdownCallback = (_, _) =>
+            {
+                BootstrapGraphQuickAdd.ShowCreateAddMenu(graph, profileIndex);
+                graphSO.Update();
+            };
+
+            list.onRemoveCallback = rl =>
+            {
+                if (EditorUtility.DisplayDialog("Remove Feature", "Remove selected entry from profile?", "Remove", "Cancel"))
                 {
-                    EditorGUI.LabelField(rect, "Features (drag to reorder)  |  Enabled toggle  |  Fix MissingFeature");
-                },
-                onAddDropdownCallback = (_, _) =>
-                {
-                    BootstrapGraphQuickAdd.ShowCreateAddMenu(graph, profileIndex);
-                    graphSO.Update();
-                },
-                onRemoveCallback = rl =>
-                {
-                    if (EditorUtility.DisplayDialog("Remove Feature", "Remove selected entry from profile?", "Remove", "Cancel"))
-                    {
-                        ReorderableList.defaultBehaviours.DoRemoveButton(rl);
-                        graphSO.ApplyModifiedProperties();
-                        EditorUtility.SetDirty(graph);
-                        AssetDatabase.SaveAssets();
-                    }
-                },
-                // ✅ 필터 row는 1줄(접기바), 나머지는 2줄
-                elementHeightCallback = index =>
-                {
-                    var entryProp = featuresProp.GetArrayElementAtIndex(index);
-                    var feature = entryProp.FindPropertyRelative("feature").objectReferenceValue as AppFeatureSO;
-                    var enabled = entryProp.FindPropertyRelative("enabled").boolValue;
-
-                    string key = GetRowKey(index, feature);
-                    bool pass = PassFilter(feature, enabled);
-                    bool revealed = revealFiltered.TryGetValue(key, out var r) && r;
-
-                    if (!pass && !revealed)
-                        return EditorGUIUtility.singleLineHeight + 6f;
-
-                    return EditorGUIUtility.singleLineHeight * 2f + 8f;
-                },
-                drawElementCallback = (rect, index, _, _) =>
-                {
-                    var entryProp = featuresProp.GetArrayElementAtIndex(index);
-                    var featureProp = entryProp.FindPropertyRelative("feature");
-                    var enabledProp = entryProp.FindPropertyRelative("enabled");
-                    var feature = featureProp.objectReferenceValue as AppFeatureSO;
-
-                    bool entryEnabled = enabledProp.boolValue;
-
-                    string key = GetRowKey(index, feature);
-                    bool pass = PassFilter(feature, entryEnabled);
-                    bool revealed = revealFiltered.TryGetValue(key, out var r) && r;
-
-                    rect.y += 2f;
-
-                    bool isMissing = feature && feature.GetType().Name == "MissingFeature";
-                    bool isCycle = feature && cycleNodes != null && cycleNodes.Contains(feature.Id);
-
-                    // 배경 강조
-                    if (isCycle)
-                        EditorGUI.DrawRect(new Rect(rect.x, rect.y - 1, rect.width, rect.height + 2), new Color(1f, 0.88f, 0.88f));
-
-                    if (isMissing)
-                        EditorGUI.DrawRect(new Rect(rect.x, rect.y - 1, rect.width, rect.height + 2), new Color(1f, 0.55f, 0.55f));
-
-                    // ===== 필터로 숨겨진 row: 접기바만 =====
-                    if (!pass && !revealed)
-                    {
-                        DrawFilteredCollapsedRow(rect, key, feature);
-                        return;
-                    }
-
-                    // ===== 펼친 row (필터 통과하지 못한 경우는 회색 처리 + 접기 가능) =====
-                    bool drawDisabled = !pass;
-
-                    if (drawDisabled)
-                    {
-                        var bar = new Rect(rect.x, rect.y, rect.width, EditorGUIUtility.singleLineHeight);
-                        var foldRect = new Rect(bar.x, bar.y, 18, bar.height);
-
-                        bool newReveal = EditorGUI.Foldout(foldRect, true, GUIContent.none, toggleOnLabelClick: false);
-                        if (!newReveal) revealFiltered[key] = false;
-
-                        // 나머지 영역에 "(filtered)" 표시
-                        using (new EditorGUI.DisabledScope(true))
-                        {
-                            EditorGUI.LabelField(new Rect(bar.x + 18, bar.y, bar.width - 18, bar.height),
-                                feature ? $"{feature.Id} (filtered)" : "<null feature> (filtered)",
-                                EditorStyles.miniLabel);
-                        }
-                    }
-
-                    using (new EditorGUI.DisabledScope(drawDisabled))
-                    {
-                        var prev = GUI.color;
-                        if (drawDisabled) GUI.color = new Color(1f, 1f, 1f, 0.35f);
-
-                        DrawNormalRow(rect, entryProp, featureProp, enabledProp, feature, isMissing);
-
-                        GUI.color = prev;
-                    }
+                    ReorderableList.defaultBehaviours.DoRemoveButton(rl);
+                    graphSO.ApplyModifiedProperties();
+                    EditorUtility.SetDirty(graph);
+                    AssetDatabase.SaveAssets();
                 }
             };
 
+            // ✅ 필터 row는 1줄(접기바), 나머지는 2줄
+            list.elementHeightCallback = index =>
+            {
+                var entryProp = featuresProp.GetArrayElementAtIndex(index);
+                var feature = entryProp.FindPropertyRelative("feature").objectReferenceValue as AppFeatureSO;
+                var enabled = entryProp.FindPropertyRelative("enabled").boolValue;
+
+                string key = GetRowKey(index, feature);
+                bool pass = PassFilter(feature, enabled);
+                bool revealed = revealFiltered.TryGetValue(key, out var r) && r;
+
+                if (!pass && !revealed)
+                    return EditorGUIUtility.singleLineHeight + 6f;
+
+                return EditorGUIUtility.singleLineHeight * 2f + 8f;
+            };
+
+            list.drawElementCallback = (rect, index, _, _) =>
+            {
+                var entryProp = featuresProp.GetArrayElementAtIndex(index);
+                var featureProp = entryProp.FindPropertyRelative("feature");
+                var enabledProp = entryProp.FindPropertyRelative("enabled");
+                var feature = featureProp.objectReferenceValue as AppFeatureSO;
+
+                bool entryEnabled = enabledProp.boolValue;
+
+                string key = GetRowKey(index, feature);
+                bool pass = PassFilter(feature, entryEnabled);
+                bool revealed = revealFiltered.TryGetValue(key, out var r) && r;
+
+                rect.y += 2f;
+
+                bool isMissing = feature && feature.GetType().Name == "MissingFeature";
+                bool isCycle = feature && cycleNodes != null && cycleNodes.Contains(feature.Id);
+
+                // 배경 강조
+                if (isCycle)
+                    EditorGUI.DrawRect(new Rect(rect.x, rect.y - 1, rect.width, rect.height + 2), new Color(1f, 0.88f, 0.88f));
+
+                if (isMissing)
+                    EditorGUI.DrawRect(new Rect(rect.x, rect.y - 1, rect.width, rect.height + 2), new Color(1f, 0.55f, 0.55f));
+
+                // ===== 필터로 숨겨진 row: 접기바만 =====
+                if (!pass && !revealed)
+                {
+                    DrawFilteredCollapsedRow(rect, key, feature);
+                    return;
+                }
+
+                // ===== 펼친 row (필터 통과하지 못한 경우는 회색 처리 + 접기 가능) =====
+                bool drawDisabled = !pass && revealed;
+
+                if (drawDisabled)
+                {
+                    var bar = new Rect(rect.x, rect.y, rect.width, EditorGUIUtility.singleLineHeight);
+                    var foldRect = new Rect(bar.x, bar.y, 18, bar.height);
+
+                    bool newReveal = EditorGUI.Foldout(foldRect, true, GUIContent.none, toggleOnLabelClick: false);
+                    if (!newReveal) revealFiltered[key] = false;
+
+                    // 나머지 영역에 "(filtered)" 표시
+                    using (new EditorGUI.DisabledScope(true))
+                    {
+                        EditorGUI.LabelField(new Rect(bar.x + 18, bar.y, bar.width - 18, bar.height),
+                            feature ? $"{feature.Id} (filtered)" : "<null feature> (filtered)",
+                            EditorStyles.miniLabel);
+                    }
+                }
+
+                using (new EditorGUI.DisabledScope(drawDisabled))
+                {
+                    var prev = GUI.color;
+                    if (drawDisabled) GUI.color = new Color(1f, 1f, 1f, 0.35f);
+
+                    DrawNormalRow(rect, entryProp, featureProp, enabledProp, feature, isMissing);
+
+                    GUI.color = prev;
+                }
+            };
         }
 
         private void DrawFilteredCollapsedRow(Rect rect, string key, AppFeatureSO feature)
@@ -337,7 +339,7 @@ namespace AES.Tools.VContainer.Bootstrap.Framework.Editor
             var order = feature.Order;
             var cat = BootstrapGraphQuickAdd.GetCategory(feature.GetType());
 
-            bool hasMissingDep = HasMissingDepsInProfile(feature.DependsOn);
+            bool hasMissingDep = HasMissingDepsInProfile(id, feature.DependsOn);
             if (hasMissingDep)
                 EditorGUI.LabelField(new Rect(r1.x, r1.y, 70, r1.height), "MISSING", EditorStyles.miniBoldLabel);
 
@@ -383,7 +385,6 @@ namespace AES.Tools.VContainer.Bootstrap.Framework.Editor
                 Selection.activeObject = feature;
         }
 
-        // ReSharper disable Unity.PerformanceAnalysis
         private void DrawToolbar(FeaturePlan plan)
         {
             using (new EditorGUILayout.HorizontalScope(EditorStyles.toolbar))
@@ -391,7 +392,7 @@ namespace AES.Tools.VContainer.Bootstrap.Framework.Editor
                 if (GUILayout.Button("Validate", EditorStyles.toolbarButton, GUILayout.Width(80)))
                 {
                     var profiles = graph.Profiles?.ToArray();
-                    var profile = profiles is { Length: > 0 } ? profiles[profileIndex] : null;
+                    var profile = (profiles != null && profiles.Length > 0) ? profiles[profileIndex] : null;
                     var issues = FeatureValidators.ValidateProfile(profile);
                     if (issues.Count == 0) Debug.Log("[BootstrapGraph] No issues.");
                     else foreach (var s in issues) Debug.LogError($"[BootstrapGraph] {s}");
@@ -401,7 +402,6 @@ namespace AES.Tools.VContainer.Bootstrap.Framework.Editor
                 {
                     BootstrapGraphInspector.AutoSortProfile(graph, profileIndex);
                     graphSO.Update();
-
                     
                     list = null;
                     boundFeaturesProp = null;
@@ -409,7 +409,6 @@ namespace AES.Tools.VContainer.Bootstrap.Framework.Editor
 
                     Repaint();
                 }
-                
 
                 GUILayout.Space(10);
 
@@ -418,7 +417,7 @@ namespace AES.Tools.VContainer.Bootstrap.Framework.Editor
 
                 GUILayout.FlexibleSpace();
 
-                if (plan is { HasCycle: true })
+                if (plan != null && plan.HasCycle)
                     GUILayout.Label("CYCLE", EditorStyles.toolbarButton);
             }
         }
@@ -442,13 +441,13 @@ namespace AES.Tools.VContainer.Bootstrap.Framework.Editor
 
             if (showOnlyIssues && feature)
             {
-                if (!HasMissingDepsInProfile(feature.DependsOn)) return false;
+                if (!HasMissingDepsInProfile(feature.Id, feature.DependsOn)) return false;
             }
 
             return true;
         }
 
-        private bool HasMissingDepsInProfile(string[] deps)
+        private bool HasMissingDepsInProfile(string selfId, string[] deps)
         {
             if (deps == null || deps.Length == 0) return false;
 
@@ -533,8 +532,9 @@ namespace AES.Tools.VContainer.Bootstrap.Framework.Editor
             if (plan == null || plan.Issues == null) return null;
 
             string line = null;
-            foreach (string s in plan.Issues)
+            for (int i = 0; i < plan.Issues.Count; i++)
             {
+                var s = plan.Issues[i];
                 if (s != null && s.StartsWith("Cycle path:", StringComparison.OrdinalIgnoreCase))
                 {
                     line = s;

@@ -1,19 +1,19 @@
-using System;
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
-using UnityEngine.Purchasing;
 
-namespace AES.IAP
+namespace AES.Tools
 {
     /// <summary>Low-level store backend (Unity IAP). Uses Store ProductId (=SKU).</summary>
     public interface IIapPurchaseBackend
     {
-        UniTask PurchaseAsync(string storeProductId);
+        UniTask InitializeAsync();
+        UniTask PurchaseAsync(string sku);
+        UniTask RestoreAsync();
     }
 
     /// <summary>
     /// Receives purchases from the store backend and decides whether the store purchase should be confirmed.
-    /// Return true => confirmed (consumed). Return false => keep pending (user can retry).
+    /// Return true => confirm. Return false => keep pending.
     /// </summary>
     public interface IIapPurchaseProcessor
     {
@@ -23,7 +23,7 @@ namespace AES.IAP
     /// <summary>Applies rewards into the game economy. Game must implement this.</summary>
     public interface IIapRewardApplier
     {
-        UniTask ApplyAsync(IReadOnlyList<Data.IapBundleContentRow> rewards);
+        UniTask ApplyAsync(IReadOnlyList<IapBundleContentRow> rewards);
     }
 
     /// <summary>Optional server-side receipt verification.</summary>
@@ -55,7 +55,15 @@ namespace AES.IAP
         public string StoreProductId; // SKU
         public string TransactionId;
         public string UnityReceipt;
-        public ProductType ProductType;
+        // ProductType은 v5 주문모델에서 안정적으로 못 구해서 제거/미사용 권장
+    }
+
+    /// <summary>Facade interface exposed to game UI.</summary>
+    public interface IIap
+    {
+        bool IsReady { get; }
+        UniTask PurchaseByProductKeyAsync(string productKey);
+        UniTask RestoreAsync();
     }
 
     /// <summary>
@@ -65,7 +73,7 @@ namespace AES.IAP
     public sealed class IapStoreCatalogEntry
     {
         public string StoreProductId;
-        public ProductType ProductType;
+        public UnityEngine.Purchasing.ProductType ProductType;
         public bool VerifyOnServer;
     }
 }

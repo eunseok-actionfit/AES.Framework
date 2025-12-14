@@ -24,7 +24,7 @@ namespace AES.Tools.VContainer.Bootstrap.Framework.Features
         [SerializeField, Min(0)] private int interstitialMaxPerSession = 10;
 
         [Header("Runtime Flags")]
-        [SerializeField] private bool runtimeAdsDisabled = false;
+        [SerializeField] private bool runtimeAdsDisabled;
 
         [Header("Test Device CSV")]
         [SerializeField] private TextAsset testDeviceCSV;

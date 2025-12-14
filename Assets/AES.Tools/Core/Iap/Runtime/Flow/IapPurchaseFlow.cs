@@ -1,8 +1,8 @@
 using System;
 using Cysharp.Threading.Tasks;
-using AES.IAP.Data;
 
-namespace AES.IAP.Flow
+
+namespace AES.Tools
 {
     /// <summary>
     /// High-level purchase flow.

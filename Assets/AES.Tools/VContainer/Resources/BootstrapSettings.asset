@@ -13,6 +13,8 @@ MonoBehaviour:
   m_Name: BootstrapSettings
   m_EditorClassIdentifier: AES.Tools.VContainer::MyGame.BootstrapSettings
   rootLifetimeScope: {fileID: 3810769011494029179, guid: c40849478e3c14c9885c49123dd834f2, type: 3}
+  graph: {fileID: 11400000, guid: f25e0498ef8ec4fef95f30d77fd19aa7, type: 2}
+  profile: Dev
   autoRunRootLifetimeScope: 1
   removeClonePostfix: 1
   firstSceneName: Scene/Home

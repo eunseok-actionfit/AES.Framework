@@ -2,9 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine.Purchasing;
-using AES.IAP.Data;
 
-namespace AES.IAP.Unity
+
+namespace AES.Tools
 {
     public static class IapUnityCatalogBuilder
     {
