@@ -9,7 +9,9 @@
     "Unity.InputSystem",
     "Unity.TextMeshPro",
     "AYellowpaper.SerializedCollections",
-    "MaxSdk.Scripts"
+    "MaxSdk.Scripts",
+    "Unity.Purchasing",
+    "Unity.Services.Core"
   ],
   "includePlatforms": [],
   "excludePlatforms": [],

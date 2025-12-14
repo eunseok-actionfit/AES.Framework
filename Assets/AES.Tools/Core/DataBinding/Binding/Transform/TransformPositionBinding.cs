@@ -33,12 +33,12 @@ namespace AES.Tools
         public AnimationCurve tweenCurve = AnimationCurve.Linear(0f, 0f, 1f, 1f);
 
         [Header("Distance Warp")]
-        [AesLabelText("멀리 떨어져 있으면 워프")]
+        [AesLabel("멀리 떨어져 있으면 워프")]
         public bool useDistanceWarp = false;
 
         [AesShowIf("useDistanceWarp")]
         [Min(0f)]
-        [AesLabelText("워프로 처리할 최소 거리")]
+        [AesLabel("워프로 처리할 최소 거리")]
         public float warpDistance = 10f;
 
         [Header("Events")]
@@ -49,7 +49,7 @@ namespace AES.Tools
 
         [Header("Duplicate Target Filter")]
         [Min(0f)]
-        [AesLabelText("같은 타겟으로 간주할 거리(이 값 이내면 같은 타겟)")]
+        [AesLabel("같은 타겟으로 간주할 거리(이 값 이내면 같은 타겟)")]
         public float sameTargetEpsilon = 0.0005f;
 
         private Tween _activeTween;

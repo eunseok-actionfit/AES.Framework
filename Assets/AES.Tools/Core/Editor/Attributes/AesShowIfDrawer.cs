@@ -1,105 +1,47 @@
-#if UNITY_EDITOR && !ODIN_INSPECTOR
+#if UNITY_EDITOR
 using UnityEditor;
 using UnityEngine;
-
 
 namespace AES.Tools.Editor
 {
     [CustomPropertyDrawer(typeof(AesShowIfAttribute))]
-    public class AesShowIfDrawer : PropertyDrawer
-    {
-        public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
-        {
-            var attr = (AesShowIfAttribute)attribute;
-            var target = property.serializedObject.targetObject;
-
-            if (!AesConditionEvaluator.EvaluateRaw(target, attr))
-                return;
-
-            EditorGUI.PropertyField(position, property, label, true);
-        }
-
-        public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
-        {
-            var attr = (AesShowIfAttribute)attribute;
-            var target = property.serializedObject.targetObject;
-
-            return AesConditionEvaluator.EvaluateRaw(target, attr)
-                ? EditorGUI.GetPropertyHeight(property, label, true)
-                : 0f;
-        }
-    }
-
-    [CustomPropertyDrawer(typeof(AesHideIfAttribute))]
-    public class AesHideIfDrawer : PropertyDrawer
-    {
-        public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
-        {
-            var attr = (AesHideIfAttribute)attribute;
-            var target = property.serializedObject.targetObject;
-
-            if (AesConditionEvaluator.EvaluateRaw(target, attr))
-                return;
-
-            EditorGUI.PropertyField(position, property, label, true);
-        }
-
-        public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
-        {
-            var attr = (AesHideIfAttribute)attribute;
-            var target = property.serializedObject.targetObject;
-
-            return AesConditionEvaluator.EvaluateRaw(target, attr)
-                ? 0f
-                : EditorGUI.GetPropertyHeight(property, label, true);
-        }
-    }
-
     [CustomPropertyDrawer(typeof(AesEnableIfAttribute))]
-    public class AesEnableIfDrawer : PropertyDrawer
+    public class AesConditionDrawer : PropertyDrawer
     {
-        public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
+        public override void OnGUI(Rect pos, SerializedProperty prop, GUIContent label)
         {
-            var attr = (AesEnableIfAttribute)attribute;
-            var target = property.serializedObject.targetObject;
+            var attr = (AesConditionAttribute)attribute;
+            var target = prop.serializedObject.targetObject;
 
-            bool cond = AesConditionEvaluator.EvaluateRaw(target, attr);
+            bool cond = AesConditionUtil.Evaluate(target, attr.Member);
+            if (attr.Invert) cond = !cond;
 
-            bool prev = GUI.enabled;
-            GUI.enabled = prev && cond;
-
-            EditorGUI.PropertyField(position, property, label, true);
-
-            GUI.enabled = prev;
+            if (attribute is AesShowIfAttribute)
+            {
+                if (!cond) return;
+                EditorGUI.PropertyField(pos, prop, label, true);
+            }
+            else
+            {
+                bool prev = GUI.enabled;
+                GUI.enabled = prev && cond;
+                EditorGUI.PropertyField(pos, prop, label, true);
+                GUI.enabled = prev;
+            }
         }
 
-        public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
+        public override float GetPropertyHeight(SerializedProperty prop, GUIContent label)
         {
-            return EditorGUI.GetPropertyHeight(property, label, true);
-        }
-    }
+            var attr = (AesConditionAttribute)attribute;
+            var target = prop.serializedObject.targetObject;
 
-    [CustomPropertyDrawer(typeof(AesDisableIfAttribute))]
-    public class AesDisableIfDrawer : PropertyDrawer
-    {
-        public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
-        {
-            var attr = (AesDisableIfAttribute)attribute;
-            var target = property.serializedObject.targetObject;
+            bool cond = AesConditionUtil.Evaluate(target, attr.Member);
+            if (attr.Invert) cond = !cond;
 
-            bool cond = AesConditionEvaluator.EvaluateRaw(target, attr);
+            if (attribute is AesShowIfAttribute && !cond)
+                return 0f;
 
-            bool prev = GUI.enabled;
-            GUI.enabled = prev && !cond;
-
-            EditorGUI.PropertyField(position, property, label, true);
-
-            GUI.enabled = prev;
-        }
-
-        public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
-        {
-            return EditorGUI.GetPropertyHeight(property, label, true);
+            return EditorGUI.GetPropertyHeight(prop, label, true);
         }
     }
 }

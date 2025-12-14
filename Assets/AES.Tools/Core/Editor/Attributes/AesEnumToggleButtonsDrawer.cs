@@ -1,4 +1,4 @@
-#if UNITY_EDITOR && !ODIN_INSPECTOR
+
 using UnityEditor;
 using UnityEngine;
 
@@ -41,4 +41,3 @@ namespace AES.Tools.Editor
         }
     }
 }
-#endif

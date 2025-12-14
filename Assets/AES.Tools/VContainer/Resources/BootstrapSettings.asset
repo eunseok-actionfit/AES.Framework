@@ -15,4 +15,4 @@ MonoBehaviour:
   rootLifetimeScope: {fileID: 3810769011494029179, guid: c40849478e3c14c9885c49123dd834f2, type: 3}
   autoRunRootLifetimeScope: 1
   removeClonePostfix: 1
-  firstSceneName: 
+  firstSceneName: Scene/Home

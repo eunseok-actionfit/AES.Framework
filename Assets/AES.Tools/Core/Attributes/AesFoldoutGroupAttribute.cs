@@ -1,16 +1,16 @@
-using System;
 using UnityEngine;
 
 namespace AES.Tools
 {
-    [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = false)]
-    public class AesFoldoutGroupAttribute : PropertyAttribute
+    public sealed class AesFoldoutGroupAttribute : PropertyAttribute
     {
-        public readonly string GroupName;
+        public readonly string Name;
+        public readonly bool DefaultExpanded;
 
-        public AesFoldoutGroupAttribute(string groupName)
+        public AesFoldoutGroupAttribute(string name, bool defaultExpanded = true)
         {
-            GroupName = groupName;
+            Name = name;
+            DefaultExpanded = defaultExpanded;
         }
     }
 }

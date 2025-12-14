@@ -48,9 +48,5 @@ MonoBehaviour:
     TypeName: 
   autoRun: 1
   autoInjectGameObjects: []
-  config: {fileID: 11400000, guid: 1fbe23969bbf74469b6f6dfad62a142c, type: 2}
-  installers:
-  - {fileID: 11400000, guid: 48e972fe3cd024867a06e757f24b6652, type: 2}
-  - {fileID: 11400000, guid: 8882c1e6fe3364e22b34ac0ab421c5a6, type: 2}
-  - {fileID: 11400000, guid: 07f169a4c05244de592fc9d821100ef1, type: 2}
-  - {fileID: 11400000, guid: a3b7932533d9b4f5b989023fa5a9684b, type: 2}
+  graph: {fileID: 11400000, guid: f25e0498ef8ec4fef95f30d77fd19aa7, type: 2}
+  profile: Dev

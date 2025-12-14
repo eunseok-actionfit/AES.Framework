@@ -1,50 +1,27 @@
-using AES.Tools.VContainer.Bootstrap;
-using AES.Tools.VContainer.Installer;
-using AES.Tools.VContainer.Installer.App;
+using AES.Tools.VContainer.Bootstrap.Framework;
 using UnityEngine;
 using VContainer;
 using VContainer.Unity;
 
-
 namespace AES.Tools.VContainer.Scope
 {
-    [DefaultExecutionOrder(-1000)]
     public sealed class AppLifetimeScope : LifetimeScope
     {
-        [SerializeField] private AppConfig config;
-        
-        [Header("Game Installers (게임에서 채우는 슬롯)")]
-        [SerializeField] ScriptableInstaller[] installers;
+        [SerializeField] private BootstrapGraph graph;
+        [SerializeField] private string profile = "Dev";
+
         protected override void Configure(IContainerBuilder builder)
         {
-            if (!config)
-                throw new System.NullReferenceException("AppConfig 누락");
-
-            builder.RegisterInstance(config);
-            
-            if (installers != null)
-            {
-                foreach (var installer in installers)
-                {
-                    if (!installer) continue;
-                    installer.Install(builder);
-                }
-            }
-
-            // Core (엔진 + 앱)
-            new CoreEngineInstaller().Install(builder);
-            // Scene Flow (앱)
-            new SceneFlowInstaller().Install(builder);
-
-            // Assets (엔진)
-            new AssetSystemInstaller().Install(builder);
-            
-            // Save / Load (앱)
-            new SaveAndLoadInstaller(config.storageProfile).Install(builder);
-            
-            
-            // UX (앱 UX)
-            new UXServicesInstaller().Install(builder);
+            BootstrapRunner.InstallAll(
+                graph, profile,
+                builder,
+                Application.platform,
+#if UNITY_EDITOR
+                true
+#else
+                false
+#endif
+            );
         }
     }
 }
