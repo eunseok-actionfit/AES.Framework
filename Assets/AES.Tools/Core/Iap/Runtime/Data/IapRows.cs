@@ -20,6 +20,7 @@ namespace AES.Tools
         public bool VerifyOnServer;
         public bool IsVisible;
         public int SortOrder;
+        public string DisplayKey;
         public string AnalyticsId;
         public string Note;
 
@@ -40,8 +41,7 @@ namespace AES.Tools
     public sealed class IapBundleContentRow
     {
         public string BundleKey;   // = ProductKey
-        public string ItemType;    // Coin/Booster/RemoveAds/UnlimitedLivesMin
-        public string ItemId;      // Booster id
+        public string ItemType;    // Coin/Boosters/RemoveAds/UnlimitedLivesMin
         public int Amount;
         public bool IsMain;
         public int DisplayOrder;

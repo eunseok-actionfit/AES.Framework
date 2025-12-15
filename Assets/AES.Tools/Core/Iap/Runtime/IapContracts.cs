@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 
@@ -6,6 +7,8 @@ namespace AES.Tools
     /// <summary>Low-level store backend (Unity IAP). Uses Store ProductId (=SKU).</summary>
     public interface IIapPurchaseBackend
     {
+        
+        
         UniTask InitializeAsync();
         UniTask PurchaseAsync(string sku);
         UniTask RestoreAsync();
@@ -62,6 +65,19 @@ namespace AES.Tools
     public interface IIap
     {
         bool IsReady { get; }
+
+        //  ShopViewModel이 DB 직접 DI 안 받고 여기서 접근
+        IapDatabase Database { get; }
+
+        // IAP 준비 완료 시점(= SetReady 직후)
+        event Action Ready;
+
+        // 가격 갱신 (productKey 기준으로 쏨)
+        event Action<string, string> PriceUpdatedByProductKey;
+
+        // 현재 캐시된 가격 조회
+        bool TryGetLocalizedPriceByProductKey(string productKey, out string priceText);
+
         UniTask PurchaseByProductKeyAsync(string productKey);
         UniTask RestoreAsync();
     }

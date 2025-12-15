@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 #if ENABLED_UNITY_MATHEMATICS
 using Unity.Mathematics;
 #endif
@@ -93,6 +94,88 @@ namespace AES.Tools
 
             return number + suffix;
         }
+        
+        /// <summary>
+        /// TimeSpan → "y h m s" 형식
+        /// 예)
+        ///  59s        -> "59s"
+        ///  61s        -> "1m 1s"
+        ///  3661s      -> "1h 1m 1s"
+        ///  31536001s  -> "1y 1s"
+        /// </summary>
+        public static string ToSMHY(this TimeSpan time, bool includeZeroUnits = false)
+        {
+            if (time <= TimeSpan.Zero)
+                return "0s";
+
+            const int DaysPerYear = 365;
+
+            long totalSeconds = (long)Math.Floor(time.TotalSeconds);
+
+            long secondsPerMinute = 60;
+            long secondsPerHour   = 60 * secondsPerMinute;
+            long secondsPerDay    = 24 * secondsPerHour;
+            long secondsPerYear   = DaysPerYear * secondsPerDay;
+
+            long years   = totalSeconds / secondsPerYear;
+            totalSeconds %= secondsPerYear;
+
+            long hours   = totalSeconds / secondsPerHour;
+            totalSeconds %= secondsPerHour;
+
+            long minutes = totalSeconds / secondsPerMinute;
+            long seconds = totalSeconds % secondsPerMinute;
+
+            System.Text.StringBuilder sb = new(32);
+
+            void Append(long v, string unit)
+            {
+                if (!includeZeroUnits && v == 0) return;
+                if (sb.Length > 0) sb.Append(' ');
+                sb.Append(v).Append(unit);
+            }
+
+            Append(years, "y");
+            Append(hours, "h");
+            Append(minutes, "m");
+
+            if (sb.Length == 0 || includeZeroUnits || seconds != 0)
+                Append(seconds, "s");
+
+            return sb.ToString();
+        }
+
+        // 초 기반 오버로드
+        public static string ToSMHY(this long seconds, bool includeZeroUnits = false)
+            => TimeSpan.FromSeconds(seconds).ToSMHY(includeZeroUnits);
+
+        public static string ToSMHY(this int seconds, bool includeZeroUnits = false)
+            => ((long)seconds).ToSMHY(includeZeroUnits);
+
+        public static string ToSMHY(this float seconds, bool includeZeroUnits = false)
+            => TimeSpan.FromSeconds(seconds).ToSMHY(includeZeroUnits);
+
+        public static string ToSMHY(this double seconds, bool includeZeroUnits = false)
+            => TimeSpan.FromSeconds(seconds).ToSMHY(includeZeroUnits);
+        
+        /// <summary>
+        /// 분(minute) → "y h m s"
+        /// 예)
+        ///  1      -> "1m"
+        ///  61     -> "1h 1m"
+        ///  1500   -> "1d 1h"
+        /// </summary>
+        public static string MinutesToSMHY(this int minutes, bool includeZeroUnits = false)
+            => TimeSpan.FromMinutes(minutes).ToSMHY(includeZeroUnits);
+
+        public static string MinutesToSMHY(this long minutes, bool includeZeroUnits = false)
+            => TimeSpan.FromMinutes(minutes).ToSMHY(includeZeroUnits);
+
+        public static string MinutesToSMHY(this float minutes, bool includeZeroUnits = false)
+            => TimeSpan.FromMinutes(minutes).ToSMHY(includeZeroUnits);
+
+        public static string MinutesToSMHY(this double minutes, bool includeZeroUnits = false)
+            => TimeSpan.FromMinutes(minutes).ToSMHY(includeZeroUnits);
 
     }
 }

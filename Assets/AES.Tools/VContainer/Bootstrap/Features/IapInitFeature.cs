@@ -16,6 +16,16 @@ namespace AES.Tools.VContainer.Bootstrap.Framework
         public override void Install(IContainerBuilder builder, in FeatureContext ctx)
         {
             builder.Register<IapFacade>(Lifetime.Singleton).As<IIap>();
+            
+            try
+            {
+                var db = IapDatabaseLoader_Resources.Load(generatedFolder);
+                builder.RegisterInstance(db).As<IapDatabase>();
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogWarning($"[IAP] DB not registered (load failed): {e.Message}");
+            }
         }
 
         public override async UniTask Initialize(LifetimeScope rootScope, FeatureContext ctx)

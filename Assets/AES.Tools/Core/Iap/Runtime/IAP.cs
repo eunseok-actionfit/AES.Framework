@@ -11,6 +11,26 @@ namespace AES.Tools
 
         public static bool IsBound => _service != null;
         public static bool IsReady => _service?.IsReady ?? false;
+        
+        public static IapDatabase Database => _service?.Database;
+        
+        public static event Action Ready
+        {
+            add { if (_service != null) _service.Ready += value; }
+            remove { if (_service != null) _service.Ready -= value; }
+        }
+
+        public static event Action<string, string> PriceUpdatedByProductKey
+        {
+            add { if (_service != null) _service.PriceUpdatedByProductKey += value; }
+            remove { if (_service != null) _service.PriceUpdatedByProductKey -= value; }
+        }
+
+        public static bool TryGetLocalizedPriceByProductKey(string productKey, out string priceText)
+        {
+            priceText = null;
+            return _service != null && _service.TryGetLocalizedPriceByProductKey(productKey, out priceText);
+        }
 
         public static UniTask PurchaseByProductKeyAsync(string productKey)
         {

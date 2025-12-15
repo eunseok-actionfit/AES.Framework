@@ -13,6 +13,8 @@ namespace AES.Tools
         public event Action<Order> OnConfirmed;
         public event Action<FailedOrder> OnFailed;
         public event Action<DeferredOrder> OnDeferred;
+        
+        public event Action<string, string> PriceUpdated; 
 
         public UnityIapBackend(
             List<ProductDefinition> products,
@@ -27,8 +29,11 @@ namespace AES.Tools
             _store.OnPurchaseFailed += f => OnFailed?.Invoke(f);
             _store.OnPurchaseDeferred += d => OnDeferred?.Invoke(d);
 
+            _store.OnProductsFetched += OnProductsFetched;
+            
             _store.FetchProducts(products);
         }
+        
 
         public UniTask InitializeAsync()
             => _store.Connect().AsUniTask();
@@ -69,6 +74,25 @@ namespace AES.Tools
             }
 
             _store.ConfirmPurchase(order);
+        }
+        
+        private void OnProductsFetched(List<Product> products)
+        {
+            if (products == null) return;
+
+            foreach (var p in products)
+            {
+                if (p == null) continue;
+
+                var sku = p.definition?.id;
+                if (string.IsNullOrEmpty(sku)) continue;
+
+                // Unity IAP가 지역/통화에 맞춰 내려주는 문자열
+                var priceText = p.metadata?.localizedPriceString ?? string.Empty;
+
+                if (!string.IsNullOrEmpty(priceText))
+                    PriceUpdated?.Invoke(sku, priceText);
+            }
         }
     }
 }
