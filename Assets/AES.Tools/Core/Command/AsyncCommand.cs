@@ -13,13 +13,13 @@ namespace AES.Tools
     /// </summary>
     public class AsyncCommand : IAsyncCommand
     {
-        private readonly Func<object, Task> _executeAsync;
+        private readonly Func<object, UniTask> _executeAsync;
         private readonly Func<object, bool> _canExecute;
 
         public event Action CanExecuteChanged = delegate { };
 
         public AsyncCommand(
-            Func<object, Task> executeAsync,
+            Func<object, UniTask> executeAsync,
             Func<object, bool> canExecute = null)
         {
             _executeAsync = executeAsync ?? throw new ArgumentNullException(nameof(executeAsync));
