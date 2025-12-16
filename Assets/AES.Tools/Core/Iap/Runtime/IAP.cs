@@ -25,6 +25,12 @@ namespace AES.Tools
             add { if (_service != null) _service.PriceUpdatedByProductKey += value; }
             remove { if (_service != null) _service.PriceUpdatedByProductKey -= value; }
         }
+        
+        public static event Action<string> PurchaseConfirmedByProductKey
+        {
+            add { if (_service != null) _service.PurchaseConfirmedByProductKey += value; }
+            remove { if (_service != null) _service.PurchaseConfirmedByProductKey -= value; }
+        }
 
         public static bool TryGetLocalizedPriceByProductKey(string productKey, out string priceText)
         {

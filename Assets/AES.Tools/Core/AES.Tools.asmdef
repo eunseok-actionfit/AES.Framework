@@ -9,9 +9,11 @@
     "Unity.InputSystem",
     "Unity.TextMeshPro",
     "AYellowpaper.SerializedCollections",
+    "VContainer",
     "MaxSdk.Scripts",
     "Unity.Purchasing",
-    "Unity.Services.Core"
+    "Unity.Services.Core",
+    "SingularSDK"
   ],
   "includePlatforms": [],
   "excludePlatforms": [],
@@ -25,8 +27,34 @@
       "name": "com.cysharp.unitask",
       "expression": "",
       "define": "AESFW_UNITASK"
+    },
+    {
+      "name": "com.unity.purchasing",
+      "expression": "",
+      "define": "AESFW_IAP"
+    },
+    {
+      "name": "com.applovin.mediation.ads",
+      "expression": "",
+      "define": "AESFW_ADS_MAX"
+    },
+    {
+      "name": "com.google.ads.mobile",
+      "expression": "",
+      "define": "AESFW_ADS_ADMOB"
+    },   
+    {
+      "name": "singular-unity-package",
+      "expression": "",
+      "define": "AESFW_ANALYTICS_SINGULAR"
+    },
+    {
+      "name": "com.gameanalytics.sdk",
+      "expression": "",
+      "define": "AESFW_ANALYTICS_GA"
     }
   ],
+  
   "noEngineReferences": false
   
 }

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
+using Singular;
 using UnityEngine.Purchasing;
 
 namespace AES.Tools
@@ -70,11 +71,14 @@ namespace AES.Tools
 
                 var ok = await _processor.ProcessAsync(ctx);
                 if (!ok)
-                    return; // 하나라도 보류면 전체 보류
+                    return;
             }
+            
+            SingularSDK.InAppPurchase(order);
 
             _store.ConfirmPurchase(order);
         }
+
         
         private void OnProductsFetched(List<Product> products)
         {

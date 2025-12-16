@@ -1,4 +1,4 @@
-#if UNITY_EDITOR
+#if UNITY_EDITOR && AESFW_GOOGLE_APIS && AESFW_SHEETS_IMPORTER
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -86,5 +86,14 @@ public static class GoogleSheetsPrivateDownloader
         }
         return s;
     }
+}
+#else
+public static class GoogleSheetsPrivateDownloader
+{
+    public static System.Collections.Generic.IList<System.Collections.Generic.IList<object>>
+        DownloadValuesOptimized(string spreadsheetId, string gid, string serviceAccountJson)
+        => throw new System.InvalidOperationException(
+            "GoogleSheetsPrivateDownloader is disabled. " +
+            "Requires UNITY_EDITOR && AESFW_SHEETS_IMPORTER && AESFW_GOOGLE_APIS.");
 }
 #endif

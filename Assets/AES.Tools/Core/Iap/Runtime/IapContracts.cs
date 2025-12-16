@@ -74,6 +74,8 @@ namespace AES.Tools
 
         // 가격 갱신 (productKey 기준으로 쏨)
         event Action<string, string> PriceUpdatedByProductKey;
+        
+        event Action<string> PurchaseConfirmedByProductKey;
 
         // 현재 캐시된 가격 조회
         bool TryGetLocalizedPriceByProductKey(string productKey, out string priceText);
