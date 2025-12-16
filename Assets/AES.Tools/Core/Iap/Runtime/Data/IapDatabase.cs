@@ -19,7 +19,6 @@ namespace AES.Tools
         private readonly Dictionary<(string type, string id), double> _valueInGemByItem;
         private readonly Dictionary<string, List<IapLimitRow>> _limitsByProductKey;
 
-        // 기존 생성자(레거시 유지)
 
         // 신규 생성자(확장 데이터 포함)
         public IapDatabase(
@@ -91,15 +90,7 @@ namespace AES.Tools
 
         public bool TryResolveProductKeyByProductId(string productId, out string productKey)
             => _keyByProductIdPlatform.TryGetValue((productId, IapPlatform.Current), out productKey);
-
-        [Obsolete("Use TryResolveProductId instead.")]
-        public bool TryResolveSku(string productKey, out string sku)
-            => TryResolveProductId(productKey, out sku);
-
-        [Obsolete("Use TryResolveProductKeyByProductId instead.")]
-        public bool TryResolveProductKeyBySku(string sku, out string productKey)
-            => TryResolveProductKeyByProductId(sku, out productKey);
-
+        
         public IReadOnlyList<IapBundleContentRow> GetRewards(string productKey)
             => _bundleByKey.TryGetValue(productKey, out var list) ? list : Array.Empty<IapBundleContentRow>();
 
@@ -123,13 +114,6 @@ namespace AES.Tools
                 if (!string.Equals(kv.Key.platform, platform, StringComparison.Ordinal)) continue;
                 yield return (kv.Key.key, kv.Value);
             }
-        }
-
-        [Obsolete("Use EnumerateActiveProductIdsForCurrentPlatform instead.")]
-        public IEnumerable<(string productKey, string sku)> EnumerateActiveSkusForCurrentPlatform()
-        {
-            foreach (var (productKey, productId) in EnumerateActiveProductIdsForCurrentPlatform())
-                yield return (productKey, productId);
         }
     }
 }

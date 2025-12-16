@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
+using UnityEngine;
 using UnityEngine.Purchasing;
 
 
@@ -45,16 +46,25 @@ namespace AES.Tools
 
         private void OnBackendPriceUpdated(string productId, string priceText)
         {
-            if (string.IsNullOrWhiteSpace(productId) || string.IsNullOrWhiteSpace(priceText))
-                return;
-
-            if (_db != null && _db.TryResolveProductKeyByProductId(productId, out var productKey) && !string.IsNullOrWhiteSpace(productKey))
+            try
             {
-                _productKeyToPrice[productKey] = priceText;
-                PriceUpdatedByProductKey?.Invoke(productKey, priceText);
+                Debug.Log($"[IAP] OnBackendPriceUpdated pid={productId}, price={priceText}");
+
+
+                if (string.IsNullOrWhiteSpace(productId)) return;
+                if (string.IsNullOrWhiteSpace(priceText)) return;
+
+                if (_db != null && _db.TryResolveProductKeyByProductId(productId, out var productKey))
+                {
+                    _productKeyToPrice[productKey] = priceText;
+                    PriceUpdatedByProductKey?.Invoke(productKey, priceText);
+                    Debug.Log($"[IAP] Resolved productKey={productKey}");
+                }
+                else { Debug.LogError($"[IAP] Resolve FAILED productId={productId}"); }
             }
+            catch (Exception e) { Debug.LogError($"[IAP] OnBackendPriceUpdated FAILED pid={productId}, price={priceText}\n{e}"); }
         }
-        
+
         private void OnBackendConfirmed(Order order)
         {
             if (_db == null || order == null) return;
@@ -70,20 +80,18 @@ namespace AES.Tools
                 if (string.IsNullOrWhiteSpace(productId)) continue;
 
                 if (_db.TryResolveProductKeyByProductId(productId, out var productKey) &&
-                    !string.IsNullOrWhiteSpace(productKey))
-                {
-                    PurchaseConfirmedByProductKey?.Invoke(productKey);
-                }
+                    !string.IsNullOrWhiteSpace(productKey)) { PurchaseConfirmedByProductKey?.Invoke(productKey); }
             }
         }
 
         public bool TryGetLocalizedPriceByProductKey(string productKey, out string priceText)
         {
             priceText = null;
+
             if (string.IsNullOrWhiteSpace(productKey))
                 return false;
 
-            return _productKeyToPrice.TryGetValue(productKey, out priceText) && !string.IsNullOrWhiteSpace(priceText);
+            return _productKeyToPrice.TryGetValue(productKey, out priceText);
         }
 
         public UniTask PurchaseByProductKeyAsync(string productKey)

@@ -2,6 +2,7 @@
 using System;
 using Cysharp.Threading.Tasks;
 using GoogleMobileAds.Api;
+using Singular;
 using UnityEngine;
 
 
@@ -102,6 +103,28 @@ namespace AES.Tools.VContainer
             ad.OnAdPaid += (AdValue adValue) =>
             {
                 Debug.Log($"[AdmobAppOpen] Paid {adValue.Value} {adValue.CurrencyCode}");
+                // Validate and ensure revenue data is within an expected range
+                float revenue = adValue.Value / 1_000_000f; // Convert micros to dollars
+                string currency = adValue.CurrencyCode;
+
+                // Check if revenue is positive and currency is valid
+                if (revenue > 0 && !string.IsNullOrEmpty(currency))
+                {
+                    // Construct and send the Singular AdMon Event
+                    SingularAdData data = new SingularAdData(
+                        "Admob",
+                        currency,
+                        revenue
+                    );
+                    SingularSDK.AdRevenue(data);
+
+                    // Log the revenue data for debugging purposes
+                    Debug.Log($"Ad Revenue reported to Singular: {data}");
+                }
+                else
+                {
+                    Debug.LogError($"Invalid ad revenue data: revenue = {revenue}, currency = {currency}");
+                }
             };
 
             ad.OnAdImpressionRecorded += () =>

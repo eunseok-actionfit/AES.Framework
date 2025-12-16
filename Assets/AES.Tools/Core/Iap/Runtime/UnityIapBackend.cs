@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using Singular;
+using UnityEngine;
 using UnityEngine.Purchasing;
 
 namespace AES.Tools
@@ -16,6 +17,7 @@ namespace AES.Tools
         public event Action<DeferredOrder> OnDeferred;
         
         public event Action<string, string> PriceUpdated; 
+        private readonly List<ProductDefinition> _products;
 
         public UnityIapBackend(
             List<ProductDefinition> products,
@@ -23,6 +25,7 @@ namespace AES.Tools
             string storeName = null)
         {
             _store = UnityIAPServices.StoreController(storeName);
+            _products = products;
             _processor = processor;
 
             _store.OnPurchasePending += HandlePending;
@@ -45,13 +48,19 @@ namespace AES.Tools
             };
 
             _store.OnProductsFetched += OnProductsFetched;
-            
-            _store.FetchProducts(products);
         }
         
-
-        public UniTask InitializeAsync()
-            => _store.Connect().AsUniTask();
+        private bool _fetched;
+        public async UniTask InitializeAsync()
+        {
+            await _store.Connect().AsUniTask();
+            
+            if (!_fetched)
+            {
+                _fetched = true;
+                _store.FetchProducts(_products);
+            }
+        }
 
         public UniTask PurchaseAsync(string productId)
         {
@@ -84,7 +93,10 @@ namespace AES.Tools
                     UnityReceipt = info.Receipt,
                 };
 
+                Debug.Log($"[IAP] Pending productId={p.productId}, tx={info.TransactionID}");
+
                 var ok = await _processor.ProcessAsync(ctx);
+                Debug.Log($"[IAP] Process result={ok} for productId={p.productId}");
                 if (!ok)
                     return;
             }
@@ -97,6 +109,8 @@ namespace AES.Tools
         
         private void OnProductsFetched(List<Product> products)
         {
+            Debug.Log($"[IAP] OnProductsFetched count={(products?.Count ?? -1)}");
+
             if (products == null) return;
 
             foreach (var p in products)
@@ -108,6 +122,8 @@ namespace AES.Tools
 
                 // Unity IAP가 지역/통화에 맞춰 내려주는 문자열
                 var priceText = p.metadata?.localizedPriceString ?? string.Empty;
+                
+                Debug.Log($"[IAP] Fetched id={productId}, price={priceText}");
 
                 if (!string.IsNullOrEmpty(priceText))
                     PriceUpdated?.Invoke(productId, priceText);

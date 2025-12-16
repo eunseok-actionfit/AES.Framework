@@ -114,7 +114,7 @@ namespace AES.Tools
             for (int i = 0; i < _screensContainer.childCount; i++)
             {
                 RectTransform child = _screensContainer.GetChild(i).GetComponent<RectTransform>();
-                Debug.Log($"[PagesOrder] i={i} name={_screensContainer.GetChild(i).name}");
+                //Debug.Log($"[PagesOrder] i={i} name={_screensContainer.GetChild(i).name}");
                 currentXPosition = offset + i * _childSize;
                 child.sizeDelta = new Vector2(panelRect.width, panelRect.height);
                 child.anchoredPosition = new Vector2(currentXPosition, 0f);

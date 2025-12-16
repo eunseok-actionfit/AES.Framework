@@ -71,10 +71,12 @@ namespace AES.Tools.VContainer.Bootstrap.Framework
             router.Target = processor;
 
             var backend = new UnityIapBackend(products, router);
-            await backend.InitializeAsync();
-
             facade.SetReady(db, backend);
             IAP.Bind(facade);
+            
+            await backend.InitializeAsync();
+            
+            Debug.Log("[IAP] Initialized.");
         }
     }
 }
