@@ -1,4 +1,5 @@
 using System;
+using AES.Tools.VContainer;
 using Cysharp.Threading.Tasks;
 
 namespace AES.Tools
@@ -42,6 +43,7 @@ namespace AES.Tools
         {
             if (_service == null)
                 throw new InvalidOperationException("[IAP] Not bound.");
+            ADS.NotifySensitiveFlowStarted();
             return _service.PurchaseByProductKeyAsync(productKey);
         }
 

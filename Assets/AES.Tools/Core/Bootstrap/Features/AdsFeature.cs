@@ -23,10 +23,10 @@ namespace AES.Tools.VContainer.Bootstrap.Framework.Features
         [Header("Interstitial Rules")]
         [SerializeField, Min(0f)] private float interstitialMinIntervalSeconds = 40f;
         [SerializeField, Min(0)] private int interstitialMaxPerSession = 10;
-
-        [Header("Runtime Flags")]
-        [SerializeField] private bool runtimeAdsDisabled;
-
+        
+        [Header("Runtime Settings")]
+        [SerializeField] private AdsRuntimeSettings _adsRuntimeSettings;
+        
         [Header("Test Device CSV")]
         [SerializeField] private TextAsset testDeviceCSV;
 
@@ -34,13 +34,7 @@ namespace AES.Tools.VContainer.Bootstrap.Framework.Features
         [SerializeField] private SerializedDictionary<string, string> testDevices;
         public override void Install(IContainerBuilder builder, in FeatureContext ctx)
         {
-            var settings = new AdsRuntimeSettings
-            {
-                interstitialMinIntervalSeconds = interstitialMinIntervalSeconds,
-                interstitialMaxPerSession = interstitialMaxPerSession,
-                runtimeAdsDisabled = runtimeAdsDisabled,
-            };
-            builder.RegisterInstance(settings);
+            builder.RegisterInstance(_adsRuntimeSettings);
 
             var flags = CreateTestDeviceFlags(testDeviceCSV);
             builder.RegisterInstance(flags);

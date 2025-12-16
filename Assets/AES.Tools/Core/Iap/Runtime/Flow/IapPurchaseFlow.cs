@@ -26,10 +26,10 @@ namespace AES.Tools
         /// <summary>UI entry point: buy by ProductKey.</summary>
         public UniTask PurchaseByProductKeyAsync(string productKey)
         {
-            if (!_db.TryResolveSku(productKey, out var sku))
-                throw new InvalidOperationException($"[IAP] SKU not found. productKey={productKey} platform={IapPlatform.Current}");
+            if (!_db.TryResolveProductId(productKey, out var productId))
+                throw new InvalidOperationException($"[IAP] ProductId not found. productKey={productKey} platform={IapPlatform.Current}");
 
-            return _backend.PurchaseAsync(sku);
+            return _backend.PurchaseAsync(productId);
         }
 
         /// <summary>
@@ -41,8 +41,8 @@ namespace AES.Tools
             if (ctx == null || string.IsNullOrWhiteSpace(ctx.StoreProductId))
                 throw new ArgumentException("[IAP] Invalid purchase context");
 
-            if (!_db.TryResolveProductKeyBySku(ctx.StoreProductId, out var productKey))
-                throw new InvalidOperationException($"[IAP] Cannot map SKU->ProductKey. sku={ctx.StoreProductId} platform={IapPlatform.Current}");
+            if (!_db.TryResolveProductKeyByProductId(ctx.StoreProductId, out var productKey))
+                throw new InvalidOperationException($"[IAP] Cannot map ProductId->ProductKey. productId={ctx.StoreProductId} platform={IapPlatform.Current}");
 
             var rewards = _db.GetRewards(productKey);
             if (rewards.Count == 0)

@@ -12,15 +12,16 @@ namespace AES.Tools
         {
             var list = new List<IapStoreCatalogEntry>();
 
-            foreach (var (productKey, sku) in db.EnumerateActiveSkusForCurrentPlatform())
+            foreach (var (productKey, productId) in db.EnumerateActiveProductIdsForCurrentPlatform())
             {
-                if (string.IsNullOrWhiteSpace(sku)) continue;
+                if (string.IsNullOrWhiteSpace(productId)) continue;
                 if (!db.TryGetProduct(productKey, out var meta)) continue;
                 if (!meta.IsVisible) continue;
 
                 list.Add(new IapStoreCatalogEntry
                 {
-                    StoreProductId = sku,
+                    // Unity IAP v5 uses ProductDefinition.id as the canonical identifier.
+                    StoreProductId = productId,
                     ProductType = ParseProductType(meta.ProductType),
                     VerifyOnServer = meta.VerifyOnServer,
                 });

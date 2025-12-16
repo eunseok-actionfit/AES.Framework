@@ -4,6 +4,8 @@ using UnityEngine.SceneManagement;
 using VContainer;
 using VContainer.Unity;
 using AES.Tools.VContainer.Bootstrap.Framework;
+using Cysharp.Threading.Tasks;
+
 
 namespace AES.Tools.VContainer.Bootstrap
 {
@@ -113,8 +115,7 @@ namespace AES.Tools.VContainer.Bootstrap
             {
                 Debug.LogWarning("[BootstrapSettings] BootstrapGraph가 비어있습니다. Init 단계를 스킵합니다.");
             }
-
-            // 기존: SceneFlow로 첫 씬 로드
+            
             var root = _rootLifetimeScopeInstance;
             if (root == null || root.Container == null) return;
 
@@ -128,6 +129,9 @@ namespace AES.Tools.VContainer.Bootstrap
                     await sceneFlow.LoadWithArgsAsync<object>(Instance.firstSceneName, "Home.Load", null);
                 }
             }
+            await UniTask.NextFrame();
+            ADS.MarkAppReadyForAppOpen();
+            ADS.TryShowAppOpen("app_launch");
         }
 
         private LifetimeScope GetOrCreateRootLifetimeScopeInstance()

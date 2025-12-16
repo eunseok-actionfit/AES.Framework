@@ -11,8 +11,7 @@ namespace AES.Tools
         private IapDatabase _db;
         private IIapPurchaseBackend _backend;
 
-        // sku/productKey -> localized price
-        private readonly Dictionary<string, string> _skuToPrice = new(StringComparer.Ordinal);
+        // productKey -> localized price
         private readonly Dictionary<string, string> _productKeyToPrice = new(StringComparer.Ordinal);
 
         public bool IsReady => _db != null && _backend != null;
@@ -44,14 +43,12 @@ namespace AES.Tools
         }
 
 
-        private void OnBackendPriceUpdated(string sku, string priceText)
+        private void OnBackendPriceUpdated(string productId, string priceText)
         {
-            if (string.IsNullOrWhiteSpace(sku) || string.IsNullOrWhiteSpace(priceText))
+            if (string.IsNullOrWhiteSpace(productId) || string.IsNullOrWhiteSpace(priceText))
                 return;
 
-            _skuToPrice[sku] = priceText;
-
-            if (_db != null && _db.TryResolveProductKeyBySku(sku, out var productKey) && !string.IsNullOrWhiteSpace(productKey))
+            if (_db != null && _db.TryResolveProductKeyByProductId(productId, out var productKey) && !string.IsNullOrWhiteSpace(productKey))
             {
                 _productKeyToPrice[productKey] = priceText;
                 PriceUpdatedByProductKey?.Invoke(productKey, priceText);
@@ -62,17 +59,17 @@ namespace AES.Tools
         {
             if (_db == null || order == null) return;
 
-            // Order 안의 productId(sku) 목록을 꺼내서 productKey로 변환 후 브로드캐스트
+            // Order 안의 productId 목록을 꺼내서 productKey로 변환 후 브로드캐스트
             var info = order.Info;
             var purchased = info?.PurchasedProductInfo;
             if (purchased.Count == 0) return;
 
             foreach (var p in purchased)
             {
-                var sku = p?.productId;
-                if (string.IsNullOrWhiteSpace(sku)) continue;
+                var productId = p?.productId;
+                if (string.IsNullOrWhiteSpace(productId)) continue;
 
-                if (_db.TryResolveProductKeyBySku(sku, out var productKey) &&
+                if (_db.TryResolveProductKeyByProductId(productId, out var productKey) &&
                     !string.IsNullOrWhiteSpace(productKey))
                 {
                     PurchaseConfirmedByProductKey?.Invoke(productKey);
@@ -93,10 +90,10 @@ namespace AES.Tools
         {
             if (!IsReady) throw new InvalidOperationException("[IAP] Not ready.");
 
-            if (!_db.TryResolveSku(productKey, out var sku) || string.IsNullOrWhiteSpace(sku))
-                throw new InvalidOperationException($"[IAP] SKU not found for productKey: {productKey}");
+            if (!_db.TryResolveProductId(productKey, out var productId) || string.IsNullOrWhiteSpace(productId))
+                throw new InvalidOperationException($"[IAP] ProductId not found for productKey: {productKey}");
 
-            return _backend.PurchaseAsync(sku);
+            return _backend.PurchaseAsync(productId);
         }
 
         public UniTask RestoreAsync()

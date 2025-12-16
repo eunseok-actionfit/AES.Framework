@@ -1,180 +1,100 @@
 using System;
 using System.Threading;
 using AES.Tools.TimeManager.Schedulers;
-using AES.Tools.UI;
-using AES.Tools.UI.Utility;
 using AES.Tools.VContainer.AppLifetime;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 namespace AES.Tools.VContainer
 {
-    [Serializable]
-    public sealed class AdsRuntimeSettings
+    public sealed class AdsService : IAdsService, IDisposable
     {
-        public float interstitialMinIntervalSeconds = 40f;
-        public int interstitialMaxPerSession = 10;
-        public bool runtimeAdsDisabled = false;
-    }
+        // =========================================================
+        // Gate (정책 주입 포인트)
+        // =========================================================
+        public Func<bool> CanShowBannerGate;
+        public Func<string, bool> CanShowInterstitialGate;
+        public Func<string, bool> CanShowRewardedGate;
+        public Func<string, bool> CanShowAppOpenGate;
 
-    public enum AdsServiceState { Uninitialized, Configured, Disposed }
+        // =========================================================
+        // Runtime / State
+        // =========================================================
+        private bool _runtimeDisabled;
+        private bool _appReadyForAppOpen;
+        private int _sensitiveDepth;
 
-    public class AdsService : IAdsService
-    {
-        private readonly ITimerScheduler _scheduler;
-        private readonly IAdsProviderFactory _factory;
+        private DateTime _lastInterstitialUtc;
+        private int _interstitialCountThisSession;
 
-        private readonly AdsRuntimeSettings _settings;
-        private readonly TestDeviceFlags _testDeviceFlags;
+        private DateTime _lastAppOpenShownUtc;
+        private DateTime _lastSensitiveEndedUtc;
+
+        private DateTime _appOpenBlockUntilUtc;
+        private int _appOpenBlockDepth;
 
         private AdsServiceState _state = AdsServiceState.Uninitialized;
 
-        private AdsProfile _profile;
-        private EventBinding<ApplicationFocusChangedEvent> _focusBinding;
-        private EventBinding<ApplicationPauseChangedEvent> _pauseBinding;
-        private EventBinding<ApplicationQuitEvent> _quitBinding;
+        // =========================================================
+        // Dependencies / Providers
+        // =========================================================
+        private readonly ITimerScheduler _scheduler;
+        private readonly AdsRuntimeSettings _settings;
+        private readonly IAdsProviderFactory _factory;
 
         private IAppOpenAdService _appOpen;
         private IInterstitialAdService _interstitial;
         private IRewardedAdService _rewarded;
         private IBannerAdService _banner;
 
-        private AdNetworkType _bannerNetwork;
+        // =========================================================
+        // Events
+        // =========================================================
+        private EventBinding<ApplicationFocusChangedEvent> _focusBinding;
+        private EventBinding<ApplicationPauseChangedEvent> _pauseBinding;
+        private EventBinding<ApplicationQuitEvent> _quitBinding;
 
-        private DateTime _lastInterstitialUtc;
-        private int _interstitialCountThisSession;
-
-        private bool _runtimeDisabled;
-
+        // =========================================================
+        // IAdsService Properties
+        // =========================================================
         public bool IsReadyInterstitial => !_runtimeDisabled && (_interstitial?.IsReady ?? false);
         public bool IsReadyRewarded => !_runtimeDisabled && (_rewarded?.IsReady ?? false);
-        public bool IsReadyAppOpen => _appOpen != null && _appOpen.IsReady;
+        public bool IsReadyAppOpen => !_runtimeDisabled && (_appOpen?.IsReady ?? false);
 
-     
-        public AdsService(ITimerScheduler scheduler, AdsRuntimeSettings settings, TestDeviceFlags testDeviceFlags, IAdsProviderFactory factory)
+        // =========================================================
+        // Constructor
+        // =========================================================
+        public AdsService(
+            ITimerScheduler scheduler,
+            AdsRuntimeSettings settings,
+            IAdsProviderFactory factory)
         {
             _scheduler = scheduler;
-            _settings = settings ?? new AdsRuntimeSettings();
-            _testDeviceFlags = testDeviceFlags;
+            _settings = settings;
             _factory = factory;
-
-            // 우선순위:
-            // 1) CSV 기반 테스트 디바이스 adsDisabled
-            // 2) Feature 설정 runtimeAdsDisabled
-            var csvAdsDisabled = _testDeviceFlags != null && _testDeviceFlags.adsDisabled;
-            var cfgAdsDisabled = _settings.runtimeAdsDisabled;
-
-            _runtimeDisabled = csvAdsDisabled || cfgAdsDisabled;
-
-#if UNITY_EDITOR
-            if (_testDeviceFlags != null && _testDeviceFlags.isTester)
-            {
-                Debug.Log($"[AdsService] Test device detected: name={_testDeviceFlags.matchedName}, id={_testDeviceFlags.matchedDeviceId}, adsDisabled={_runtimeDisabled}");
-            }
-#endif
         }
 
-        public void SetRuntimeDisabled(bool disabled)
-        {
-            _runtimeDisabled = disabled;
-            if (disabled)
-                _banner?.Hide();
-        }
-
+        // =========================================================
+        // Configure / Dispose
+        // =========================================================
         public void Configure(AdsProfile profile)
         {
-            if (_state == AdsServiceState.Disposed)
-            {
-                Debug.LogWarning("[AdsService] Already disposed. Configure ignored.");
-                return;
-            }
-
             if (_state == AdsServiceState.Configured)
-            {
-                Debug.Log("[AdsService] Already configured. Skipping reconfigure.");
                 return;
-            }
 
-            _profile = profile;
             _state = AdsServiceState.Configured;
 
-            _bannerNetwork = _profile.banner.network;
-
-            SetupProviders();
-            SetupFocusBinding();
-            SetupQuitBinding();
-#if UNITY_EDITOR
-            SetupPauseBinding();
-#endif
-        }
-
-        private void SetupProviders()
-        {
-            _appOpen       = _factory.CreateAppOpen(_profile);
-            _interstitial  = _factory.CreateInterstitial(_profile, _scheduler);
-            _rewarded      = _factory.CreateRewarded(_profile, _scheduler);
-            _banner        = _factory.CreateBanner(_profile);
+            _appOpen = _factory.CreateAppOpen(profile);
+            _interstitial = _factory.CreateInterstitial(profile, _scheduler);
+            _rewarded = _factory.CreateRewarded(profile, _scheduler);
+            _banner = _factory.CreateBanner(profile);
 
             _appOpen?.Initialize(); _appOpen?.Load();
             _interstitial?.Initialize(); _interstitial?.Load();
             _rewarded?.Initialize(); _rewarded?.Load();
             _banner?.Initialize();
-        }
 
-        private void SetupPauseBinding()
-        {
-            _pauseBinding = new EventBinding<ApplicationPauseChangedEvent>()
-                .Add(e =>
-                {
-                    var ready = IsReadyAppOpen;
-
-                    Debug.Log($"[AdsService] Paused={e.Paused}, ready={ready}, runtimeDisabled={_runtimeDisabled}");
-
-                    if (e.Paused) return;
-                    if (_runtimeDisabled) return;
-
-                    if (!ready)
-                    {
-                        Debug.Log("[AdsService] AppOpen NOT ready at focus. (skip)");
-                        return;
-                    }
-
-                    Debug.Log("[AdsService] AppOpen READY at focus → Show");
-                    _appOpen.ShowIfReady();
-                })
-                .Register();
-        }
-
-        private void SetupFocusBinding()
-        {
-            _focusBinding = new EventBinding<ApplicationFocusChangedEvent>()
-                .Add(e =>
-                {
-                    var ready = IsReadyAppOpen;
-
-                    Debug.Log($"[AdsService] Focus={e.Focused}, ready={ready}, runtimeDisabled={_runtimeDisabled}");
-
-                    if (!e.Focused) return;
-                    if (_runtimeDisabled) return;
-
-                    if (!ready)
-                    {
-                        Debug.Log("[AdsService] AppOpen NOT ready at focus. (skip)");
-                        if (_appOpen != null) _appOpen.Load();
-                        return;
-                    }
-
-                    Debug.Log("[AdsService] AppOpen READY at focus → Show");
-                    _appOpen.ShowIfReady();
-                })
-                .Register();
-        }
-
-        private void SetupQuitBinding()
-        {
-            _quitBinding = new EventBinding<ApplicationQuitEvent>()
-                .Add(Dispose)
-                .Register();
+            BindLifecycleEvents();
         }
 
         public void Dispose()
@@ -185,61 +105,83 @@ namespace AES.Tools.VContainer
             _state = AdsServiceState.Disposed;
 
             _focusBinding?.Deregister();
+            _pauseBinding?.Deregister();
             _quitBinding?.Deregister();
-            _focusBinding = null;
-            _quitBinding = null;
 
             (_appOpen as IDisposable)?.Dispose();
             (_interstitial as IDisposable)?.Dispose();
             (_rewarded as IDisposable)?.Dispose();
             (_banner as IDisposable)?.Dispose();
-
-            _appOpen = null;
-            _interstitial = null;
-            _rewarded = null;
-            _banner = null;
         }
-        
 
+        // =========================================================
+        // Banner
+        // =========================================================
         public void ShowBanner()
         {
-            if (_state != AdsServiceState.Configured) return;
             if (_runtimeDisabled) return;
+            if (CanShowBannerGate != null && !CanShowBannerGate()) return;
 
             _banner?.Show();
-
-            int bannerHeightPx = 0;
-
-            switch (_bannerNetwork)
-            {
-                case AdNetworkType.AdMob:
-                    bannerHeightPx = BannerHeightUtil.GetAdmobAdaptiveBannerHeightPx();
-                    break;
-                case AdNetworkType.AppLovinMax:
-                    bannerHeightPx = BannerHeightUtil.GetMaxAdaptiveBannerHeightPx();
-                    break;
-                default:
-                    bannerHeightPx = BannerHeightUtil.GetDefaultBannerHeightPx();
-                    break;
-            }
-
-            EventBus<BannerHeightChangedEvent>.Raise(new BannerHeightChangedEvent(bannerHeightPx, true));
         }
 
         public void HideBanner()
         {
-            if (_state != AdsServiceState.Configured) return;
-
             _banner?.Hide();
-            EventBus<BannerHeightChangedEvent>.Raise(new BannerHeightChangedEvent(0, false));
         }
 
-        private bool CanShowInterstitial()
+        // =========================================================
+        // Interstitial
+        // =========================================================
+        public void ShowInterstitial()
+        {
+            TryShowInterstitial(string.Empty);
+        }
+
+        public bool TryShowInterstitial(string reason)
         {
             if (_runtimeDisabled) return false;
             if (_interstitial == null || !_interstitial.IsReady) return false;
 
-            var interval = TimeSpan.FromSeconds(Mathf.Max(0f, _settings.interstitialMinIntervalSeconds));
+            if (CanShowInterstitialGate != null &&
+                !CanShowInterstitialGate(reason))
+                return false;
+
+            if (!CanShowInterstitialInternal())
+                return false;
+
+            if (_interstitial.Show())
+            {
+                _lastInterstitialUtc = DateTime.UtcNow;
+                _interstitialCountThisSession++;
+                return true;
+            }
+
+            return false;
+        }
+
+        public async UniTask<bool> ShowInterstitialAsync(CancellationToken ct = default)
+        {
+            if (!TryShowInterstitial(string.Empty))
+                return false;
+
+            try
+            {
+                var e = await EventBusAsyncUtil.WaitFor<InterstitialFinishedEvent>(
+                    null, ct);
+                return e.Succeeded;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private bool CanShowInterstitialInternal()
+        {
+            var interval = TimeSpan.FromSeconds(
+                Mathf.Max(0f, _settings.interstitialMinIntervalSeconds));
+
             if (DateTime.UtcNow - _lastInterstitialUtc < interval)
                 return false;
 
@@ -250,118 +192,189 @@ namespace AES.Tools.VContainer
             return true;
         }
 
-        public void ShowInterstitial()
-        {
-            if (_state != AdsServiceState.Configured) return;
-
-            if (!CanShowInterstitial())
-            {
-                if (!_interstitial?.IsReady ?? false)
-                    _interstitial?.Load();
-                return;
-            }
-
-            if (_interstitial.Show())
-            {
-                _lastInterstitialUtc = DateTime.UtcNow;
-                _interstitialCountThisSession++;
-            }
-        }
-
+        // =========================================================
+        // Rewarded
+        // =========================================================
         public void ShowRewarded(Action onReward)
         {
-            if (_state != AdsServiceState.Configured) return;
-            if (_runtimeDisabled) return;
-            if (_rewarded == null) return;
-
-            if (!_rewarded.IsReady)
-                _rewarded.Load();
-
-            _rewarded.Show(onReward);
+            TryShowRewarded(string.Empty, onReward);
         }
 
-        public async UniTask<bool> ShowInterstitialAsync(CancellationToken ct = default)
+        public bool TryShowRewarded(string reason, Action onReward)
         {
-            if (_state != AdsServiceState.Configured) return false;
             if (_runtimeDisabled) return false;
-            if (_interstitial == null) return false;
+            if (_rewarded == null || !_rewarded.IsReady) return false;
 
-            if (!CanShowInterstitial())
-            {
-                if (!_interstitial.IsReady)
-                    _interstitial.Load();
-                return false;
-            }
-
-            if (!_interstitial.Show())
+            if (CanShowRewardedGate != null &&
+                !CanShowRewardedGate(reason))
                 return false;
 
-            _lastInterstitialUtc = DateTime.UtcNow;
-            _interstitialCountThisSession++;
-
-            try
-            {
-                var e = await EventBusAsyncUtil.WaitFor<InterstitialFinishedEvent>(
-                    predicate: null,
-                    cancellationToken: ct
-                );
-                return e.Succeeded;
-            }
-            catch (OperationCanceledException) { return false; }
+            _rewarded.Show(onReward);
+            return true;
         }
 
         public async UniTask<bool> ShowRewardedAsync(CancellationToken ct = default)
         {
-            if (_state != AdsServiceState.Configured) return false;
-            if (_runtimeDisabled) return false;
-            if (_rewarded == null) return false;
-
-            if (!_rewarded.IsReady)
-                _rewarded.Load();
+            if (_rewarded == null || !_rewarded.IsReady)
+                return false;
 
             _rewarded.Show(null);
 
             try
             {
                 var e = await EventBusAsyncUtil.WaitFor<RewardedFinishedEvent>(
-                    predicate: null,
-                    cancellationToken: ct
-                );
-
+                    null, ct);
                 return e.Succeeded && e.RewardGranted;
             }
-            catch (OperationCanceledException) { return false; }
-        }
-
-        public async UniTask<bool> WaitForAppOpenReadyAsync(float maxWaitSeconds, CancellationToken ct = default)
-        {
-            if (_state != AdsServiceState.Configured) return false;
-            if (_runtimeDisabled) return false;
-            if (_appOpen == null) return false;
-
-            float start = Time.realtimeSinceStartup;
-
-            while (Time.realtimeSinceStartup - start < maxWaitSeconds)
+            catch
             {
-                if (ct.IsCancellationRequested)
-                    return false;
-
-                if (_appOpen.IsReady)
-                    return true;
-
-                await UniTask.Yield(PlayerLoopTiming.Update, ct);
+                return false;
             }
+        }
+        
+        public async UniTask<bool> ShowRewardedAsync(string reason, CancellationToken ct = default)
+        {
+            if (_runtimeDisabled) return false;
+            if (_rewarded == null || !_rewarded.IsReady) return false;
 
-            return _appOpen.IsReady;
+            if (CanShowRewardedGate != null &&
+                !CanShowRewardedGate(reason))
+                return false;
+
+            _rewarded.Show(null);
+
+            try
+            {
+                var e = await EventBusAsyncUtil.WaitFor<RewardedFinishedEvent>(null, ct);
+                return e.Succeeded && e.RewardGranted;
+            }
+            catch
+            {
+                return false;
+            }
         }
 
+
+        // =========================================================
+        // AppOpen
+        // =========================================================
         public bool TryShowAppOpen()
         {
-            if (_runtimeDisabled) return false;
-            if (_appOpen == null || !_appOpen.IsReady) return false;
+            return TryShowAppOpen(string.Empty);
+        }
 
+        public bool TryShowAppOpen(string reason)
+        {
+            if (_runtimeDisabled) return false;
+            if (!_appReadyForAppOpen) return false;
+            if (_appOpen == null || !_appOpen.IsReady) return false;
+            if (IsAppOpenBlockedNow()) return false;
+
+            if (CanShowAppOpenGate != null &&
+                !CanShowAppOpenGate(reason))
+                return false;
+
+            _lastAppOpenShownUtc = DateTime.UtcNow;
             _appOpen.ShowIfReady();
             return true;
         }
+
+        public UniTask<bool> WaitForAppOpenReadyAsync(
+            float maxWaitSeconds,
+            CancellationToken ct = default)
+        {
+            return UniTask.FromResult(IsReadyAppOpen);
+        }
+
+        // =========================================================
+        // AppOpen Control / Sensitive Flow
+        // =========================================================
+        public void NotifySensitiveFlowStarted()
+        {
+            _sensitiveDepth++;
+        }
+
+        public void NotifySensitiveFlowEnded()
+        {
+            if (_sensitiveDepth > 0)
+                _sensitiveDepth--;
+
+            _lastSensitiveEndedUtc = DateTime.UtcNow;
+        }
+
+        public void PushAppOpenBlock()
+        {
+            _appOpenBlockDepth++;
+        }
+
+        public void PopAppOpenBlock()
+        {
+            _appOpenBlockDepth = Mathf.Max(0, _appOpenBlockDepth - 1);
+        }
+
+        public void BlockAppOpenForSeconds(float seconds)
+        {
+            _appOpenBlockUntilUtc = DateTime.UtcNow.AddSeconds(seconds);
+        }
+
+        public void MarkAppReadyForAppOpen()
+        {
+            _appReadyForAppOpen = true;
+        }
+
+        private bool IsAppOpenBlockedNow()
+        {
+            if (_appOpenBlockDepth > 0)
+                return true;
+
+            if (_appOpenBlockUntilUtc != default &&
+                DateTime.UtcNow < _appOpenBlockUntilUtc)
+                return true;
+
+            return false;
+        }
+
+        // =========================================================
+        // Runtime
+        // =========================================================
+        public void SetRuntimeDisabled(bool disabled)
+        {
+            _runtimeDisabled = disabled;
+            if (disabled)
+                _banner?.Hide();
+        }
+
+        // =========================================================
+        // Lifecycle Bindings
+        // =========================================================
+        private void BindLifecycleEvents()
+        {
+            _focusBinding = new EventBinding<ApplicationFocusChangedEvent>()
+                .Add(e =>
+                {
+                    if (e.Focused && !_runtimeDisabled)
+                        TryShowAppOpen("resume");
+                })
+                .Register();
+
+            _pauseBinding = new EventBinding<ApplicationPauseChangedEvent>()
+                .Add(e =>
+                {
+                    if (!e.Paused && !_runtimeDisabled)
+                        TryShowAppOpen("resume");
+                })
+                .Register();
+
+            _quitBinding = new EventBinding<ApplicationQuitEvent>()
+                .Add(_ => Dispose())
+                .Register();
+        }
+    }
+
+    public enum AdsServiceState
+    {
+        Uninitialized,
+        Configured,
+        Disposed
     }
 }

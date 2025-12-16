@@ -30,7 +30,8 @@ namespace AES.Tools
             if (_tx != null && !string.IsNullOrEmpty(ctx.TransactionId) && _tx.IsProcessed(ctx.TransactionId))
                 return true;
 
-            if (!_db.TryResolveProductKeyBySku(ctx.StoreProductId, out var productKey))
+            // StoreProductId is treated as Unity IAP productId (ProductDefinition.id).
+            if (!_db.TryResolveProductKeyByProductId(ctx.StoreProductId, out var productKey))
                 return false;
 
             // optional server verify

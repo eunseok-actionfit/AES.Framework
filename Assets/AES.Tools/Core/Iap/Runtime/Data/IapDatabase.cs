@@ -8,8 +8,10 @@ namespace AES.Tools
     public sealed class IapDatabase
     {
         private readonly Dictionary<string, IapProductRow> _productByKey;
-        private readonly Dictionary<(string key, string platform), string> _skuByKeyPlatform;
-        private readonly Dictionary<(string sku, string platform), string> _keyBySkuPlatform;
+        // Unity IAP v5 canonical id (ProductDefinition.id) mapping.
+        // productKey <-> productId (per platform)
+        private readonly Dictionary<(string key, string platform), string> _productIdByKeyPlatform;
+        private readonly Dictionary<(string productId, string platform), string> _keyByProductIdPlatform;
         private readonly Dictionary<string, List<IapBundleContentRow>> _bundleByKey;
 
         // 추가 인덱스
@@ -36,8 +38,8 @@ namespace AES.Tools
                 .Where(x => !string.IsNullOrWhiteSpace(x.ProductKey))
                 .ToDictionary(x => x.ProductKey.Trim(), x => x, StringComparer.Ordinal);
 
-            _skuByKeyPlatform = new();
-            _keyBySkuPlatform = new();
+            _productIdByKeyPlatform = new();
+            _keyByProductIdPlatform = new();
 
             foreach (var s in storeProducts)
             {
@@ -47,10 +49,12 @@ namespace AES.Tools
 
                 var key = s.ProductKey.Trim();
                 var platform = s.Platform.Trim();
-                var sku = s.StoreProductId.Trim();
+                // NOTE: This is treated as Unity IAP productId (ProductDefinition.id).
+                // If your data schema differentiates productId vs storeSpecificId, map the correct column here.
+                var productId = s.StoreProductId.Trim();
 
-                _skuByKeyPlatform[(key, platform)] = sku;
-                _keyBySkuPlatform[(sku, platform)] = key;
+                _productIdByKeyPlatform[(key, platform)] = productId;
+                _keyByProductIdPlatform[(productId, platform)] = key;
             }
 
             _bundleByKey = bundleContents
@@ -82,11 +86,19 @@ namespace AES.Tools
                 .ToDictionary(g => g.Key, g => g.ToList(), StringComparer.Ordinal);
         }
 
-        public bool TryResolveSku(string productKey, out string sku)
-            => _skuByKeyPlatform.TryGetValue((productKey, IapPlatform.Current), out sku);
+        public bool TryResolveProductId(string productKey, out string productId)
+            => _productIdByKeyPlatform.TryGetValue((productKey, IapPlatform.Current), out productId);
 
+        public bool TryResolveProductKeyByProductId(string productId, out string productKey)
+            => _keyByProductIdPlatform.TryGetValue((productId, IapPlatform.Current), out productKey);
+
+        [Obsolete("Use TryResolveProductId instead.")]
+        public bool TryResolveSku(string productKey, out string sku)
+            => TryResolveProductId(productKey, out sku);
+
+        [Obsolete("Use TryResolveProductKeyByProductId instead.")]
         public bool TryResolveProductKeyBySku(string sku, out string productKey)
-            => _keyBySkuPlatform.TryGetValue((sku, IapPlatform.Current), out productKey);
+            => TryResolveProductKeyByProductId(sku, out productKey);
 
         public IReadOnlyList<IapBundleContentRow> GetRewards(string productKey)
             => _bundleByKey.TryGetValue(productKey, out var list) ? list : Array.Empty<IapBundleContentRow>();
@@ -103,14 +115,21 @@ namespace AES.Tools
         public IReadOnlyList<IapLimitRow> GetLimits(string productKey)
             => _limitsByProductKey.TryGetValue(productKey, out var list) ? list : Array.Empty<IapLimitRow>();
 
-        public IEnumerable<(string productKey, string sku)> EnumerateActiveSkusForCurrentPlatform()
+        public IEnumerable<(string productKey, string productId)> EnumerateActiveProductIdsForCurrentPlatform()
         {
             var platform = IapPlatform.Current;
-            foreach (var kv in _skuByKeyPlatform)
+            foreach (var kv in _productIdByKeyPlatform)
             {
                 if (!string.Equals(kv.Key.platform, platform, StringComparison.Ordinal)) continue;
                 yield return (kv.Key.key, kv.Value);
             }
+        }
+
+        [Obsolete("Use EnumerateActiveProductIdsForCurrentPlatform instead.")]
+        public IEnumerable<(string productKey, string sku)> EnumerateActiveSkusForCurrentPlatform()
+        {
+            foreach (var (productKey, productId) in EnumerateActiveProductIdsForCurrentPlatform())
+                yield return (productKey, productId);
         }
     }
 }

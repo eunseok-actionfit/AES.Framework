@@ -26,9 +26,23 @@ namespace AES.Tools
             _processor = processor;
 
             _store.OnPurchasePending += HandlePending;
-            _store.OnPurchaseConfirmed += o => OnConfirmed?.Invoke(o);
-            _store.OnPurchaseFailed += f => OnFailed?.Invoke(f);
-            _store.OnPurchaseDeferred += d => OnDeferred?.Invoke(d);
+            _store.OnPurchaseConfirmed += o =>
+            {
+                VContainer.ADS.NotifySensitiveFlowEnded(); 
+                OnConfirmed?.Invoke(o);
+            };
+
+            _store.OnPurchaseFailed += f =>
+            {
+                VContainer.ADS.NotifySensitiveFlowEnded(); 
+                OnFailed?.Invoke(f);
+            };
+
+            _store.OnPurchaseDeferred += d =>
+            {
+                VContainer.ADS.NotifySensitiveFlowEnded(); 
+                OnDeferred?.Invoke(d);
+            };
 
             _store.OnProductsFetched += OnProductsFetched;
             
@@ -39,16 +53,17 @@ namespace AES.Tools
         public UniTask InitializeAsync()
             => _store.Connect().AsUniTask();
 
-        public UniTask PurchaseAsync(string sku)
+        public UniTask PurchaseAsync(string productId)
         {
-            _store.PurchaseProduct(sku);
+            _store.PurchaseProduct(productId);
             return UniTask.CompletedTask;
         }
 
         public UniTask RestoreAsync()
         {
 #if UNITY_IOS
-            _store.RestoreTransactions(null);
+    VContainer.ADS.NotifySensitiveFlowStarted();
+    _store.RestoreTransactions(null);
 #endif
             return UniTask.CompletedTask;
         }
@@ -88,14 +103,14 @@ namespace AES.Tools
             {
                 if (p == null) continue;
 
-                var sku = p.definition?.id;
-                if (string.IsNullOrEmpty(sku)) continue;
+                var productId = p.definition?.id;
+                if (string.IsNullOrEmpty(productId)) continue;
 
                 // Unity IAP가 지역/통화에 맞춰 내려주는 문자열
                 var priceText = p.metadata?.localizedPriceString ?? string.Empty;
 
                 if (!string.IsNullOrEmpty(priceText))
-                    PriceUpdated?.Invoke(sku, priceText);
+                    PriceUpdated?.Invoke(productId, priceText);
             }
         }
     }
