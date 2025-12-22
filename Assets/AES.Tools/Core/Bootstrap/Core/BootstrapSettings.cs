@@ -1,15 +1,13 @@
+using System;
 using System.Linq;
 using AES.Tools.VContainer.Bootstrap.Framework;
 using UnityEngine;
 using VContainer.Unity;
 
+
 namespace AES.Tools.VContainer.Bootstrap
 {
-    public enum AppOpenLoadingMode
-    {
-        None,
-        Prefab,
-    }
+    public enum AppOpenLoadingMode { None, Prefab, }
 
     [CreateAssetMenu(menuName = "Game/Bootstrap Settings", fileName = "BootstrapSettings")]
     public sealed class BootstrapSettings : ScriptableObject
@@ -30,6 +28,8 @@ namespace AES.Tools.VContainer.Bootstrap
         [SerializeField] private bool removeClonePostfix = true;
 
         [Header("First Scene Key (SceneCatalog key)")]
+        [SerializeField] private bool enableFirstSceneKey = true;
+        [AesEnableIf("enableFirstSceneKey")]
         [SerializeField] private string firstSceneKey = "Lobby";
 
         [Header("App Open Loading UI")]
@@ -45,7 +45,7 @@ namespace AES.Tools.VContainer.Bootstrap
         public bool AutoCreateRootScope => autoCreateRootScope;
         public bool RemoveClonePostfix => removeClonePostfix;
 
-        public string FirstSceneKey => firstSceneKey;
+        public string FirstSceneKey => enableFirstSceneKey ? firstSceneKey : string.Empty;
         public AppOpenLoadingMode AppOpenLoading => appOpenLoadingMode;
         public GameObject AppOpenLoadingPrefab => appOpenLoadingPrefab;
 
@@ -60,6 +60,7 @@ namespace AES.Tools.VContainer.Bootstrap
             var preloadAsset = UnityEditor.PlayerSettings
                 .GetPreloadedAssets()
                 .FirstOrDefault(x => x is BootstrapSettings);
+
             return preloadAsset as BootstrapSettings;
         }
 #endif

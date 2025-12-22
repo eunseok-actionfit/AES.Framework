@@ -556,7 +556,7 @@ namespace AES.Tools
                 Debug.LogError("ScrollRect has to have a direction, please select either Horizontal OR Vertical with the appropriate control.");
 
             if (_scroll_rect.horizontal && _scroll_rect.vertical)
-                Debug.LogError("ScrollRect has to be unidirectional, only use either Horizontal or Vertical on the ScrollRect, NOT both.");
+                Debug.LogError("ScrollRect는 단방향이어야 합니다. ScrollRect에서는 수평 또는 수직 중 하나만 사용하고 둘 다 사용할 수는 없습니다.");
 
             var content = GetComponent<ScrollRect>().content;
 

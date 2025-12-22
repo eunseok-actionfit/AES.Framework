@@ -117,7 +117,7 @@ public sealed class AppOpenBootstrapOrchestrator : IAsyncStartable
             EntryFadeDuration = 0f,
             ExitFadeDuration = 0f,
 
-            UseAntiSpill = _cfg != null ? _cfg.UseAntiSpill : true,
+            UseAntiSpill = _cfg?.UseAntiSpill ?? true,
             EnableFallback = false
         }, cancellation);
 
