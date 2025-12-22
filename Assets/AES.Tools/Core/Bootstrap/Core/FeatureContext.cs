@@ -13,19 +13,23 @@ namespace AES.Tools.VContainer.Bootstrap.Framework
 
         public readonly IReadOnlyDictionary<Type, IFeatureCapability> Capabilities;
         public readonly IReadOnlyDictionary<string, UnityEngine.Object> Overrides;
+        
+        public readonly IFeatureProgressReporter Progress;
 
         public FeatureContext(
             string profile,
             RuntimePlatform platform,
             bool isEditor,
             IReadOnlyDictionary<string, UnityEngine.Object> overrides,
-            IReadOnlyDictionary<Type, IFeatureCapability> capabilities)
+            IReadOnlyDictionary<Type, IFeatureCapability> capabilities,
+            IFeatureProgressReporter progress = null)
         {
             Profile = profile;
             Platform = platform;
             IsEditor = isEditor;
             Overrides = overrides;
             Capabilities = capabilities;
+            Progress = progress;
         }
 
         public bool TryGetOverride<T>(string key, out T value) where T : UnityEngine.Object

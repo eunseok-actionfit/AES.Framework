@@ -1,3 +1,4 @@
+#if AESFW_IAP
 using System;
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
@@ -62,7 +63,9 @@ namespace AES.Tools
                 }
                 else { Debug.LogError($"[IAP] Resolve FAILED productId={productId}"); }
             }
-            catch (Exception e) { Debug.LogError($"[IAP] OnBackendPriceUpdated FAILED pid={productId}, price={priceText}\n{e}"); }
+            catch (Exception e) {
+                Debug.LogError($"[IAP] OnBackendPriceUpdated FAILED pid={productId}, price={priceText}\n{e}");
+            }
         }
 
         private void OnBackendConfirmed(Order order)
@@ -111,3 +114,4 @@ namespace AES.Tools
         }
     }
 }
+#endif

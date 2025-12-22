@@ -7,7 +7,6 @@ using VContainer;
 using VContainer.Unity;
 using Debug = UnityEngine.Debug;
 
-
 namespace AES.Tools.VContainer.Bootstrap.Framework
 {
     internal static class BootstrapRunnerCacheReset
@@ -15,7 +14,7 @@ namespace AES.Tools.VContainer.Bootstrap.Framework
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void Reset() => BootstrapRunner.ClearCache();
     }
-    
+
     public static class BootstrapRunner
     {
         public readonly struct Result
@@ -48,7 +47,6 @@ namespace AES.Tools.VContainer.Bootstrap.Framework
             }
         }
 
-        // ===== cache =====
         private readonly struct CacheKey : IEquatable<CacheKey>
         {
             public readonly int GraphId;
@@ -64,7 +62,6 @@ namespace AES.Tools.VContainer.Bootstrap.Framework
         }
 
         private static readonly Dictionary<CacheKey, FeaturePlan> PlanCache = new();
-
         public static void ClearCache() => PlanCache.Clear();
 
         private static bool TryGetProfile(BootstrapGraph graph, string profile, out FeatureProfile p)
@@ -109,8 +106,6 @@ namespace AES.Tools.VContainer.Bootstrap.Framework
                 foreach (var s in plan.Issues) Debug.LogError($"[BootstrapGraph] {s}");
             }
 
-            // profile name은 실제 선택된 프로필을 쓰는 게 좋으나,
-            // ctx.Profile은 표시용이므로 입력 profile을 그대로 사용.
             var caps = BuildCapabilities(plan, profile, platform, isEditor);
 
             foreach (var n in plan.Ordered)
@@ -119,7 +114,7 @@ namespace AES.Tools.VContainer.Bootstrap.Framework
                 var feature = n.Feature;
 
                 var ov = FeatureUtils.BuildOverrideMap(entry.Overrides);
-                var ctx = new FeatureContext(profile, platform, isEditor, ov, caps);
+                var ctx = new FeatureContext(profile, platform, isEditor, ov, caps, progress: null);
 
                 bool enabled = entry.Enabled && feature.IsEnabled(in ctx);
 
@@ -146,7 +141,8 @@ namespace AES.Tools.VContainer.Bootstrap.Framework
             string profile,
             LifetimeScope root,
             RuntimePlatform platform,
-            bool isEditor)
+            bool isEditor,
+            IProgress<BootstrapProgress> progress = null)
         {
             var runs = new List<FeatureRun>(64);
             bool ok = true;
@@ -161,35 +157,118 @@ namespace AES.Tools.VContainer.Bootstrap.Framework
                 foreach (var s in plan.Issues) Debug.LogError($"[BootstrapGraph] {s}");
             }
 
+            // total count
+            int total = 0;
+            foreach (var _ in plan.Ordered) total++;
+            if (total <= 0) total = 1;
+
             var caps = BuildCapabilities(plan, profile, platform, isEditor);
+
+            progress?.Report(new BootstrapProgress(
+                normalized: 0f,
+                local: 0f,
+                index: 0,
+                total: total,
+                featureId: null,
+                enabled: true,
+                phase: BootstrapProgressPhase.Start,
+                message: "Bootstrap start",
+                exception: null));
+
+            int i = 0;
             foreach (var n in plan.Ordered)
             {
                 var entry = n.Entry;
                 var feature = n.Feature;
 
                 var ov = FeatureUtils.BuildOverrideMap(entry.Overrides);
-                var ctx = new FeatureContext(profile, platform, isEditor, ov, caps);
+                var ctx0 = new FeatureContext(profile, platform, isEditor, ov, caps, progress: null);
 
-                bool enabled = entry.Enabled && feature.IsEnabled(in ctx);
+                bool enabled = entry.Enabled && feature.IsEnabled(in ctx0);
+
+                // Begin
+                progress?.Report(new BootstrapProgress(
+                    normalized: (float)i / total,
+                    local: 0f,
+                    index: i,
+                    total: total,
+                    featureId: feature.Id,
+                    enabled: enabled,
+                    phase: BootstrapProgressPhase.FeatureBegin,
+                    message: enabled ? "Begin" : "Skipped",
+                    exception: null));
 
                 long ms = 0;
                 Exception ex = null;
 
+                // per-feature reporter injected into ctx.Progress
+                var featureReporter = progress != null
+                    ? new FeatureProgressReporter(progress, i, total, feature.Id, enabled)
+                    : null;
+
+                var ctx = new FeatureContext(profile, platform, isEditor, ov, caps, progress: featureReporter);
+
                 if (enabled)
                 {
                     var sw = Stopwatch.StartNew();
-                    try { await feature.Initialize(root,  ctx); }
-                    catch (Exception e) { ex = e; ok = false; Debug.LogException(e); }
+                    try
+                    {
+                        // feature 내부에서 ctx.Progress.Report(...) 가능
+                        await feature.Initialize(root, ctx);
+                    }
+                    catch (Exception e)
+                    {
+                        ex = e;
+                        ok = false;
+                        Debug.LogException(e);
+
+                        // error also reported
+                        progress?.Report(new BootstrapProgress(
+                            normalized: (float)i / total,
+                            local: 0f,
+                            index: i,
+                            total: total,
+                            featureId: feature.Id,
+                            enabled: enabled,
+                            phase: BootstrapProgressPhase.FeatureProgress,
+                            message: "Exception",
+                            exception: e));
+                    }
                     sw.Stop();
                     ms = sw.ElapsedMilliseconds;
                 }
 
                 runs.Add(new FeatureRun(feature.Id, enabled, 0, ms, ex));
+
+                // End
+                progress?.Report(new BootstrapProgress(
+                    normalized: (float)(i + 1) / total,
+                    local: 1f,
+                    index: i,
+                    total: total,
+                    featureId: feature.Id,
+                    enabled: enabled,
+                    phase: BootstrapProgressPhase.FeatureEnd,
+                    message: "End",
+                    exception: ex));
+
+                i++;
             }
+
+            progress?.Report(new BootstrapProgress(
+                normalized: 1f,
+                local: 1f,
+                index: total,
+                total: total,
+                featureId: null,
+                enabled: ok,
+                phase: BootstrapProgressPhase.Complete,
+                message: "Bootstrap complete",
+                exception: null));
 
             return new Result(runs, ok);
         }
-        
+
         private static IReadOnlyDictionary<Type, IFeatureCapability> BuildCapabilities(
             FeaturePlan plan,
             string profile,
@@ -203,9 +282,8 @@ namespace AES.Tools.VContainer.Bootstrap.Framework
                 var entry = n.Entry;
                 var feature = n.Feature;
 
-                // provider는 보통 cap이 필요 없으니 caps=null ctx로 enabled 판정
                 var ov = FeatureUtils.BuildOverrideMap(entry.Overrides);
-                var ctx0 = new FeatureContext(profile, platform, isEditor, ov, capabilities: null);
+                var ctx0 = new FeatureContext(profile, platform, isEditor, ov, capabilities: null, progress: null);
 
                 if (!entry.Enabled) continue;
                 if (!feature.IsEnabled(in ctx0)) continue;
@@ -216,6 +294,5 @@ namespace AES.Tools.VContainer.Bootstrap.Framework
 
             return caps;
         }
-
     }
 }

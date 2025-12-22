@@ -23,18 +23,19 @@ namespace AES.Tools.VContainer.Bootstrap.Framework.Features
         [Header("Interstitial Rules")]
         [SerializeField, Min(0f)] private float interstitialMinIntervalSeconds = 40f;
         [SerializeField, Min(0)] private int interstitialMaxPerSession = 10;
-        
+
         [Header("Runtime Settings")]
-        [SerializeField] private AdsRuntimeSettings _adsRuntimeSettings;
-        
+        [SerializeField] private AdsRuntimeSettings adsRuntimeSettings;
+
         [Header("Test Device CSV")]
         [SerializeField] private TextAsset testDeviceCSV;
 
         [Header("Test Devices (Name -> AdId)")]
         [SerializeField] private SerializedDictionary<string, string> testDevices;
+
         public override void Install(IContainerBuilder builder, in FeatureContext ctx)
         {
-            builder.RegisterInstance(_adsRuntimeSettings);
+            builder.RegisterInstance(adsRuntimeSettings);
 
             var flags = CreateTestDeviceFlags(testDeviceCSV);
             builder.RegisterInstance(flags);
@@ -50,7 +51,7 @@ namespace AES.Tools.VContainer.Bootstrap.Framework.Features
                 Debug.Log("[AdsFeature] Ads disabled.");
                 return;
             }
-            
+
 #if AESFW_ADS_MAX
             ApplyMaxTestDevices(testDevices);
 
@@ -64,6 +65,7 @@ namespace AES.Tools.VContainer.Bootstrap.Framework.Features
             }
 #endif
             var profile = GetActiveProfile();
+
             if (profile == null)
             {
                 Debug.LogWarning("[AdsFeature] No AdsProfile found.");
@@ -77,21 +79,24 @@ namespace AES.Tools.VContainer.Bootstrap.Framework.Features
             await UniTask.CompletedTask;
         }
 
+#if AESFW_ADS_MAX
         private static void ApplyMaxTestDevices(SerializedDictionary<string, string> map)
         {
             if (map == null || map.Count == 0) return;
 
             var ids = new System.Collections.Generic.List<string>(map.Count);
+
             foreach (var kv in map)
             {
                 if (!string.IsNullOrWhiteSpace(kv.Value))
                     ids.Add(kv.Value.Trim());
             }
-
+            
             if (ids.Count > 0)
                 MaxSdk.SetTestDeviceAdvertisingIdentifiers(ids.ToArray());
         }
-        
+#endif
+
         private AdsProfile GetActiveProfile()
         {
             if (profiles == null || profiles.Length == 0)
@@ -138,6 +143,6 @@ namespace AES.Tools.VContainer.Bootstrap.Framework.Features
         }
 
     }
-    
-    
+
+
 }

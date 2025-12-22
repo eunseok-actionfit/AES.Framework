@@ -1,4 +1,6 @@
 #if !(AESFW_ADS_ADMOB || AESFW_ADS_MAX)
+using AES.Tools.TimeManager.Schedulers;
+
 namespace AES.Tools.VContainer
 {
     public sealed class AdsProviderFactory : IAdsProviderFactory

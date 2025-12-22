@@ -2,13 +2,14 @@ using System;
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 
+
 namespace AES.Tools
 {
     /// <summary>Low-level store backend (Unity IAP). Uses Store ProductId (=SKU).</summary>
     public interface IIapPurchaseBackend
     {
-        
-        
+
+
         UniTask InitializeAsync();
         UniTask PurchaseAsync(string sku);
         UniTask RestoreAsync();
@@ -74,7 +75,7 @@ namespace AES.Tools
 
         // 가격 갱신 (productKey 기준으로 쏨)
         event Action<string, string> PriceUpdatedByProductKey;
-        
+
         event Action<string> PurchaseConfirmedByProductKey;
 
         // 현재 캐시된 가격 조회
@@ -84,6 +85,7 @@ namespace AES.Tools
         UniTask RestoreAsync();
     }
 
+#if AESFW_IAP
     /// <summary>
     /// Catalog entry used to initialize Unity IAP.
     /// StoreProductId must match platform store SKU.
@@ -94,4 +96,5 @@ namespace AES.Tools
         public UnityEngine.Purchasing.ProductType ProductType;
         public bool VerifyOnServer;
     }
+#endif
 }

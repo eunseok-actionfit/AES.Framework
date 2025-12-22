@@ -48,5 +48,3 @@ MonoBehaviour:
     TypeName: 
   autoRun: 1
   autoInjectGameObjects: []
-  graph: {fileID: 11400000, guid: f25e0498ef8ec4fef95f30d77fd19aa7, type: 2}
-  profile: Dev

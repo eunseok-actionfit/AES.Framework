@@ -10,6 +10,7 @@
     "Unity.TextMeshPro",
     "AYellowpaper.SerializedCollections",
     "VContainer",
+    "Eflatun.SceneReference",
     "MaxSdk.Scripts",
     "Unity.Purchasing",
     "Unity.Services.Core",
@@ -27,6 +28,11 @@
       "name": "com.cysharp.unitask",
       "expression": "",
       "define": "AESFW_UNITASK"
+    },
+    {
+      "name": "com.eflatun.scenereference",
+      "expression": "",
+      "define": "EFLATUN_SCENE_REFERENCE"
     },
     {
       "name": "com.unity.purchasing",

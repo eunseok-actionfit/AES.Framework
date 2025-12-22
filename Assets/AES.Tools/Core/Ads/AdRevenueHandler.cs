@@ -1,4 +1,4 @@
-
+#if AESFW_ADS_MAX
 using Singular;
 using UnityEngine;
 
@@ -44,3 +44,4 @@ public class AdRevenueHandler : MonoBehaviour
         MaxSdkCallbacks.MRec.OnAdRevenuePaidEvent -= OnAdRevenuePaidEvent;
     }
 }
+#endif
