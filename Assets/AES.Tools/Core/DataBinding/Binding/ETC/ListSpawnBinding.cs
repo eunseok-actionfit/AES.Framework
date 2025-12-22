@@ -14,7 +14,7 @@ namespace AES.Tools
 
     public sealed class ListSpawnBinding : ContextBindingBase
     {
-        [SerializeField] private UnityEngine.Transform   root;
+        [SerializeField] private Transform   root;
         [SerializeField] private MonoContext itemPrefab;
 
         [Header("Events")]
