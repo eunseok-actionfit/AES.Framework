@@ -1,7 +1,7 @@
 
 namespace AES.Tools
 {
-    public interface ISceneArgs
-    {
-    }
+    // public interface ISceneArgs
+    // {
+    // }
 }

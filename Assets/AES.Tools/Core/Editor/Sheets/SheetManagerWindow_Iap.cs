@@ -35,9 +35,14 @@ namespace AES.IAP.Editor.Sheets
             {
                 using (new EditorGUILayout.HorizontalScope())
                 {
-                    EditorGUILayout.LabelField($"{s.name} ({s.mode}, gid={s.gid})");
+                    string src = (s.tsv != null) ? $"TSV={s.tsv.name}" : $"gid={s.gid}";
+                    EditorGUILayout.LabelField($"{s.name} ({s.mode}, {src})");
                     if (GUILayout.Button("Generate", GUILayout.Width(90)))
-                        SheetDataProcessor_IapJson.GenerateOne(profile, s);
+                    {
+                        // GenerateOne을 직접 호출해도 되지만, GenerateAll에서 lookup을 만드는 편이 더 안전.
+                        // 여기서는 간단히 전체 생성 권장. 필요하면 개별 생성에서도 lookup 만들도록 확장 가능.
+                        SheetDataProcessor_IapJson.GenerateAll(profile);
+                    }
                 }
             }
         }

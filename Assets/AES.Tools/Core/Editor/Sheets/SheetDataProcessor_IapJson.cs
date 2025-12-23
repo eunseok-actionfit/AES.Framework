@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Newtonsoft.Json;
 using UnityEditor;
 using UnityEngine;
@@ -19,6 +20,68 @@ namespace AES.IAP.Editor.Sheets
             public List<Dictionary<string, string>> rows;
         }
 
+        // ===== Menu Buttons =====
+        [MenuItem("AES/IAP/Sheets/Generate All (Profile)")]
+        private static void MenuGenerateAll()
+        {
+            var profile = FindProfile();
+            if (profile == null) return;
+            GenerateAll(profile);
+        }
+
+        [MenuItem("AES/IAP/Sheets/Generate From Selected TSV")]
+        private static void MenuGenerateFromSelectedTsv()
+        {
+            var profile = FindProfile();
+            if (profile == null) return;
+
+            var selected = Selection.objects.OfType<TextAsset>().ToArray();
+            if (selected.Length == 0)
+            {
+                Debug.LogWarning("[SheetDataProcessor_IapJson] Select one or more TSV(TextAsset).");
+                return;
+            }
+
+            var enumLookup = SheetValidation_Iap.BuildEnumLookupFromProfile(profile, out var enumErrors);
+            if (enumErrors.Count > 0)
+            {
+                Debug.LogError("[SheetDataProcessor_IapJson] EnumDefinition build failed:\n- " + string.Join("\n- ", enumErrors));
+                return;
+            }
+
+            EnsureOutputFolder();
+
+            int ok = 0, fail = 0;
+            foreach (var ta in selected)
+            {
+                var sheet = profile.sheets?.FirstOrDefault(s => s != null && s.tsv == ta);
+                if (sheet == null)
+                {
+                    Debug.LogWarning($"[SheetDataProcessor_IapJson] Selected TSV not found in profile.sheets: {ta.name}");
+                    fail++;
+                    continue;
+                }
+
+                if (GenerateOne(profile, sheet, enumLookup)) ok++; else fail++;
+            }
+
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+            Debug.Log($"[SheetDataProcessor_IapJson] Generate From Selected TSV done. ok={ok}, fail={fail}");
+        }
+
+        private static SheetAssetProfile_Iap FindProfile()
+        {
+            var guid = AssetDatabase.FindAssets("t:SheetAssetProfile_Iap").FirstOrDefault();
+            if (string.IsNullOrEmpty(guid))
+            {
+                Debug.LogError("[SheetDataProcessor_IapJson] SheetAssetProfile_Iap not found.");
+                return null;
+            }
+            return AssetDatabase.LoadAssetAtPath<SheetAssetProfile_Iap>(AssetDatabase.GUIDToAssetPath(guid));
+        }
+
+        // ===== Main =====
         public static void GenerateAll(SheetAssetProfile_Iap profile)
         {
             if (profile == null)
@@ -27,50 +90,110 @@ namespace AES.IAP.Editor.Sheets
                 return;
             }
 
-            if (profile.serviceAccountJson == null)
+            if (profile.sheets == null || profile.sheets.Count == 0)
             {
-                Debug.LogError("[SheetDataProcessor_IapJson] serviceAccountJson is null");
+                Debug.LogWarning("[SheetDataProcessor_IapJson] profile.sheets is empty");
+                return;
+            }
+
+            // TSV 없는 시트가 하나라도 있으면 Google 설정 필요
+            bool needsGoogle = profile.sheets.Any(s => s != null && s.tsv == null);
+            if (needsGoogle)
+            {
+                if (string.IsNullOrWhiteSpace(profile.sheetId))
+                {
+                    Debug.LogError("[SheetDataProcessor_IapJson] sheetId is empty (required for non-TSV sheets)");
+                    return;
+                }
+
+                if (profile.serviceAccountJson == null)
+                {
+                    Debug.LogError("[SheetDataProcessor_IapJson] serviceAccountJson is null (required for non-TSV sheets)");
+                    return;
+                }
+            }
+
+            // EnumDefinition lookup 준비
+            var enumLookup = SheetValidation_Iap.BuildEnumLookupFromProfile(profile, out var enumErrors);
+            if (enumErrors.Count > 0)
+            {
+                Debug.LogError("[SheetDataProcessor_IapJson] EnumDefinition build failed:\n- " + string.Join("\n- ", enumErrors));
                 return;
             }
 
             EnsureOutputFolder();
 
+            int ok = 0, fail = 0;
             foreach (var s in profile.sheets)
-                GenerateOne(profile, s);
+            {
+                if (s == null) continue;
+                if (GenerateOne(profile, s, enumLookup)) ok++; else fail++;
+            }
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
+            Debug.Log($"[SheetDataProcessor_IapJson] GenerateAll done. ok={ok}, fail={fail}");
         }
 
-        public static void GenerateOne(SheetAssetProfile_Iap profile, SheetAssetProfile_Iap.SheetInfo sheet)
+        // return true on success
+        public static bool GenerateOne(
+            SheetAssetProfile_Iap profile,
+            SheetAssetProfile_Iap.SheetInfo sheet,
+            IReadOnlyDictionary<string, HashSet<string>> enumLookup = null)
         {
-            if (profile == null || sheet == null) return;
+            if (profile == null || sheet == null) return false;
 
             var fileName = GetOutputFileName(sheet);
             if (string.IsNullOrEmpty(fileName))
-                return;
+                return false;
 
             EnsureOutputFolder();
 
-            IList<IList<object>> values;
-            try
+            List<Dictionary<string, string>> rows = null;
+
+            // 1) TSV 우선
+            if (sheet.tsv != null)
             {
-                values = GoogleSheetsPrivateDownloader.DownloadValuesOptimized(
-                    profile.sheetId,
-                    sheet.gid,
-                    profile.serviceAccountJson.text);
+                rows = GoogleSheetImporter.ParseTSV(sheet.tsv.text);
             }
-            catch (Exception e)
+            else
             {
-                Debug.LogWarning($"[SheetDataProcessor_IapJson] Download failed: {sheet.name} ({sheet.gid})\n{e.Message}");
-                return;
+                // 2) Google Sheets fallback
+                if (string.IsNullOrWhiteSpace(profile.sheetId) || profile.serviceAccountJson == null)
+                {
+                    Debug.LogError($"[SheetDataProcessor_IapJson] Google path requires sheetId and serviceAccountJson: {sheet.name}");
+                    return false;
+                }
+
+                IList<IList<object>> values;
+                try
+                {
+                    values = GoogleSheetsPrivateDownloader.DownloadValuesOptimized(
+                        profile.sheetId,
+                        sheet.gid,
+                        profile.serviceAccountJson.text);
+                }
+                catch (Exception e)
+                {
+                    Debug.LogWarning($"[SheetDataProcessor_IapJson] Download failed: {sheet.name} ({sheet.gid})\n{e.Message}");
+                    return false;
+                }
+
+                rows = GoogleSheetImporter.ParseValues(values);
             }
 
-            var rows = GoogleSheetImporter.ParseValues(values); // header=0, skip=1, data=2~
             if (rows == null || rows.Count == 0)
             {
                 Debug.LogWarning($"[SheetDataProcessor_IapJson] No rows: {sheet.name}");
-                return;
+                return false;
+            }
+
+            // 3) Validate (EnumDefinitionJson은 lookup이 없어도 통과 가능)
+            var errors = SheetValidation_Iap.ValidateSheet(sheet, rows, enumLookup);
+            if (errors.Count > 0)
+            {
+                Debug.LogError($"[SheetDataProcessor_IapJson] Validation failed: {sheet.name}\n- " + string.Join("\n- ", errors));
+                return false;
             }
 
             var root = new JsonRoot
@@ -81,6 +204,7 @@ namespace AES.IAP.Editor.Sheets
 
             var json = JsonConvert.SerializeObject(root, Formatting.Indented);
             WriteJson(fileName, json);
+            return true;
         }
 
         private static string GetOutputFileName(SheetAssetProfile_Iap.SheetInfo sheet)
@@ -102,7 +226,6 @@ namespace AES.IAP.Editor.Sheets
             // subfolder 입력은 허용하되 normalize
             n = n.Replace("\\", "/").TrimStart('/');
 
-            // extension 자동 보정
             if (!n.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
                 n += ".json";
 
