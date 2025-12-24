@@ -13,7 +13,7 @@ namespace AES.Tools
         IEnumerable Enumerate();
     }
 
-    public class ObservableList<T> : IList<T>, IObservableList
+    public class ObservableList<T> : IList<T>, IObservableList, IReadOnlyList<T>
     {
         private readonly List<T> _inner = new();
 
