@@ -5,7 +5,7 @@ namespace AES.Tools.TBC.Unit
 {
     public readonly struct Unit : IEquatable<Unit>
     {
-        public static readonly Unit Default = new();
+        public readonly static Unit Default = new();
 
         public bool Equals(Unit other) => true;
         public override bool Equals(object obj) => obj is Unit;

@@ -140,7 +140,12 @@ namespace AES.Tools.Editor
                     try { return a.GetTypes(); }
                     catch (ReflectionTypeLoadException ex) { return ex.Types.Where(t => t != null); }
                 })
-                .Where(t => t.IsClass && !t.IsAbstract && t.Name.EndsWith("ViewModel", StringComparison.Ordinal))
+                .Where(t =>
+                    t.IsClass &&
+                    !t.IsAbstract &&
+                    (t.Name.EndsWith("ViewModel", StringComparison.Ordinal) ||
+                     t.Name.EndsWith("VM", StringComparison.Ordinal))
+                )
                 .OrderBy(t => t.FullName)
                 .ToList();
 
