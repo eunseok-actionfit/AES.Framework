@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
+using VContainer;
+using VContainer.Unity;
 
 
 namespace AES.Tools
@@ -20,6 +22,8 @@ namespace AES.Tools
         [Header("Events")]
         [SerializeField] public UnityEvent OnSpawnEvent   = new();
         [SerializeField] public UnityEvent OnDespawnEvent = new();
+        
+        [Inject] private IObjectResolver _resolver;
 
         private Action<object> _listener;
         private object         _token;
@@ -89,7 +93,8 @@ namespace AES.Tools
 
                 if (!_vmToInstance.TryGetValue(vm, out var ctx) || ctx == null)
                 {
-                    ctx = Instantiate(itemPrefab, root);
+                   // ctx = Instantiate(itemPrefab, root);
+                   ctx = _resolver.Instantiate(itemPrefab, root); 
                     _vmToInstance[vm] = ctx;
                     OnSpawnEvent.Invoke();
                 }

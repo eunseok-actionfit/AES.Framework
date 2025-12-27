@@ -161,16 +161,21 @@ namespace AES.Tools
                 OnValidationChanged(this);
         }
 
-        public IDisposable Subscribe(Action<T, T> action)
+        public IDisposable Subscribe(Action<T, T> action,  bool refresh = true)
         {
             OnValueChangedWithPrev += action;
+            
+            if (refresh)
+                action.Invoke(_value, _value);
 
             return new Subscription(() => { OnValueChangedWithPrev -= action; });
         }
         
-        public IDisposable Subscribe(Action<T> action)
+        public IDisposable Subscribe(Action<T> action,  bool refresh = true)
         {
             OnValueChanged += action;
+            if (refresh)
+                action.Invoke(_value);
 
             return new Subscription(() => { OnValueChanged -= action; });
         }
