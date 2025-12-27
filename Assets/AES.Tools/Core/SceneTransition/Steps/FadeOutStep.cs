@@ -7,10 +7,10 @@ public sealed class FadeOutStep : ITransitionStep
     private readonly float _duration;
     private readonly TransitionStatus _emit;
 
-    public FadeOutStep(IFader fader, float duration, TransitionStatus emit = TransitionStatus.ExitFade)
+    public FadeOutStep(IFader fader, float? duration, TransitionStatus emit = TransitionStatus.ExitFade)
     {
         _fader = fader;
-        _duration = duration;
+        _duration = duration ?? 0f;
         _emit = emit;
     }
 

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
@@ -16,13 +17,16 @@ public sealed class AppOpenBootstrapOrchestrator : IAsyncStartable
     private readonly SceneTransitionBootstrapConfig _cfg;
     private readonly BootstrapSettings _settings;
 
+    private readonly ILoadingProgressHub _hub;
+
     public AppOpenBootstrapOrchestrator(
         LifetimeScope rootScope,
         BootstrapGraph graph,
         string profile,
         SceneTransitionService scene,
         SceneTransitionBootstrapConfig cfg,
-        BootstrapSettings settings)
+        BootstrapSettings settings,
+        ILoadingProgressHub hub)
     {
         _rootScope = rootScope;
         _graph = graph;
@@ -30,11 +34,18 @@ public sealed class AppOpenBootstrapOrchestrator : IAsyncStartable
         _scene = scene;
         _cfg = cfg;
         _settings = settings;
+        _hub = hub;
+    }
+
+    // AppOpen 전용: ITransitionEvents를 "구독 가능" 형태로 어댑팅
+    private sealed class AppOpenTransitionEvents : ITransitionEvents
+    {
+        public event Action<TransitionStatus> OnStatus;
+        public void Emit(TransitionStatus status) => OnStatus?.Invoke(status);
     }
 
     public async UniTask StartAsync(CancellationToken cancellation)
     {
-        // 1) AppOpen 로딩 오버레이 표시 (프리팹 내부 LoadingOverlayUIBase가 Registry 등록)
         AppOpenLoadingOverlaySpawner spawner = null;
 
         if (_settings != null &&
@@ -45,59 +56,74 @@ public sealed class AppOpenBootstrapOrchestrator : IAsyncStartable
             spawner.Show();
         }
 
-        // helper
-        void Set(float p, string msg = null)
-        {
-            var ui = LoadingUIRegistry.Current;
-            if (ui == null) return;
-
-            // AppOpen은 realtime/smoothed 동일 값으로 넣는 정책
-            ui.SetProgress(p, p);
-            if (!string.IsNullOrEmpty(msg))
-                ui.SetMessage(msg);
-        }
-
-        Set(0.02f, "Initializing...");
+        _hub?.SetMessage("Initializing...");
+        _hub?.ReportRealtime01(0.02f);
 
         const float bootMin = 0.05f;
         const float bootMax = 0.85f;
 
-        var progress = new Progress<BootstrapProgress>(bp =>
+        using (_hub.PushRange(bootMin, bootMax))
         {
-            var mapped = Mathf.Lerp(bootMin, bootMax, Mathf.Clamp01(bp.Normalized));
-            Set(mapped);
-
-            if (!string.IsNullOrEmpty(bp.FeatureId))
+            var progress = new Progress<BootstrapProgress>(bp =>
             {
-                if (bp.Phase == BootstrapProgressPhase.FeatureBegin)
-                    Set(mapped, $"Boot: {bp.FeatureId}");
-                else if (bp.Phase == BootstrapProgressPhase.FeatureProgress && !string.IsNullOrEmpty(bp.Message))
-                    Set(mapped, $"Boot: {bp.FeatureId} - {bp.Message}");
-            }
-        });
+                _hub?.ReportRealtime01(Mathf.Clamp01(bp.Normalized));
 
-        if (_graph)
-        {
-            await BootstrapRunner.InitializeAllAsync(
-                _graph,
-                _profile,
-                _rootScope,
-                Application.platform,
+                if (!string.IsNullOrEmpty(bp.FeatureId))
+                {
+                    if (bp.Phase == BootstrapProgressPhase.FeatureBegin)
+                        _hub?.SetMessage($"Boot: {bp.FeatureId}");
+                    else if (bp.Phase == BootstrapProgressPhase.FeatureProgress && !string.IsNullOrEmpty(bp.Message))
+                        _hub?.SetMessage($"Boot: {bp.FeatureId} - {bp.Message}");
+                }
+            });
+
+            if (_graph)
+            {
+                await BootstrapRunner.InitializeAllAsync(
+                    _graph,
+                    _profile,
+                    _rootScope,
+                    Application.platform,
 #if UNITY_EDITOR
-                true
+                    true
 #else
-                false
+                    false
 #endif
-                ,
-                progress
-            );
+                    ,
+                    progress
+                );
+            }
         }
 
-        Set(0.90f, "Entering first scene...");
+        //  1) Ready를 먼저 찍고
+        _hub?.SetMessage("Ready");
+        _hub?.ReportRealtime01(1f);
+
+        //  2) 스무스가 진짜 1.0 될 때까지 기다린 뒤
+        await _hub.WaitUntilFilledAsync(cancellation);
+
+        //  3) 그 다음 씬 전환 시작
+        _hub?.SetMessage("Entering first scene...");
 
         var firstKey = _settings != null ? _settings.FirstSceneKey : "Lobby";
 
-        // 2) 첫 씬 진입은 SceneTransition로. AppOpen UI가 이미 떠 있으니 ShowLoadingScreen=false
+        // ExitFade(검정->밝음) 시작 시점에 AppOpen 오버레이를 내려서 로비가 보이게 함
+        var events = new AppOpenTransitionEvents();
+        bool spawnerHidden = false;
+
+        void HideSpawner()
+        {
+            if (spawnerHidden) return;
+            spawnerHidden = true;
+            spawner?.Hide();
+        }
+
+        events.OnStatus += status =>
+        {
+            if (status == TransitionStatus.ExitFade)
+                HideSpawner();
+        };
+
         await _scene.RunAsync(new LoadRequest
         {
             DestinationKey = firstKey,
@@ -105,25 +131,26 @@ public sealed class AppOpenBootstrapOrchestrator : IAsyncStartable
             ShowLoadingScreen = false,
             LoadingKeyOverride = null,
 
+            Events = events,
+
             ActivateOnLoad = true,
             ActivationGateTimeoutMs = 0,
 
             LoadAdditive = false,
             UnloadPolicy = UnloadPolicy.AllLoadedScenes,
             KeepSceneNames = _cfg != null
-                ? new System.Collections.Generic.List<string>(_cfg.KeepSceneNames ?? Array.Empty<string>())
-                : new System.Collections.Generic.List<string>(),
-
-            EntryFadeDuration = 0f,
-            ExitFadeDuration = 0f,
+                ? new List<string>(_cfg.KeepSceneNames ?? Array.Empty<string>())
+                : new List<string>(),
 
             UseAntiSpill = _cfg?.UseAntiSpill ?? true,
-            EnableFallback = false
+            EnableFallback = false,
+
+            SmoothedProgress = 0f
         }, cancellation);
 
-        Set(1f, "Ready");
+        // 안전장치: ExitFade가 없거나 이벤트가 안 오면 여기서라도 내림
+        HideSpawner();
 
-        // 3) AppOpen 오버레이 숨김 (UI는 OnDisable에서 Registry 해제)
-        spawner?.Hide();
+        _hub.Stop();
     }
 }

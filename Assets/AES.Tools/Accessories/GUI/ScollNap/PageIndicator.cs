@@ -70,9 +70,6 @@ namespace AES.Tools
             if (autoCollect)
                 Collect();
 
-            if (items.Count != count)
-                Debug.LogWarning($"[PageIndicator] ItemCount({items.Count}) != PageCount({count})", this);
-
             Bind();
         }
 

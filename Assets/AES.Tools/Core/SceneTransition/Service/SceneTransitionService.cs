@@ -1,8 +1,10 @@
+// SceneTransitionService.cs
 using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using VContainer;
 using VContainer.Unity;
 
 public enum GateId { AfterUnload, BeforeActivation }
@@ -22,8 +24,14 @@ public sealed class SceneTransitionService
 
     private readonly TransitionViewModel _vm;
 
-    // NEW: presenter 선택 팩토리(씬/오버레이 전략)
+    // presenter 선택 팩토리(씬/오버레이 전략)
     private readonly LoadingPresenterFactory _loadingPresenterFactory;
+
+    // 단일 progress writer(Hub)
+    private readonly ILoadingProgressHub _hub;
+
+    // optional: uxRootPrefab이 등록되어 있으면 여기로 들어옴(없으면 null)
+    private readonly SceneTransitionUxRoot _uxRoot;
 
     private readonly FallbackGuard _fallbackGuard = new();
     private CancellationTokenSource _inflightCts;
@@ -41,7 +49,9 @@ public sealed class SceneTransitionService
         SceneCatalog sceneCatalog,
         LoadingCatalog loadingCatalog,
         LoadingPresenterFactory loadingPresenterFactory,
-        TransitionViewModel vm
+        TransitionViewModel vm,
+        ILoadingProgressHub hub,
+        IObjectResolver resolver // ✅ optional resolve 용도
     )
     {
         _loader = loader;
@@ -54,6 +64,10 @@ public sealed class SceneTransitionService
         _loadingCatalog = loadingCatalog;
         _loadingPresenterFactory = loadingPresenterFactory;
         _vm = vm;
+        _hub = hub;
+
+
+        resolver.TryResolve(out _uxRoot);
     }
 
     public void CancelCurrent() => _inflightCts?.Cancel();
@@ -90,12 +104,38 @@ public sealed class SceneTransitionService
         return _cfg != null ? _cfg.DefaultLoading : default;
     }
 
+    private void ApplyDefaultsAndUxRoot(ref LoadRequest request)
+    {
+        // 1) UXRoot 기반 기본값 자동 주입 (있을 때만)
+        if (_uxRoot != null)
+        {
+            if (request.Fader == null) request.Fader = _uxRoot.Fader;
+            if (request.InputBlocker == null) request.InputBlocker = _uxRoot.InputBlocker;
+
+            // 필요하면 UI도 uxRoot로 기본값 주입 가능
+            // if (request.UI == null) request.UI = _uxRoot.UI;
+        }
+
+        // 2) Config 기반 기본값 적용 (request가 명시하지 않았을 때만)
+        if (_cfg != null)
+        {
+            if (!request.EntryFadeDuration.HasValue)
+                request.EntryFadeDuration = _cfg.EntryFadeDuration;
+            if (!request.AfterEntryFadeDelay.HasValue)
+                request.AfterEntryFadeDelay = _cfg.AfterEntryFadeDelay;
+            if (!request.ExitFadeDuration.HasValue)
+                request.ExitFadeDuration = _cfg.ExitFadeDuration;
+        }
+    }
+
     private async UniTask RunInternal(LoadRequest request, CancellationToken externalCt)
     {
         _inflightCts?.Cancel();
         _inflightCts?.Dispose();
         _inflightCts = CancellationTokenSource.CreateLinkedTokenSource(externalCt);
         var ct = _inflightCts.Token;
+        
+        ApplyDefaultsAndUxRoot(ref request);
 
         _vm?.ResetForNewRun();
         _vm?.SetStatus(TransitionStatus.LoadStarted);
@@ -108,9 +148,6 @@ public sealed class SceneTransitionService
             RestorePreviousActiveScene = true
         };
 
-        // NOTE:
-        // 네 프로젝트에서 TransitionContext가 LoadingKey/LoadingPresenter를 포함하도록 확장되어 있다면 그대로 사용.
-        // 포함되어 있지 않다면, 이 2줄(LoadingKey/LoadingPresenter)은 TransitionContext에 필드 추가가 필요.
         var ctx = new TransitionContext
         {
             Request = request,
@@ -123,36 +160,16 @@ public sealed class SceneTransitionService
 
         var antiSpill = request.UseAntiSpill ? new AntiSpill() : null;
 
-        float lastRealtime = 0f;
-        float lastSmoothed = 0f;
-
-        var realtimeSink = new Progress<float>(p => { lastRealtime = Mathf.Clamp01(p); });
-
-        var smoothedSink = new Progress<float>(p =>
+        // 핵심:
+        // - Service는 Registry/UI에 직접 쓰지 않는다.
+        // - 로더 progress(0..1)를 Hub에 "입력"만 전달한다.
+        var progressProxy = new System.Progress<float>(p =>
         {
-            lastSmoothed = Mathf.Clamp01(p);
+            var x = Mathf.Clamp01(p);
+            _hub?.ReportRealtime01(x);
 
-            // Registry 기반 UI (씬/오버레이 공통)
-            LoadingUIRegistry.Current?.SetProgress(lastRealtime, lastSmoothed);
-
-            // MVVM
-            _vm?.SetProgress(lastRealtime, lastSmoothed);
-        });
-
-        using var smoother = new ProgressSmoother(
-            request.ProgressSpeedFn ?? (_ => 5f),
-            realtimeSink,
-            smoothedSink);
-
-        var progressProxy = new Progress<float>(p => smoother.SetRealtime(p));
-
-        var tick = UniTask.Create(async () =>
-        {
-            while (!ct.IsCancellationRequested)
-            {
-                smoother.Tick(Time.unscaledDeltaTime);
-                await UniTask.Yield();
-            }
+            // VM이 꼭 필요하면 최소한 realtime로만 유지
+            _vm?.SetProgress(x, x);
         });
 
         bool failed = false;
@@ -217,7 +234,6 @@ public sealed class SceneTransitionService
         finally
         {
             _inflightCts?.Cancel();
-            await tick.SuppressCancellationThrow();
 
             if (failed)
             {
@@ -228,7 +244,6 @@ public sealed class SceneTransitionService
                 var code = TransitionFailureClassifier.Classify(failure);
                 var policy = FailurePolicies.Get(code);
 
-                // FailurePolicy 실제 필드명에 맞춘 매핑
                 _vm?.SetStatus(TransitionStatus.Failed);
                 _vm?.SetRetryVisible(policy.SuggestRetry);
                 _vm?.SetClearCacheVisible(policy.ClearCacheSuggestion);
@@ -259,12 +274,13 @@ public sealed class SceneTransitionService
             UseAntiSpill = original.FallbackUseAntiSpill,
             EnableFallback = false,
 
-            // NOTE: UI는 이제 Service에서 직접 안 씀. 남겨도 무해.
+            // NOTE: UI는 Hub/Presenter로 관리. 남겨도 무해.
             UI = original.UI,
             Events = original.Events,
             InputBlocker = original.InputBlocker,
             Fader = original.Fader,
 
+            // 기본값은 ApplyDefaultsAndUxRoot에서 cfg로 채워질 수 있음
             EntryFadeDuration = 0f,
             ExitFadeDuration = 0f,
 

@@ -32,6 +32,7 @@ public sealed class SceneTransitionFeature : AppFeatureSO
     [Header("Defaults")]
     [SerializeField] private bool useAntiSpill = true;
     [SerializeField] private float entryFadeDuration = 0f;
+    [SerializeField] private float afterEntryFadeDelay = 0f;
     [SerializeField] private float exitFadeDuration = 0f;
 
     public override void Install(IContainerBuilder builder, in FeatureContext ctx)
@@ -64,7 +65,9 @@ public sealed class SceneTransitionFeature : AppFeatureSO
         builder.Register<OverlayLoadingPresenter>(Lifetime.Singleton).As<ILoadingPresenter>().AsSelf();
         builder.Register<LoadingScenePresenter>(Lifetime.Singleton);
         builder.Register<LoadingPresenterFactory>(Lifetime.Singleton);
-
+        builder.Register<LoadingProgressHub>(Lifetime.Singleton).As<ILoadingProgressHub>().AsSelf();
+        
+        
         // Service
         builder.Register<SceneTransitionService>(Lifetime.Singleton);
 
@@ -80,6 +83,7 @@ public sealed class SceneTransitionFeature : AppFeatureSO
             LoadingMode = loadingMode,
             OverlayLoadingPrefab = overlayLoadingPrefab,
             EntryFadeDuration = entryFadeDuration,
+            AfterEntryFadeDelay = afterEntryFadeDelay,
             ExitFadeDuration = exitFadeDuration,
             UseAntiSpill = useAntiSpill
         };

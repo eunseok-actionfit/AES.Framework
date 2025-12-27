@@ -28,12 +28,12 @@ public sealed class LoadRequest
     public ITransitionEvents Events;
     
     public float BeforeEntryFadeDelay = 0f;
-    public float AfterEntryFadeDelay = 0f;
+    public float? AfterEntryFadeDelay;
     public float BeforeActivationDelay = 0f;
     public float AfterActivationDelay = 0f;
 
-    public float EntryFadeDuration = 0f;
-    public float ExitFadeDuration = 0f;
+    public float? EntryFadeDuration;
+    public float? ExitFadeDuration;
 
     public bool UseAntiSpill = true;
     public string AntiSpillSceneName = "AntiSpill";

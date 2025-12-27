@@ -40,7 +40,7 @@ namespace AES.Tools.VContainer.Scope
             builder.RegisterInstance(settings.Profile);
 
             // 4) AppOpen Orchestrator 실행
-            builder.RegisterEntryPoint<AppOpenBootstrapOrchestrator>(Lifetime.Singleton);
+            builder.RegisterEntryPoint<AppOpenBootstrapOrchestrator>();
         }
     }
 }

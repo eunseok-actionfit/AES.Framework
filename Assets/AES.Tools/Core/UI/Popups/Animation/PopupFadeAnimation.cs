@@ -1,6 +1,6 @@
 using Cysharp.Threading.Tasks;
 using UnityEngine;
-
+using System.Threading;
 
 namespace AES.Tools
 {
@@ -10,10 +10,12 @@ namespace AES.Tools
         [SerializeField] float duration = 0.15f;
 
         CanvasGroup _cg;
+        CancellationToken _ct;
 
         void Awake()
         {
             _cg = GetComponent<CanvasGroup>();
+            _ct = this.GetCancellationTokenOnDestroy();
         }
 
         public async UniTask PlayIn()
@@ -26,7 +28,7 @@ namespace AES.Tools
             {
                 t += Time.unscaledDeltaTime;
                 _cg.alpha = Mathf.Clamp01(t / duration);
-                await UniTask.Yield();
+                await UniTask.Yield(PlayerLoopTiming.Update, _ct);
             }
 
             _cg.alpha = 1f;
@@ -42,7 +44,7 @@ namespace AES.Tools
             {
                 t -= Time.unscaledDeltaTime;
                 _cg.alpha = Mathf.Clamp01(t / duration);
-                await UniTask.Yield();
+                await UniTask.Yield(PlayerLoopTiming.Update, _ct);
             }
 
             _cg.alpha = 0f;

@@ -6,9 +6,9 @@ public sealed class DelayStep : ITransitionStep
     private readonly float _seconds;
     private readonly TransitionStatus _emit;
 
-    public DelayStep(float seconds, TransitionStatus emit)
+    public DelayStep(float? seconds, TransitionStatus emit)
     {
-        _seconds = seconds;
+        _seconds = seconds ?? 0f;
         _emit = emit;
     }
 

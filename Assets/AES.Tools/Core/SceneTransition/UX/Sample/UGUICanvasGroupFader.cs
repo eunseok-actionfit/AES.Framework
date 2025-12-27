@@ -2,7 +2,7 @@ using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
-public sealed class UGUICanvasGroupFader : MonoBehaviour, IFader
+public sealed class UGUICanvasGroupFader : FaderBase
 {
     [Header("Assign a full-screen CanvasGroup")]
     public CanvasGroup CanvasGroup;
@@ -21,10 +21,10 @@ public sealed class UGUICanvasGroupFader : MonoBehaviour, IFader
         }
     }
 
-    public UniTask FadeIn(float duration, CancellationToken ct)
+    public override UniTask FadeIn(float duration, CancellationToken ct)
         => FadeTo(1f, duration, ct);
 
-    public UniTask FadeOut(float duration, CancellationToken ct)
+    public override  UniTask FadeOut(float duration, CancellationToken ct)
         => FadeTo(0f, duration, ct);
 
     private async UniTask FadeTo(float target, float duration, CancellationToken ct)

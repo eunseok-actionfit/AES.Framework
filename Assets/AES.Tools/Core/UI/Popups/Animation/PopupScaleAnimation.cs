@@ -1,6 +1,6 @@
 using Cysharp.Threading.Tasks;
 using UnityEngine;
-
+using System.Threading;
 
 namespace AES.Tools
 {
@@ -10,10 +10,12 @@ namespace AES.Tools
         [SerializeField] Vector3 from = new(0.9f, 0.9f, 1f);
 
         RectTransform _rt;
+        CancellationToken _ct;
 
         void Awake()
         {
             _rt = transform as RectTransform;
+            _ct = this.GetCancellationTokenOnDestroy();
         }
 
         public async UniTask PlayIn()
@@ -25,7 +27,7 @@ namespace AES.Tools
             {
                 t += Time.unscaledDeltaTime;
                 _rt.localScale = Vector3.Lerp(from, Vector3.one, t / duration);
-                await UniTask.Yield();
+                await UniTask.Yield(PlayerLoopTiming.Update, _ct);
             }
 
             _rt.localScale = Vector3.one;
@@ -38,7 +40,7 @@ namespace AES.Tools
             {
                 t -= Time.unscaledDeltaTime;
                 _rt.localScale = Vector3.Lerp(from, Vector3.one, t / duration);
-                await UniTask.Yield();
+                await UniTask.Yield(PlayerLoopTiming.Update, _ct);
             }
         }
     }
