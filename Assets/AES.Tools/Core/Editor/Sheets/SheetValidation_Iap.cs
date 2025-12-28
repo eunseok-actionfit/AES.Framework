@@ -64,11 +64,17 @@ namespace AES.IAP.Editor.Sheets
                 enumValue = (enumValue ?? "").Trim();
                 isActive = (isActive ?? "").Trim();
 
+                // 완전히 빈 행은 무시
+                if (string.IsNullOrEmpty(enumName) && string.IsNullOrEmpty(enumValue))
+                    continue;
+
+// 하나만 비어 있으면 진짜 에러
                 if (string.IsNullOrEmpty(enumName) || string.IsNullOrEmpty(enumValue))
                 {
                     errors.Add($"EnumDefinition Row#{i}: EnumName/EnumValue is empty.");
                     continue;
                 }
+
 
                 // IsActive가 있으면 TRUE만 포함(없으면 모두 포함)
                 if (!string.IsNullOrEmpty(isActive) && !IsTrue(isActive))
