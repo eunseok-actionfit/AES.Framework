@@ -29,6 +29,17 @@ namespace AES.Tools
             try { Unsubscribe(); }
             catch (Exception ex) { LogBindingException("Unsubscribe() 중 예외 발생", ex); }
         }
+        
+        protected virtual void OnDestroy()
+        {
+            if (!_isSubscribed)
+                return;
+            
+            _isSubscribed = false;
+
+            try { Unsubscribe(); }
+            catch (Exception ex) { LogBindingException("Unsubscribe() 중 예외 발생", ex); }
+        }
 
         protected abstract void Subscribe();
         protected abstract void Unsubscribe();

@@ -26,9 +26,13 @@ namespace AES.Tools
 
         private void OnValueChanged(object value)
         {
+            if (!this) return;               // UnityEngine.Object null-override 체크
+            if (!gameObject) return;
+
 #if UNITY_EDITOR
             Debug_OnValueUpdated(value, ResolvedPath);
 #endif
+
             if (value is bool b)
                 gameObject.SetActive(invert ? !b : b);
         }

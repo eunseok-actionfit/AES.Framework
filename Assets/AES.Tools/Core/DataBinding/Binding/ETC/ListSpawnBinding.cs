@@ -16,17 +16,17 @@ namespace AES.Tools
 
     public sealed class ListSpawnBinding : ContextBindingBase
     {
-        [SerializeField] private Transform   root;
+        [SerializeField] private Transform root;
         [SerializeField] private MonoContext itemPrefab;
 
         [Header("Events")]
-        [SerializeField] public UnityEvent OnSpawnEvent   = new();
+        [SerializeField] public UnityEvent OnSpawnEvent = new();
         [SerializeField] public UnityEvent OnDespawnEvent = new();
-        
+
         [Inject] private IObjectResolver _resolver;
 
         private Action<object> _listener;
-        private object         _token;
+        private object _token;
 
         // VM -> 인스턴스 매핑
         private readonly Dictionary<object, MonoContext> _vmToInstance = new();
@@ -34,22 +34,16 @@ namespace AES.Tools
         protected override void OnContextAvailable(IBindingContext context, string path)
         {
             _listener = OnListChanged;
-            _token    = context.RegisterListener(path, _listener);
+            _token = context.RegisterListener(path, _listener);
         }
 
         protected override void OnContextUnavailable()
         {
-            if (_token is IDisposable d)
-            {
-                d.Dispose();
-            }
-            else if (BindingContext != null && _listener != null)
-            {
-                BindingContext.RemoveListener(ResolvedPath, _token);
-            }
+            if (_token is IDisposable d) { d.Dispose(); }
+            else if (BindingContext != null && _listener != null) { BindingContext.RemoveListener(ResolvedPath, _token); }
 
             _listener = null;
-            _token    = null;
+            _token = null;
 
             ClearAll();
         }
@@ -88,13 +82,17 @@ namespace AES.Tools
             for (int i = 0; i < count; i++)
             {
                 var vm = list.GetItem(i);
+
                 if (vm == null)
                     continue;
 
                 if (!_vmToInstance.TryGetValue(vm, out var ctx) || ctx == null)
                 {
-                   // ctx = Instantiate(itemPrefab, root);
-                   ctx = _resolver.Instantiate(itemPrefab, root); 
+                    if (_resolver == null)
+                        ctx = Instantiate(itemPrefab, root);
+                    else
+                        ctx = _resolver.Instantiate(itemPrefab, root);
+
                     _vmToInstance[vm] = ctx;
                     OnSpawnEvent.Invoke();
                 }
@@ -103,6 +101,7 @@ namespace AES.Tools
                 ctx.SetViewModel(vm);
 
                 var tr = ctx.transform;
+
                 if (tr.parent != root)
                     tr.SetParent(root, false);
 
@@ -113,9 +112,11 @@ namespace AES.Tools
 
             // 이번 리스트에 없는 VM/GO 정리
             var vmKeysToRemove = new List<object>();
+
             foreach (var kvp in _vmToInstance)
             {
                 var ctx = kvp.Value;
+
                 if (ctx == null || !usedInstances.Contains(ctx))
                 {
                     if (ctx != null)
@@ -123,9 +124,11 @@ namespace AES.Tools
                         Destroy(ctx.gameObject);
                         OnDespawnEvent.Invoke();
                     }
+
                     vmKeysToRemove.Add(kvp.Key);
                 }
             }
+
             foreach (var key in vmKeysToRemove)
                 _vmToInstance.Remove(key);
 
@@ -133,7 +136,7 @@ namespace AES.Tools
             for (int i = root.childCount - 1; i >= 0; i--)
             {
                 var child = root.GetChild(i);
-                var ctx   = child.GetComponent<MonoContext>();
+                var ctx = child.GetComponent<MonoContext>();
 
                 if (ctx == null)
                     continue;
@@ -152,6 +155,7 @@ namespace AES.Tools
                 return;
 
             var resettable = ctx.GetComponent<IResettableView>();
+
             if (resettable != null)
                 resettable.ResetView();
         }
@@ -163,6 +167,7 @@ namespace AES.Tools
                 if (kvp.Value != null)
                     Destroy(kvp.Value.gameObject);
             }
+
             _vmToInstance.Clear();
 
             if (root != null)

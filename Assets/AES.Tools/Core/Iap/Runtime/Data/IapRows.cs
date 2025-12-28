@@ -31,7 +31,7 @@ namespace AES.Tools
     {
         public string ProductKey;
         public string Platform;        // GP/IOS
-        public string StoreProductId;  // SKU
+        //public string StoreProductId;  // SKU
         public int Price;
         public string Currency;
         public bool IsActive;

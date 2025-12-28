@@ -147,14 +147,17 @@ namespace AES.Tools.UI.Popups
             }
             finally
             {
-                if (anim != null)
-                    await anim.PlayOut();
+              
+                    try { vm.Dispose(); } catch { /* 필요하면 로깅 */ }
 
-                Remove(go);
-                Destroy(go);
+                    if (anim != null)
+                        await anim.PlayOut();
 
-                if (modalBlocker != null)
-                    modalBlocker.SetActive(_stack.Count > 0);
+                    Remove(go);
+                    Destroy(go);
+
+                    if (modalBlocker != null)
+                        modalBlocker.SetActive(_stack.Count > 0);
             }
 
             return result;

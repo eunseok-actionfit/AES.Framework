@@ -2,9 +2,14 @@
 using System;
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
-using Singular;
 using UnityEngine;
 using UnityEngine.Purchasing;
+
+
+#if AESFW_SINGULAR
+using Singular;
+  #endif
+
 
 namespace AES.Tools
 {
@@ -16,8 +21,8 @@ namespace AES.Tools
         public event Action<Order> OnConfirmed;
         public event Action<FailedOrder> OnFailed;
         public event Action<DeferredOrder> OnDeferred;
-        
-        public event Action<string, string> PriceUpdated; 
+
+        public event Action<string, string> PriceUpdated;
         private readonly List<ProductDefinition> _products;
 
         public UnityIapBackend(
@@ -30,32 +35,34 @@ namespace AES.Tools
             _processor = processor;
 
             _store.OnPurchasePending += HandlePending;
+
             _store.OnPurchaseConfirmed += o =>
             {
-                VContainer.ADS.NotifySensitiveFlowEnded(); 
+                VContainer.ADS.NotifySensitiveFlowEnded();
                 OnConfirmed?.Invoke(o);
             };
 
             _store.OnPurchaseFailed += f =>
             {
-                VContainer.ADS.NotifySensitiveFlowEnded(); 
+                VContainer.ADS.NotifySensitiveFlowEnded();
                 OnFailed?.Invoke(f);
             };
 
             _store.OnPurchaseDeferred += d =>
             {
-                VContainer.ADS.NotifySensitiveFlowEnded(); 
+                VContainer.ADS.NotifySensitiveFlowEnded();
                 OnDeferred?.Invoke(d);
             };
 
             _store.OnProductsFetched += OnProductsFetched;
         }
-        
+
         private bool _fetched;
+
         public async UniTask InitializeAsync()
         {
             await _store.Connect().AsUniTask();
-            
+
             if (!_fetched)
             {
                 _fetched = true;
@@ -82,6 +89,7 @@ namespace AES.Tools
         {
             var info = order.Info;
             var purchased = info.PurchasedProductInfo;
+
             if (purchased.Count == 0)
                 return;
 
@@ -98,16 +106,18 @@ namespace AES.Tools
 
                 var ok = await _processor.ProcessAsync(ctx);
                 Debug.Log($"[IAP] Process result={ok} for productId={p.productId}");
+
                 if (!ok)
                     return;
             }
             
+#if AESFW_SINGULAR
             SingularSDK.InAppPurchase(order);
-
+#endif
             _store.ConfirmPurchase(order);
         }
 
-        
+
         private void OnProductsFetched(List<Product> products)
         {
             Debug.Log($"[IAP] OnProductsFetched count={(products?.Count ?? -1)}");
@@ -123,7 +133,7 @@ namespace AES.Tools
 
                 // Unity IAP가 지역/통화에 맞춰 내려주는 문자열
                 var priceText = p.metadata?.localizedPriceString ?? string.Empty;
-                
+
                 Debug.Log($"[IAP] Fetched id={productId}, price={priceText}");
 
                 if (!string.IsNullOrEmpty(priceText))

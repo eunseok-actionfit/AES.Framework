@@ -53,14 +53,10 @@ namespace AES.Tools.VContainer.Bootstrap.Framework.Features
             }
 
 #if AESFW_ADS_MAX
-            ApplyMaxTestDevices(testDevices);
-
-
-            ApplyMaxTestDevices(testDevices);
-
             if (!MaxSdk.IsInitialized())
             {
                 Debug.Log("[AdsFeature] Initializing Max SDK...");
+                ApplyMaxTestDevices(testDevices);
                 MaxSdk.InitializeSdk();
             }
 #endif

@@ -43,17 +43,16 @@ namespace AES.Tools
             foreach (var s in storeProducts)
             {
                 if (!s.IsActive) continue;
-                if (string.IsNullOrWhiteSpace(s.ProductKey) || string.IsNullOrWhiteSpace(s.Platform) || string.IsNullOrWhiteSpace(s.StoreProductId))
+                if (string.IsNullOrWhiteSpace(s.ProductKey) || string.IsNullOrWhiteSpace(s.Platform))
                     continue;
 
                 var key = s.ProductKey.Trim();
                 var platform = s.Platform.Trim();
                 // NOTE: This is treated as Unity IAP productId (ProductDefinition.id).
                 // If your data schema differentiates productId vs storeSpecificId, map the correct column here.
-                var productId = s.StoreProductId.Trim();
 
-                _productIdByKeyPlatform[(key, platform)] = productId;
-                _keyByProductIdPlatform[(productId, platform)] = key;
+                _productIdByKeyPlatform[(key, platform)] = key;
+                _keyByProductIdPlatform[(key, platform)] = key;
             }
 
             _bundleByKey = bundleContents

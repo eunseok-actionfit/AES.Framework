@@ -9,7 +9,6 @@ public sealed class AppOpenLoadingUI : LoadingOverlayUIBase
 
     public override void SetProgress(float realtime01, float smoothed01)
     {
-        Debug.Log($"AppOpen Loading: {smoothed01}");
         if (bar) bar.value = Mathf.Clamp01(smoothed01);
     }
 

@@ -40,7 +40,10 @@ namespace AES.Tools
             Debug_OnValueUpdated(value, ResolvedPath);
 #endif
             if (image == null)
+            {
                 return;
+            }
+                
 
             if (useConverter && converter != null)
             {
@@ -56,6 +59,11 @@ namespace AES.Tools
                 image.sprite = s;
             else if (value == null)
                 image.sprite = null;
+
+            if (image.sprite == null)
+                image.enabled = false;
+            else if(image.type == Image.Type.Simple)
+                image.SetNativeSize();
         }
     }
 }

@@ -51,41 +51,97 @@ namespace AES.Tools
             {
                 Debug.Log($"[IAP] OnBackendPriceUpdated pid={productId}, price={priceText}");
 
-
                 if (string.IsNullOrWhiteSpace(productId)) return;
                 if (string.IsNullOrWhiteSpace(priceText)) return;
 
                 if (_db != null && _db.TryResolveProductKeyByProductId(productId, out var productKey))
                 {
                     _productKeyToPrice[productKey] = priceText;
-                    PriceUpdatedByProductKey?.Invoke(productKey, priceText);
+
+                    // 기존:
+                    // PriceUpdatedByProductKey?.Invoke(productKey, priceText);
+
+                    // 변경: 구독자(리스너)별로 분해 호출 + 예외 분리 로깅
+                    var evt = PriceUpdatedByProductKey;
+                    if (evt != null)
+                    {
+                        foreach (var d in evt.GetInvocationList())
+                        {
+                            var cb = (Action<string, string>)d;
+                            try
+                            {
+                                cb(productKey, priceText);
+                            }
+                            catch (Exception ex)
+                            {
+                                Debug.LogError(
+                                    $"[IAP] PriceUpdatedByProductKey handler FAILED " +
+                                    $"target={cb.Target?.GetType().FullName ?? "static"} " +
+                                    $"method={cb.Method.DeclaringType?.FullName}.{cb.Method.Name} " +
+                                    $"productKey={productKey} price={priceText}\n{ex}"
+                                );
+                            }
+                        }
+                    }
+
                     Debug.Log($"[IAP] Resolved productKey={productKey}");
                 }
-                else { Debug.LogError($"[IAP] Resolve FAILED productId={productId}"); }
+                else
+                {
+                    Debug.LogError($"[IAP] Resolve FAILED productId={productId}");
+                }
             }
-            catch (Exception e) {
+            catch (Exception e)
+            {
                 Debug.LogError($"[IAP] OnBackendPriceUpdated FAILED pid={productId}, price={priceText}\n{e}");
             }
         }
 
+
         private void OnBackendConfirmed(Order order)
         {
-            if (_db == null || order == null) return;
-
-            // Order 안의 productId 목록을 꺼내서 productKey로 변환 후 브로드캐스트
-            var info = order.Info;
-            var purchased = info?.PurchasedProductInfo;
-            if (purchased.Count == 0) return;
-
-            foreach (var p in purchased)
+            try
             {
-                var productId = p?.productId;
-                if (string.IsNullOrWhiteSpace(productId)) continue;
+                if (_db == null || order == null) return;
 
-                if (_db.TryResolveProductKeyByProductId(productId, out var productKey) &&
-                    !string.IsNullOrWhiteSpace(productKey)) { PurchaseConfirmedByProductKey?.Invoke(productKey); }
+                var purchased = order.Info?.PurchasedProductInfo;
+                if (purchased == null || purchased.Count == 0) return;
+
+                foreach (var p in purchased)
+                {
+                    var productId = p?.productId;
+                    if (string.IsNullOrWhiteSpace(productId)) continue;
+
+                    if (_db.TryResolveProductKeyByProductId(productId, out var productKey) &&
+                        !string.IsNullOrWhiteSpace(productKey))
+                    {
+                        var evt = PurchaseConfirmedByProductKey;
+                        if (evt != null)
+                        {
+                            foreach (var d in evt.GetInvocationList())
+                            {
+                                var cb = (Action<string>)d;
+                                try { cb(productKey); }
+                                catch (Exception ex)
+                                {
+                                    Debug.LogError(
+                                        $"[IAP] PurchaseConfirmedByProductKey handler FAILED " +
+                                        $"target={cb.Target?.GetType().FullName ?? "static"} " +
+                                        $"method={cb.Method.DeclaringType?.FullName}.{cb.Method.Name} " +
+                                        $"productKey={productKey}\n{ex}"
+                                    );
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"[IAP] OnBackendConfirmed FAILED\n{e}");
             }
         }
+
 
         public bool TryGetLocalizedPriceByProductKey(string productKey, out string priceText)
         {
@@ -106,6 +162,8 @@ namespace AES.Tools
 
             return _backend.PurchaseAsync(productId);
         }
+        
+    
 
         public UniTask RestoreAsync()
         {
