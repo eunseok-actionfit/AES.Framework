@@ -26,8 +26,8 @@ public sealed class LoadSceneStepWithResolver : ITransitionStep
     {
         ctx.Request.Events?.Emit(TransitionStatus.LoadDestinationScene);
 
-        if (_catalog == null || !_catalog.TryResolve(ctx.Request.DestinationKey, out var resolved))
-            throw new TransitionException(TransitionFailCode.ContentNotFound, $"Unknown destination key: {ctx.Request.DestinationKey}");
+        if (_catalog == null || !_catalog.TryResolve(ctx.Request.DestinationKey, out var resolved)) return;
+            //throw new TransitionException(TransitionFailCode.ContentNotFound, $"Unknown destination key: {ctx.Request.DestinationKey}");
 
         ctx.DestinationHandle = await ctx.Loader.LoadSceneAsync(
             resolved,
