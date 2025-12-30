@@ -17,7 +17,7 @@ MonoBehaviour:
   profile: Dev
   autoCreateRootScope: 1
   removeClonePostfix: 1
-  enableFirstSceneKey: 1
+  enableFirstSceneKey: 0
   firstSceneKey: Lobby
   appOpenLoadingMode: 1
   appOpenLoadingPrefab: {fileID: 776554383273540914, guid: b9d92847ba057414db00fbef22253693, type: 3}
