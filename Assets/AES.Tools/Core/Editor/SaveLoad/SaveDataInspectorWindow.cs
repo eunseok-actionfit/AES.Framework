@@ -225,19 +225,11 @@ namespace AES.Tools.Editor
                         var jsonStr = (string)methodToJson.Invoke(_serializer, new[] { data });
                         var bytes = Encoding.UTF8.GetBytes(jsonStr);
 
-                        var rLocal = await _local.SaveAsync(key, bytes, ct);
-
-                        if (rLocal.IsFail)
-                        {
-                            Debug.LogError($"[SaveDataInspector] Local save fail id={id}, key={key}, err={rLocal.Error}");
-                            continue;
-                        }
-
+                        await _local.SaveAsync(key, bytes, ct);
+                        
                         if (backend == SaveBackend.CloudFirst && _cloud != null)
                         {
-                            var rCloud = await _cloud.SaveAsync(key, bytes, ct);
-
-                            if (rCloud.IsFail) { Debug.LogError($"[SaveDataInspector] Cloud save fail id={id}, key={key}, err={rCloud.Error}"); }
+                             await _cloud.SaveAsync(key, bytes, ct);
                         }
                     }
 
@@ -280,9 +272,7 @@ namespace AES.Tools.Editor
 
                 try
                 {
-                    var rLocal = await _local.DeleteAsync(key, ct);
-
-                    if (rLocal.IsFail) { Debug.LogError($"[SaveDataInspector] Local delete fail id={entry.id}, key={key}, err={rLocal.Error}"); }
+                    await _local.DeleteAsync(key, ct);
                 }
                 catch (Exception ex) { Debug.LogError($"[SaveDataInspector] Local delete exception id={entry.id}, key={key}\n{ex}"); }
 
@@ -290,9 +280,7 @@ namespace AES.Tools.Editor
                 {
                     try
                     {
-                        var rCloud = await _cloud.DeleteAsync(key, ct);
-
-                        if (rCloud.IsFail) { Debug.LogError($"[SaveDataInspector] Cloud delete fail id={entry.id}, key={key}, err={rCloud.Error}"); }
+                       await _cloud.DeleteAsync(key, ct);
                     }
                     catch (Exception ex) { Debug.LogError($"[SaveDataInspector] Cloud delete exception id={entry.id}, key={key}\n{ex}"); }
                 }

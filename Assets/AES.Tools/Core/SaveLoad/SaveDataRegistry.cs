@@ -18,8 +18,7 @@ namespace AES.Tools
     public static class SaveDataRegistry
     {
         public static readonly IReadOnlyList<SaveDataInfo> All;
-
-
+        
         static SaveDataRegistry()
         {
             All = AppDomain.CurrentDomain.GetAssemblies()

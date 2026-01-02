@@ -37,10 +37,9 @@ namespace AES.Tools
         public async UniTask LoadAsync()
         {
             var slotId = _slot.CurrentSlotId;
-            var result = await _storage.LoadAsync<IapProcessedTransactionsData>(slotId);
+            var dto = await _storage.LoadAsync<IapProcessedTransactionsData>(slotId);
 
             _cache.Clear();
-            var dto = result.Value;
             if (dto?.ids != null)
             {
                 foreach (var id in dto.ids)

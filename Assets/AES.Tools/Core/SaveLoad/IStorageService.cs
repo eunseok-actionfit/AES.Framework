@@ -7,10 +7,10 @@ namespace AES.Tools
 {
     public interface IStorageService
     {
-        UniTask<Result<T>> LoadAsync<T>(string slotId = null, CancellationToken ct = default);
-        UniTask<Result> SaveAsync<T>(T data, CancellationToken ct = default);
-        UniTask<Result> SaveAsync<T>(string slotId, T data, CancellationToken ct = default);
-         UniTask<Result> DeleteAsync<T>(string slotId = null, CancellationToken ct = default);
+        UniTask<T> LoadAsync<T>(string slotId = null, CancellationToken ct = default);
+        UniTask SaveAsync<T>(T data, CancellationToken ct = default);
+        UniTask SaveAsync<T>(string slotId, T data, CancellationToken ct = default);
+         UniTask DeleteAsync<T>(string slotId = null, CancellationToken ct = default);
     }
 }
 

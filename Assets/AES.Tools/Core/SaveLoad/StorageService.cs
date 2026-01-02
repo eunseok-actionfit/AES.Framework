@@ -2,7 +2,6 @@ using System;
 using System.Linq;
 using System.Text;
 using System.Threading;
-using AES.Tools.TBC.Result;
 using Cysharp.Threading.Tasks;
 
 
@@ -62,14 +61,14 @@ namespace AES.Tools
         string BuildKey(SaveDataInfo info, string slotId)
             => BuildKeyWithProfile(info, slotId); // StorageProfile-aware key builder
 
-        public async UniTask<Result<T>> LoadAsync<T>(string slotId = null, CancellationToken ct = default)
+        // Result 제거 버전
+        public async UniTask<T> LoadAsync<T>(string slotId = null, CancellationToken ct = default)
         {
             var info = GetInfo<T>();
             var key = BuildKey(info, slotId);
             var backend = EffectiveBackend(info);
 
             byte[] bytes = null;
-            Error lastErr;
 
             // Cloud First 시도
             if (backend == SaveBackend.CloudFirst && cloud != null)
@@ -80,42 +79,43 @@ namespace AES.Tools
                 }
                 catch (Exception ex)
                 {
-                    lastErr = new Error("cloud-load-fail", ex.Message, info.Id, true, ex);
+                    // 에러 로깅만 하고, 로컬로 폴백
+                    UnityEngine.Debug.LogWarning(
+                        $"[Storage] Cloud load fail: {info.Id}, {ex.Message}");
                 }
             }
 
             // Local fallback 또는 LocalOnly
             if (bytes == null)
             {
-                try
-                {
-                    bytes = await local.LoadOrNullAsync(key, ct);
-                }
-                catch (Exception ex)
-                {
-                    lastErr = new Error("local-load-fail", ex.Message, info.Id, false, ex);
-                    return Result<T>.Fail(lastErr);
-                }
+                bytes = await local.LoadOrNullAsync(key, ct);
             }
 
+            // 저장된 데이터가 아예 없으면 default(T) 반환
             if (bytes == null)
-                return Result<T>.Ok(default);
+                return default;
 
             try
             {
                 var jsonStr = Encoding.UTF8.GetString(bytes);
                 var data = json.Deserialize<T>(jsonStr);
-                return Result<T>.Ok(data);
+                return data;
             }
             catch (Exception ex)
             {
-                return Result<T>.Fail(new Error("json-parse", ex.Message, info.Id, false, ex));
+                // JSON 파싱 실패 시 예외를 그대로 던지거나, default 반환 중 선택
+                UnityEngine.Debug.LogError(
+                    $"[Storage] Json parse fail: {info.Id}, {ex.Message}");
+                throw;
+                // 혹은 필요하면: return default;
             }
         }
-        public UniTask<Result> SaveAsync<T>(T data, CancellationToken ct = default)
+
+        // SaveAsync / DeleteAsync 도 Result 제거 버전 예시
+        public UniTask SaveAsync<T>(T data, CancellationToken ct = default)
             => SaveAsync(null, data, ct);
-    
-        public async UniTask<Result> SaveAsync<T>(string slotId, T data, CancellationToken ct = default)
+
+        public async UniTask SaveAsync<T>(string slotId, T data, CancellationToken ct = default)
         {
             var info = GetInfo<T>();
             var key = BuildKey(info, slotId);
@@ -126,24 +126,22 @@ namespace AES.Tools
                 var jsonStr = json.Serialize(data);
                 var bytes = Encoding.UTF8.GetBytes(jsonStr);
 
-                var rLocal = await local.SaveAsync(key, bytes, ct);
-                if (rLocal.IsFail) return rLocal;
+                await local.SaveAsync(key, bytes, ct);
 
                 if (backend == SaveBackend.CloudFirst && cloud != null)
                 {
-                    var rCloud = await cloud.SaveAsync(key, bytes, ct);
-                    if (rCloud.IsFail) return rCloud;
+                    await cloud.SaveAsync(key, bytes, ct);
                 }
-
-                return Result.Ok();
             }
             catch (Exception ex)
             {
-                return Result.Fail(new Error("save-fail", ex.Message, info.Id, false, ex));
+                UnityEngine.Debug.LogError(
+                    $"[Storage] Save fail: {info.Id}, {ex.Message}");
+                throw;
             }
         }
-    
-        public async UniTask<Result> DeleteAsync<T>(string slotId = null, CancellationToken ct = default)
+
+        public async UniTask DeleteAsync<T>(string slotId = null, CancellationToken ct = default)
         {
             var info = GetInfo<T>();
             var key = BuildKey(info, slotId);
@@ -152,21 +150,19 @@ namespace AES.Tools
             try
             {
                 // Local 삭제
-                var rLocal = await local.DeleteAsync(key, ct);
-                if (rLocal.IsFail) return rLocal;
+                await local.DeleteAsync(key, ct);
 
                 // CloudFirst면 클라우드도 삭제
                 if (backend == SaveBackend.CloudFirst && cloud != null)
                 {
-                    var rCloud = await cloud.DeleteAsync(key, ct);
-                    if (rCloud.IsFail) return rCloud;
+                    await cloud.DeleteAsync(key, ct);
                 }
-
-                return Result.Ok();
             }
             catch (Exception ex)
             {
-                return Result.Fail(new Error("delete-fail", ex.Message, info.Id, false, ex));
+                UnityEngine.Debug.LogError(
+                    $"[Storage] Delete fail: {info.Id}, {ex.Message}");
+                throw;
             }
         }
     }

@@ -10,8 +10,8 @@ namespace AES.Tools
     {
         public UniTask<byte[]> LoadOrNullAsync(string key, CancellationToken ct = default) => UniTask.FromResult<byte[]>(null);
 
-        public UniTask<Result> SaveAsync(string key, byte[] bytes, CancellationToken ct = default) =>  Result.Ok().AsUniTask();
-        public UniTask<Result> DeleteAsync(string key, CancellationToken ct = default) => Result.Ok().AsUniTask();
+        public UniTask SaveAsync(string key, byte[] bytes, CancellationToken ct = default) => UniTask.CompletedTask;
+        public UniTask DeleteAsync(string key, CancellationToken ct = default) =>  UniTask.CompletedTask;
     }
 }
 

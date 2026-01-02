@@ -15,7 +15,6 @@ namespace AES.Tools
         {
             _listener = OnValueChanged;
             _token    = context.RegisterListener(path, _listener);
-            //OnValueChanged(context.GetValue(path));
         }
 
         protected override void OnContextUnavailable()

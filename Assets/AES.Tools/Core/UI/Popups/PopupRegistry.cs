@@ -12,6 +12,11 @@ namespace AES.Tools.UI.Popups
         [SerializeField] private GameObject[] prefabs;
 
         private Dictionary<Type, GameObject> _map;
+        
+        private void OnValidate()
+        {
+            Build();
+        }
 
         private void OnEnable()
         {
