@@ -142,7 +142,6 @@ namespace AES.Tools.Editor
                 })
                 .Where(t =>
                     t.IsClass &&
-                    !t.IsAbstract &&
                     (t.Name.EndsWith("ViewModel", StringComparison.Ordinal) ||
                      t.Name.EndsWith("VM", StringComparison.Ordinal))
                 )
@@ -161,12 +160,26 @@ namespace AES.Tools.Editor
 
             foreach (var t in allTypes)
             {
-                string display = t.FullName;
-                menu.AddItem(new GUIContent(display), false, () => {
+                string display = t.FullName + (t.IsAbstract ? " (abstract)" : "");
+
+                menu.AddItem(new GUIContent(display), false, () =>
+                {
+                    var sourceMode = (ViewModelSourceMode)_viewModelSourceProp.enumValueIndex;
+
+                    if (sourceMode == ViewModelSourceMode.AutoCreate && t.IsAbstract)
+                    {
+                        EditorUtility.DisplayDialog(
+                            "선택 불가",
+                            "AutoCreate 모드에서는 추상 ViewModel 타입을 선택할 수 없습니다.",
+                            "확인");
+                        return;
+                    }
+
                     _viewModelTypeNameProp.stringValue = t.AssemblyQualifiedName;
                     serializedObject.ApplyModifiedProperties();
                 });
             }
+
 
             menu.ShowAsContext();
         }
