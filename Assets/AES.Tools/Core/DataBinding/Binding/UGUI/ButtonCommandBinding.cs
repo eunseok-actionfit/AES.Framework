@@ -9,7 +9,8 @@ namespace AES.Tools
     public enum ParameterType
     {
         None, String, Int,
-        Float, Bool
+        Float, Bool,
+        Enum
     }
 
     [RequireComponent(typeof(Button))]
@@ -22,6 +23,9 @@ namespace AES.Tools
         [SerializeField] bool useParameter;
         [SerializeField, ShowIf(nameof(useParameter))] ParameterType parameterType = ParameterType.None;
         [SerializeField, ShowIf(nameof(useParameter))] string stringParameter;
+        
+        [SerializeField, ShowIf(nameof(useParameter))] string enumTypeName; // 예: "AES.Tools.MyEnum, Assembly-CSharp"
+        [SerializeField, ShowIf(nameof(useParameter))] bool enumIgnoreCase = true;
 
         [Header("Behaviour")]
         [SerializeField] bool updateInteractableOnEnable = true;
@@ -172,6 +176,41 @@ namespace AES.Tools
                         if (stringParameter == "1") return true;
                         Debug.LogWarning($"ButtonCommandBinding: bool 변환 실패 '{stringParameter}'", this);
                         return null;
+                    case ParameterType.Enum:
+                    {
+                        if (string.IsNullOrEmpty(enumTypeName))
+                        {
+                            Debug.LogWarning("ButtonCommandBinding: enumTypeName 이 비어있습니다.", this);
+                            return null;
+                        }
+
+                        var t = Type.GetType(enumTypeName);
+                        if (t == null)
+                        {
+                            Debug.LogWarning($"ButtonCommandBinding: enumTypeName 타입 조회 실패 '{enumTypeName}'", this);
+                            return null;
+                        }
+
+                        if (!t.IsEnum)
+                        {
+                            Debug.LogWarning($"ButtonCommandBinding: '{enumTypeName}' 는 enum 타입이 아닙니다.", this);
+                            return null;
+                        }
+
+                        // 숫자도 허용: "0", "1" 등
+                        if (int.TryParse(stringParameter, NumberStyles.Integer, CultureInfo.InvariantCulture, out var enumInt))
+                            return Enum.ToObject(t, enumInt);
+
+                        try
+                        {
+                            return Enum.Parse(t, stringParameter, enumIgnoreCase);
+                        }
+                        catch
+                        {
+                            Debug.LogWarning($"ButtonCommandBinding: enum 변환 실패 '{enumTypeName}' <- '{stringParameter}'", this);
+                            return null;
+                        }
+                    }
 
                     case ParameterType.None:
                     default:

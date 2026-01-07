@@ -5,7 +5,6 @@ using UnityEngine.Events;
 using VContainer;
 using VContainer.Unity;
 
-
 namespace AES.Tools
 {
     // 뷰가 재사용될 때 상태를 초기화하고 싶으면 구현
@@ -16,8 +15,16 @@ namespace AES.Tools
 
     public sealed class ListSpawnBinding : ContextBindingBase
     {
+        [Header("Root")]
         [SerializeField] private Transform root;
+
+        [Header("Default Prefab")]
         [SerializeField] private MonoContext itemPrefab;
+
+        [Header("Value Converter (VM -> Prefab)")]
+        [SerializeField] private bool useConverter = false;
+        [SerializeField] private ValueConverterSOBase converter;
+        [SerializeField] private string converterParameter;
 
         [Header("Events")]
         [SerializeField] public UnityEvent OnSpawnEvent = new();
@@ -30,6 +37,9 @@ namespace AES.Tools
 
         // VM -> 인스턴스 매핑
         private readonly Dictionary<object, MonoContext> _vmToInstance = new();
+
+        // VM -> 이번에 사용 중인 Prefab 매핑 (프리팹 변경 감지용)
+        private readonly Dictionary<object, MonoContext> _vmToPrefab = new();
 
         protected override void OnContextAvailable(IBindingContext context, string path)
         {
@@ -63,8 +73,6 @@ namespace AES.Tools
             ApplyHybridBinding(list);
         }
 
-
-
         /// <summary>
         /// 하이브리드 방식:
         /// - VM 기준으로 인스턴스를 찾고
@@ -72,7 +80,7 @@ namespace AES.Tools
         /// </summary>
         private void ApplyHybridBinding(IObservableList list)
         {
-            if (root == null || itemPrefab == null)
+            if (root == null)
                 return;
 
             int count = list.Count;
@@ -86,15 +94,43 @@ namespace AES.Tools
                 if (vm == null)
                     continue;
 
+                // 이번 VM에 대해 어떤 prefab을 써야 하는지 결정
+                var desiredPrefab = ResolvePrefabForVm(vm);
+                if (desiredPrefab == null)
+                    continue;
+
+                // 기존 인스턴스가 있으면 prefab 변경 여부 확인
+                if (_vmToInstance.TryGetValue(vm, out var existingCtx) && existingCtx != null)
+                {
+                    if (_vmToPrefab.TryGetValue(vm, out var usedPrefab) && usedPrefab != null)
+                    {
+                        // prefab이 바뀌어야 하면 교체
+                        if (usedPrefab != desiredPrefab)
+                        {
+                            Destroy(existingCtx.gameObject);
+                            OnDespawnEvent.Invoke();
+
+                            _vmToInstance.Remove(vm);
+                            existingCtx = null;
+                        }
+                    }
+                }
+
+                // 없으면 새로 생성
                 if (!_vmToInstance.TryGetValue(vm, out var ctx) || ctx == null)
                 {
-                    if (_resolver == null)
-                        ctx = Instantiate(itemPrefab, root);
-                    else
-                        ctx = _resolver.Instantiate(itemPrefab, root);
+                    ctx = InstantiatePrefab(desiredPrefab);
+                    if (ctx == null)
+                        continue;
 
                     _vmToInstance[vm] = ctx;
+                    _vmToPrefab[vm] = desiredPrefab;
                     OnSpawnEvent.Invoke();
+                }
+                else
+                {
+                    // 기존 인스턴스 유지 시에도 prefab 기록 갱신(안전)
+                    _vmToPrefab[vm] = desiredPrefab;
                 }
 
                 ResetViewIfPossible(ctx);
@@ -115,6 +151,7 @@ namespace AES.Tools
 
             foreach (var kvp in _vmToInstance)
             {
+                var vm = kvp.Key;
                 var ctx = kvp.Value;
 
                 if (ctx == null || !usedInstances.Contains(ctx))
@@ -125,14 +162,17 @@ namespace AES.Tools
                         OnDespawnEvent.Invoke();
                     }
 
-                    vmKeysToRemove.Add(kvp.Key);
+                    vmKeysToRemove.Add(vm);
                 }
             }
 
             foreach (var key in vmKeysToRemove)
+            {
                 _vmToInstance.Remove(key);
+                _vmToPrefab.Remove(key);
+            }
 
-            // root 아래에 있는데 딕셔너리에 없는 (이상한) 자식 정리
+            // root 아래에 있는데 usedInstances에 없는 (이상한) 자식 정리
             for (int i = root.childCount - 1; i >= 0; i--)
             {
                 var child = root.GetChild(i);
@@ -149,13 +189,37 @@ namespace AES.Tools
             }
         }
 
+        private MonoContext ResolvePrefabForVm(object vm)
+        {
+            var prefab = itemPrefab;
+
+            if (useConverter && converter != null)
+            {
+                var converted = converter.Convert(vm, typeof(MonoContext), converterParameter, null);
+                if (converted is MonoContext mc && mc != null)
+                    prefab = mc;
+            }
+
+            return prefab;
+        }
+
+        private MonoContext InstantiatePrefab(MonoContext prefab)
+        {
+            if (prefab == null || root == null)
+                return null;
+
+            if (_resolver == null)
+                return Instantiate(prefab, root);
+
+            return _resolver.Instantiate(prefab, root);
+        }
+
         private void ResetViewIfPossible(MonoContext ctx)
         {
             if (ctx == null)
                 return;
 
             var resettable = ctx.GetComponent<IResettableView>();
-
             if (resettable != null)
                 resettable.ResetView();
         }
@@ -169,6 +233,7 @@ namespace AES.Tools
             }
 
             _vmToInstance.Clear();
+            _vmToPrefab.Clear();
 
             if (root != null)
             {
