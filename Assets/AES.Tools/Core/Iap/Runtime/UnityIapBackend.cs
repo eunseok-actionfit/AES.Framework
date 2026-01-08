@@ -134,7 +134,7 @@ namespace AES.Tools
                 // Unity IAP가 지역/통화에 맞춰 내려주는 문자열
                 var priceText = p.metadata?.localizedPriceString ?? string.Empty;
 
-                Debug.Log($"[IAP] Fetched id={productId}, price={priceText}");
+               // Debug.Log($"[IAP] Fetched id={productId}, price={priceText}");
 
                 if (!string.IsNullOrEmpty(priceText))
                     PriceUpdated?.Invoke(productId, priceText);

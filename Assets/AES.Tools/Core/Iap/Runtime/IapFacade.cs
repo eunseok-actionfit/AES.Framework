@@ -49,7 +49,7 @@ namespace AES.Tools
         {
             try
             {
-                Debug.Log($"[IAP] OnBackendPriceUpdated pid={productId}, price={priceText}");
+                // Debug.Log($"[IAP] OnBackendPriceUpdated pid={productId}, price={priceText}");
 
                 if (string.IsNullOrWhiteSpace(productId)) return;
                 if (string.IsNullOrWhiteSpace(priceText)) return;
@@ -63,15 +63,14 @@ namespace AES.Tools
 
                     // 변경: 구독자(리스너)별로 분해 호출 + 예외 분리 로깅
                     var evt = PriceUpdatedByProductKey;
+
                     if (evt != null)
                     {
                         foreach (var d in evt.GetInvocationList())
                         {
                             var cb = (Action<string, string>)d;
-                            try
-                            {
-                                cb(productKey, priceText);
-                            }
+
+                            try { cb(productKey, priceText); }
                             catch (Exception ex)
                             {
                                 Debug.LogError(
@@ -84,17 +83,14 @@ namespace AES.Tools
                         }
                     }
 
-                    Debug.Log($"[IAP] Resolved productKey={productKey}");
+                    //Debug.Log($"[IAP] Resolved productKey={productKey}");
                 }
                 else
                 {
-                    Debug.LogError($"[IAP] Resolve FAILED productId={productId}");
+                      Debug.LogError($"[IAP] Resolve FAILED productId={productId}");
                 }
             }
-            catch (Exception e)
-            {
-                Debug.LogError($"[IAP] OnBackendPriceUpdated FAILED pid={productId}, price={priceText}\n{e}");
-            }
+            catch (Exception e) { Debug.LogError($"[IAP] OnBackendPriceUpdated FAILED pid={productId}, price={priceText}\n{e}"); }
         }
 
 
@@ -116,11 +112,13 @@ namespace AES.Tools
                         !string.IsNullOrWhiteSpace(productKey))
                     {
                         var evt = PurchaseConfirmedByProductKey;
+
                         if (evt != null)
                         {
                             foreach (var d in evt.GetInvocationList())
                             {
                                 var cb = (Action<string>)d;
+
                                 try { cb(productKey); }
                                 catch (Exception ex)
                                 {
@@ -136,10 +134,7 @@ namespace AES.Tools
                     }
                 }
             }
-            catch (Exception e)
-            {
-                Debug.LogError($"[IAP] OnBackendConfirmed FAILED\n{e}");
-            }
+            catch (Exception e) { Debug.LogError($"[IAP] OnBackendConfirmed FAILED\n{e}"); }
         }
 
 
@@ -162,8 +157,8 @@ namespace AES.Tools
 
             return _backend.PurchaseAsync(productId);
         }
-        
-    
+
+
 
         public UniTask RestoreAsync()
         {
