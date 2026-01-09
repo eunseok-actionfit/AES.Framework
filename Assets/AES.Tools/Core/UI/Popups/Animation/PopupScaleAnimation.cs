@@ -20,6 +20,7 @@ namespace AES.Tools
 
         public async UniTask PlayIn()
         {
+            if(_rt == null) return;
             _rt.localScale = from;
 
             float t = 0f;
@@ -35,6 +36,7 @@ namespace AES.Tools
 
         public async UniTask PlayOut()
         {
+            if(_rt == null) return;
             float t = duration;
             while (t > 0f)
             {
