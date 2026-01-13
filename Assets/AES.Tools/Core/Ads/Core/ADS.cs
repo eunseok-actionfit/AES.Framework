@@ -43,6 +43,9 @@ namespace AES.Tools.VContainer
         public static bool TryShowInterstitial(string reason)
             => (_service as AdsService)?.TryShowInterstitial(reason) ?? false;
 
+        public static UniTask<bool> ShowInterstitialAsync(string reason, CancellationToken ct = default)
+            => (_service as AdsService)?.ShowInterstitialAsync(reason, ct) ?? UniTask.FromResult(false);
+
         // ================= Rewarded =================
         public static bool TryShowRewarded(string reason, Action onReward)
             => (_service as AdsService)?.TryShowRewarded(reason, onReward) ?? false;

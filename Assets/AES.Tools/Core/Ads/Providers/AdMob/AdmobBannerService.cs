@@ -1,5 +1,6 @@
 #if AESFW_ADS_ADMOB && AESFW_UNITASK
 using System;
+using AES.Tools.UI;
 using GoogleMobileAds.Api;
 using UnityEngine;
 
@@ -40,6 +41,10 @@ namespace AES.Tools.VContainer
 
             if (_bannerView == null)
             {
+                // 필요하면 Adaptive로 교체 가능:
+                // var adaptiveSize = AdSize.GetCurrentOrientationAnchoredAdaptiveBannerAdSizeWithWidth(AdSize.FullWidth);
+                // _bannerView = new BannerView(_adUnitId, adaptiveSize, AdPosition.Bottom);
+
                 _bannerView = new BannerView(_adUnitId, AdSize.Banner, AdPosition.Bottom);
                 RegisterBannerEvents(_bannerView);
             }
@@ -47,12 +52,17 @@ namespace AES.Tools.VContainer
             var request = new AdRequest();
             _bannerView.LoadAd(request);
 
+            // HeightPx는 로드 콜백에서 올리는 게 정석
             _bannerView.Show();
         }
 
         public void Hide()
         {
-            _bannerView?.Hide();
+            if (_bannerView != null)
+            {
+                _bannerView.Hide();
+                EventBus<BannerHeightChangedEvent>.Raise(new BannerHeightChangedEvent(0, false));
+            }
         }
 
         private void RegisterBannerEvents(BannerView bannerView)
@@ -60,11 +70,15 @@ namespace AES.Tools.VContainer
             bannerView.OnBannerAdLoaded += () =>
             {
                 Debug.Log("[AdmobBanner] Banner loaded.");
+
+                int heightPx = GetBannerHeightPx(bannerView);
+                EventBus<BannerHeightChangedEvent>.Raise(new BannerHeightChangedEvent(heightPx, true));
             };
 
             bannerView.OnBannerAdLoadFailed += (LoadAdError error) =>
             {
                 Debug.LogWarning($"[AdmobBanner] Banner failed to load: {error}");
+                EventBus<BannerHeightChangedEvent>.Raise(new BannerHeightChangedEvent(0, false));
             };
 
             bannerView.OnAdPaid += (AdValue adValue) =>
@@ -94,6 +108,19 @@ namespace AES.Tools.VContainer
             };
         }
 
+        /// <summary>
+        /// AdMob AdSize는 dp 단위. dp -> px 변환해서 UI에 전달.
+        /// </summary>
+        private int GetBannerHeightPx(BannerView bannerView)
+        {
+            // 스샷 기준: BannerView에 이 API는 존재함
+            float h = bannerView.GetHeightInPixels();
+            int heightPx = Mathf.RoundToInt(h);
+
+            // 가끔 0이 올 수 있으니 최소값 방어(선택)
+            return Mathf.Max(0, heightPx);
+        }
+
         public void Dispose()
         {
             if (_bannerView != null)
@@ -101,6 +128,8 @@ namespace AES.Tools.VContainer
                 _bannerView.Destroy();
                 _bannerView = null;
             }
+
+            EventBus<BannerHeightChangedEvent>.Raise(new BannerHeightChangedEvent(0, false));
         }
     }
 }

@@ -14,7 +14,8 @@
     "MaxSdk.Scripts",
     "Unity.Purchasing",
     "Unity.Services.Core",
-    "SingularSDK"
+    "SingularSDK",
+    "Vibration"
   ],
   "includePlatforms": [],
   "excludePlatforms": [],
@@ -58,6 +59,11 @@
       "name": "com.gameanalytics.sdk",
       "expression": "",
       "define": "AESFW_ANALYTICS_GA"
+    },
+    {
+      "name": "com.benoitfreslon.vibration",
+      "expression": "",
+      "define": "PROJECT_INSTALLED_HAPTIC"
     }
   ],
   

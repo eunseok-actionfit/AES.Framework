@@ -20,7 +20,7 @@ namespace AES.Tools.VContainer
         
         void SetRuntimeDisabled(bool disabled);
         
-        UniTask<bool> ShowInterstitialAsync(CancellationToken ct = default);
+        UniTask<bool> ShowInterstitialAsync(string reason, CancellationToken ct = default);
         UniTask<bool> ShowRewardedAsync(CancellationToken ct = default);
         
         bool IsReadyAppOpen { get; }

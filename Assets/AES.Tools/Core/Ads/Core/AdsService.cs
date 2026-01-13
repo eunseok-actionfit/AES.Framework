@@ -160,9 +160,9 @@ namespace AES.Tools.VContainer
             return false;
         }
 
-        public async UniTask<bool> ShowInterstitialAsync(CancellationToken ct = default)
+        public async UniTask<bool> ShowInterstitialAsync(string reason, CancellationToken ct = default)
         {
-            if (!TryShowInterstitial(string.Empty))
+            if (!TryShowInterstitial(reason))
                 return false;
 
             try
