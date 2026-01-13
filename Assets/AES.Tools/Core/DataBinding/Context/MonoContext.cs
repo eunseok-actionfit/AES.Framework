@@ -407,7 +407,11 @@ namespace AES.Tools
 
             if (type == null)
             {
+                
+#if UNITY_EDITOR
                 Debug.LogWarning($"[MonoContext] ViewModel 타입을 찾을 수 없습니다: {viewModelTypeName}", this);
+  #endif
+              
                 ViewModelType = null;
                 return;
             }
