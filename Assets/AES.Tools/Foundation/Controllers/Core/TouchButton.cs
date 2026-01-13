@@ -75,7 +75,7 @@ namespace AES.Tools.Controllers.Core
         [Tooltip("ScrollRect 안에 있을 때 MouseMode=false면 Enter에서 자동 Down을 막습니다.")]
         public bool DisableAutoDownOnEnterWhenInsideScrollRect = true;
 
-        public virtual bool ReturnToInitialSpriteAutomatically { get; set; }
+        public bool ReturnToInitialSpriteAutomatically = true;
         public virtual ButtonStates CurrentState { get; protected set; }
 
         public event System.Action<PointerEventData.FramePressState, PointerEventData> ButtonStateChange;
@@ -104,7 +104,7 @@ namespace AES.Tools.Controllers.Core
 
         protected virtual void Initialization()
         {
-            ReturnToInitialSpriteAutomatically = true;
+            // ReturnToInitialSpriteAutomatically = true;
 
             _selectable = GetComponent<Selectable>();
 
