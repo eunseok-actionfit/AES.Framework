@@ -51,7 +51,7 @@ public sealed class SceneTransitionService
         LoadingPresenterFactory loadingPresenterFactory,
         TransitionViewModel vm,
         ILoadingProgressHub hub,
-        IObjectResolver resolver // ✅ optional resolve 용도
+        IObjectResolver resolver 
     )
     {
         _loader = loader;
@@ -78,7 +78,7 @@ public sealed class SceneTransitionService
 
         // Volatile args for next scene
         if (request.SceneArgs != null) _sceneArgs.Set(request.SceneArgs);
-        else _sceneArgs.Clear();
+        //else _sceneArgs.Clear();
 
         // Bind VM commands only once
         if (!_vmBound && _vm != null)
@@ -216,7 +216,6 @@ public sealed class SceneTransitionService
 
                 // Presenter 기반 로딩 숨김
                 .Add(new UnloadLoadingScreenStep(plan))
-
                 .Add(new UnblockInputStep(request.InputBlocker));
 
             await pipe.Run(ctx, ct);
@@ -224,6 +223,14 @@ public sealed class SceneTransitionService
             request.Events?.Emit(TransitionStatus.Complete);
             _vm?.SetStatus(TransitionStatus.Complete);
             _vm?.SetMessage("Complete");
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            // "취소"는 정상 플로우로 취급
+            request.Events?.Emit(TransitionStatus.Canceled);
+            _vm?.SetStatus(TransitionStatus.Canceled);      
+            _vm?.SetMessage("Canceled");
+            return;
         }
         catch (Exception e)
         {

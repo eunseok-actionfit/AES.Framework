@@ -1,8 +1,15 @@
+using UnityEngine;
+
+
 public sealed class SceneArgsCarrier : ISceneArgsCarrier
 {
     private object _value;
 
-    public void Set<T>(T args) where T : class, ISceneArgs => _value = args;
+    public void Set<T>(T args) where T : class, ISceneArgs
+    {
+        _value = args;
+        Debug.Log(args);
+    }
 
     public bool TryConsume<T>(out T args) where T : class, ISceneArgs
     {

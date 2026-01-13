@@ -21,6 +21,11 @@ namespace AES.Tools.VContainer.Scope
                 return;
             }
 
+            // 3) Settings/Graph/Profile을 DI로 제공
+            builder.RegisterInstance(settings);
+            builder.RegisterInstance(settings.Graph);
+            builder.RegisterInstance(settings.Profile);
+            
             // 2) Feature 설치 (graph/profile은 Settings에서)
             BootstrapRunner.InstallAll(
                 settings.Graph,
@@ -34,10 +39,7 @@ namespace AES.Tools.VContainer.Scope
 #endif
             );
 
-            // 3) Settings/Graph/Profile을 DI로 제공
-            builder.RegisterInstance(settings);
-            builder.RegisterInstance(settings.Graph);
-            builder.RegisterInstance(settings.Profile);
+
 
             // 4) AppOpen Orchestrator 실행
             builder.RegisterEntryPoint<AppOpenBootstrapOrchestrator>();

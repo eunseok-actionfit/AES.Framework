@@ -46,6 +46,8 @@ namespace AES.Tools.VContainer.Bootstrap
         public bool RemoveClonePostfix => removeClonePostfix;
 
         public string FirstSceneKey => enableFirstSceneKey ? firstSceneKey : string.Empty;
+        
+        public void SetFirstSceneKey(string key) => firstSceneKey = key;
         public AppOpenLoadingMode AppOpenLoading => appOpenLoadingMode;
         public GameObject AppOpenLoadingPrefab => appOpenLoadingPrefab;
 

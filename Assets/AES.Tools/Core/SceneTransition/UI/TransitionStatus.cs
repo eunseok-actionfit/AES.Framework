@@ -28,5 +28,5 @@ public enum TransitionStatus
 
     Failed,  
 
-    Complete
+    Complete, Canceled
 }
