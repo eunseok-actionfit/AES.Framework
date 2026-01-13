@@ -14,6 +14,7 @@ namespace AES.Tools
         // key별 동시성 제어(프로세스 내)
         private static readonly Dictionary<string, SemaphoreSlim> _locks = new(StringComparer.Ordinal);
 
+        
         private static SemaphoreSlim GetLock(string key)
         {
             lock (_locks)
@@ -24,6 +25,18 @@ namespace AES.Tools
                     _locks[key] = sem;
                 }
                 return sem;
+            }
+        }
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetLocks()
+        {
+            lock (_locks)
+            {
+                foreach (var sem in _locks.Values)
+                {
+                    try { sem.Dispose(); } catch { /* 안전하게 무시 */ }
+                }
+                _locks.Clear();
             }
         }
 

@@ -6,6 +6,7 @@
     "Unity.Addressables.Editor",
     "UniTask",
     "Unity.TextMeshPro",
+    "VContainer",
     "Cshar"
   ],
   "includePlatforms": [
