@@ -17,6 +17,7 @@ namespace AES.Tools.VContainer
         }
 
         public static bool IsBound => _service != null;
+        public static bool IsRuntimeDisabled => _service?.IsRuntimeDisabled ?? false;
 
         public static bool IsReadyInterstitial
             => _service?.IsReadyInterstitial ?? false;

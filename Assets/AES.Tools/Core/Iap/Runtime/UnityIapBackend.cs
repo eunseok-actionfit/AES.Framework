@@ -4,12 +4,11 @@ using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Purchasing;
-
+using UnityEngine.Purchasing.Security;
 
 #if AESFW_SINGULAR
 using Singular;
-  #endif
-
+#endif
 
 namespace AES.Tools
 {
@@ -17,22 +16,32 @@ namespace AES.Tools
     {
         private readonly StoreController _store;
         private readonly IIapPurchaseProcessor _processor;
+        private readonly List<ProductDefinition> _products;
 
         public event Action<Order> OnConfirmed;
         public event Action<FailedOrder> OnFailed;
         public event Action<DeferredOrder> OnDeferred;
 
+        /// <summary>영구 상품 소유 감지 (productId, receipt)</summary>
+        public static event Action<string, string> OwnedNonConsumableFound;
+
         public event Action<string, string> PriceUpdated;
-        private readonly List<ProductDefinition> _products;
+
+        private bool _initialized;
+
+        private readonly UniTaskCompletionSource _productsFetchedTcs = new();
+        private readonly UniTaskCompletionSource _purchasesFetchedTcs = new();
+
+        public static event Action<Orders> OnPurchasesFetched;
 
         public UnityIapBackend(
             List<ProductDefinition> products,
             IIapPurchaseProcessor processor,
             string storeName = null)
         {
-            _store = UnityIAPServices.StoreController(storeName);
             _products = products;
             _processor = processor;
+            _store = UnityIAPServices.StoreController(storeName);
 
             _store.OnPurchasePending += HandlePending;
 
@@ -54,21 +63,54 @@ namespace AES.Tools
                 OnDeferred?.Invoke(d);
             };
 
+            _store.OnStoreDisconnected += e =>
+            {
+                Debug.LogError($"[IAP] Store disconnected: {e.Message}");
+            };
+
+            _store.OnProductsFetchFailed += e =>
+            {
+                foreach (var p in e.FailedFetchProducts)
+                    Debug.LogError($"[IAP] Product fetch failed: {p.id}, reason={e.FailureReason}");
+            };
+
             _store.OnProductsFetched += OnProductsFetched;
+            _store.OnPurchasesFetched += OnPurchasesFetchedInternal;
         }
 
-        private bool _fetched;
+        // --------------------------------------------------------------------
 
         public async UniTask InitializeAsync()
         {
-            await _store.Connect().AsUniTask();
+            if (_initialized)
+                return;
 
-            if (!_fetched)
+            _initialized = true;
+
+            Debug.Log("[IAP] InitializeAsync");
+            await _store.Connect().AsUniTask();
+            Debug.Log("[IAP] Connected");
+
+            _store.FetchProducts(_products);
+            _store.FetchPurchases();
+
+#if UNITY_IOS
+            VContainer.ADS.NotifySensitiveFlowStarted();
+            _store.RestoreTransactions((ok, err) =>
             {
-                _fetched = true;
-                _store.FetchProducts(_products);
-            }
+                VContainer.ADS.NotifySensitiveFlowEnded();
+                if (!ok)
+                    Debug.LogError($"[IAP] RestoreTransactions failed: {err}");
+            });
+#endif
         }
+
+        // --------------------------------------------------------------------
+
+        public UniTask WaitForProductsFetched() => _productsFetchedTcs.Task;
+        public UniTask WaitForPurchasesFetched() => _purchasesFetchedTcs.Task;
+
+        // --------------------------------------------------------------------
 
         public UniTask PurchaseAsync(string productId)
         {
@@ -79,66 +121,204 @@ namespace AES.Tools
         public UniTask RestoreAsync()
         {
 #if UNITY_IOS
-    VContainer.ADS.NotifySensitiveFlowStarted();
-    _store.RestoreTransactions(null);
+            VContainer.ADS.NotifySensitiveFlowStarted();
+            _store.RestoreTransactions(null);
 #endif
             return UniTask.CompletedTask;
         }
 
+        // --------------------------------------------------------------------
+        // Products (가격/메타 정보)
+        // --------------------------------------------------------------------
+
+        private void OnProductsFetched(List<Product> products)
+        {
+            Debug.Log($"[IAP] OnProductsFetched count={(products?.Count ?? 0)}");
+
+            if (products == null)
+                return;
+
+            foreach (var p in products)
+            {
+                if (p?.definition == null)
+                    continue;
+
+                Debug.Log(
+                    $"[IAP] Product id={p.definition.id}, storeId={p.definition.storeSpecificId}, type={p.definition.type}, price={p.metadata?.localizedPriceString}");
+
+                if (!string.IsNullOrEmpty(p.metadata?.localizedPriceString))
+                    PriceUpdated?.Invoke(p.definition.id, p.metadata.localizedPriceString);
+            }
+
+            _productsFetchedTcs.TrySetResult();
+        }
+
+        // --------------------------------------------------------------------
+        // Purchases (소유 / 복원)
+        // --------------------------------------------------------------------
+
+        private void OnPurchasesFetchedInternal(Orders orders)
+        {
+            Debug.Log($"[IAP] OnPurchasesFetched confirmed={orders.ConfirmedOrders.Count}");
+
+            foreach (var order in orders.ConfirmedOrders)
+            {
+                var receipt = order.Info.Receipt;
+                var tx = order.Info.TransactionID;
+
+                Debug.Log($"[IAP] Order tx={tx}, receiptLen={(receipt?.Length ?? 0)}");
+
+                if (string.IsNullOrEmpty(receipt))
+                    continue;
+
+                foreach (var pi in order.Info.PurchasedProductInfo)
+                {
+                    Debug.Log($"[IAP] Owned productId={pi.productId}");
+                    OwnedNonConsumableFound?.Invoke(pi.productId, receipt);
+                }
+            }
+
+            _purchasesFetchedTcs.TrySetResult();
+            OnPurchasesFetched?.Invoke(orders);
+        }
+
+        // --------------------------------------------------------------------
+        // Pending Purchase
+        // --------------------------------------------------------------------
+
         private async void HandlePending(PendingOrder order)
         {
             var info = order.Info;
-            var purchased = info.PurchasedProductInfo;
-
-            if (purchased.Count == 0)
+            if (info.PurchasedProductInfo.Count == 0)
                 return;
 
-            foreach (var p in purchased)
+            foreach (var p in info.PurchasedProductInfo)
             {
+                Debug.Log($"[IAP] Pending productId={p.productId}, tx={info.TransactionID}");
+
                 var ctx = new IapPurchaseContext
                 {
                     StoreProductId = p.productId,
                     TransactionId = info.TransactionID,
-                    UnityReceipt = info.Receipt,
+                    UnityReceipt = info.Receipt
                 };
 
-                Debug.Log($"[IAP] Pending productId={p.productId}, tx={info.TransactionID}");
-
                 var ok = await _processor.ProcessAsync(ctx);
-                Debug.Log($"[IAP] Process result={ok} for productId={p.productId}");
+                Debug.Log($"[IAP] Process result={ok}");
 
                 if (!ok)
                     return;
             }
-            
+
 #if AESFW_SINGULAR
             SingularSDK.InAppPurchase(order);
 #endif
+
             _store.ConfirmPurchase(order);
         }
 
+        // --------------------------------------------------------------------
+        // Receipt Validation
+        // --------------------------------------------------------------------
 
-        private void OnProductsFetched(List<Product> products)
+        public bool ValidateReceipt(
+            string receipt,
+            string productId,
+            byte[] googleTangle,
+            byte[] appleTangle)
         {
-            Debug.Log($"[IAP] OnProductsFetched count={(products?.Count ?? -1)}");
-
-            if (products == null) return;
-
-            foreach (var p in products)
+            try
             {
-                if (p == null) continue;
+                var validator = new CrossPlatformValidator(
+                    googleTangle,
+                    appleTangle,
+                    Application.identifier);
 
-                var productId = p.definition?.id;
-                if (string.IsNullOrEmpty(productId)) continue;
+                var result = validator.Validate(receipt);
 
-                // Unity IAP가 지역/통화에 맞춰 내려주는 문자열
-                var priceText = p.metadata?.localizedPriceString ?? string.Empty;
+#if UNITY_ANDROID
+                GooglePlayReceipt latest = null;
 
-               // Debug.Log($"[IAP] Fetched id={productId}, price={priceText}");
+                foreach (var r in result)
+                {
+                    if (r is not GooglePlayReceipt g || g.productID != productId)
+                        continue;
 
-                if (!string.IsNullOrEmpty(priceText))
-                    PriceUpdated?.Invoke(productId, priceText);
+                    if (latest == null || g.purchaseDate > latest.purchaseDate)
+                        latest = g;
+                }
+
+                return latest is { purchaseState: GooglePurchaseState.Purchased };
+
+#elif UNITY_IOS
+                AppleInAppPurchaseReceipt latest = null;
+
+                foreach (var r in result)
+                {
+                    if (r is not AppleInAppPurchaseReceipt a || a.productID != productId)
+                        continue;
+
+                    if (latest == null || a.purchaseDate > latest.purchaseDate)
+                        latest = a;
+                }
+
+                return latest != null && latest.cancellationDate == DateTime.MinValue;
+#else
+                return true;
+#endif
             }
+            catch (IAPSecurityException e)
+            {
+                Debug.LogWarning($"[IAP] Receipt validation failed: {e}");
+                return false;
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"[IAP] Receipt validation exception: {e}");
+                return false;
+            }
+        }
+        
+        public bool TryGetProduct(string productId, out Product product)
+        {
+            product = null;
+            product = _store.GetProductById(productId);
+            
+            return product != null;
+        }
+        
+        public bool TryGetReceipt(string productIdOrSku, out string receipt)
+        {
+            receipt = null;
+            if (string.IsNullOrWhiteSpace(productIdOrSku))
+                return false;
+
+            // 1) 기본: id로 찾기
+            var p = _store.GetProductById(productIdOrSku);
+
+            // 2) 못 찾으면: storeSpecificId로 재탐색
+            if (p == null)
+            {
+                // StoreController에 전체 제품 목록 접근 방법이 있으면 그걸 쓰세요.
+                // 예: _store.Products 같은 API가 없다면, _products(정의 목록)로 매핑을 만들어야 합니다.
+                foreach (var def in _products)
+                {
+                    if (def == null) continue;
+                    if (!string.Equals(def.storeSpecificId, productIdOrSku, StringComparison.Ordinal)) continue;
+
+                    p = _store.GetProductById(def.id);
+                    break;
+                }
+            }
+
+            if (p == null || !p.hasReceipt || string.IsNullOrWhiteSpace(p.receipt))
+            {
+                Debug.LogWarning($"[IAP] No receipt (treated as not-owned). key={productIdOrSku}, productNull={p == null}, hasReceipt={(p != null ? p.hasReceipt.ToString() : "N/A")}");
+                return false;
+            }
+
+            receipt = p.receipt;
+            return true;
         }
     }
 }

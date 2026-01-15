@@ -11,6 +11,8 @@ namespace AES.Tools
         private static Action _readyHandlers;
         private static Action<string, string> _priceHandlers;
         private static Action<string> _purchaseConfirmedHandlers;
+        
+        public static IIap Service => _service;
 
         internal static void Bind(IIap service)
         {
@@ -96,5 +98,27 @@ namespace AES.Tools
 
         public static UniTask RestoreAsync()
             => _service?.RestoreAsync() ?? UniTask.CompletedTask;
+        
+        public static bool ValidateReceiptByProductKey(string productKey, byte[] googleTangle, byte[] appleTangle)
+        {
+            if (_service == null)
+            {
+                return false;
+            }
+
+            // 실제 구현은 IapFacade에만 있으므로 캐스팅
+            if (_service is IapFacade facade)
+                return facade.ValidateReceiptByProductKey(productKey, googleTangle, appleTangle);
+
+            return false;
+        }
+        
+        public static UniTask WaitForProductsFetched()
+        {
+            if (_service == null)
+                throw new InvalidOperationException("[IAP] Not bound.");
+            return _service.WaitForProductsFetched();
+        }
+
     }
 }

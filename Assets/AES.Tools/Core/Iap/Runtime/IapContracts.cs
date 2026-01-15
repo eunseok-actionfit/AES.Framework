@@ -13,6 +13,7 @@ namespace AES.Tools
         UniTask InitializeAsync();
         UniTask PurchaseAsync(string sku);
         UniTask RestoreAsync();
+        UniTask WaitForProductsFetched();
     }
 
     /// <summary>
@@ -83,6 +84,7 @@ namespace AES.Tools
 
         UniTask PurchaseByProductKeyAsync(string productKey);
         UniTask RestoreAsync();
+        UniTask WaitForProductsFetched();
     }
 
 #if AESFW_IAP

@@ -13,6 +13,9 @@
     "Eflatun.SceneReference",
     "MaxSdk.Scripts",
     "Unity.Purchasing",
+    "Unity.Purchasing.Security",
+    "Unity.Purchasing.SecurityCore",
+    "Unity.Purchasing.SecurityStub",
     "Unity.Services.Core",
     "SingularSDK",
     "Vibration"

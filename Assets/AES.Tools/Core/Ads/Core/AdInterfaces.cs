@@ -19,6 +19,7 @@ namespace AES.Tools.VContainer
         bool IsReadyRewarded { get; }
         
         void SetRuntimeDisabled(bool disabled);
+         bool IsRuntimeDisabled { get; }
         
         UniTask<bool> ShowInterstitialAsync(string reason, CancellationToken ct = default);
         UniTask<bool> ShowRewardedAsync(CancellationToken ct = default);

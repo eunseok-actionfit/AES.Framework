@@ -337,6 +337,7 @@ namespace AES.Tools.VContainer
         // =========================================================
         // Runtime
         // =========================================================
+        public bool IsRuntimeDisabled => _runtimeDisabled;
         public void SetRuntimeDisabled(bool disabled)
         {
             _runtimeDisabled = disabled;

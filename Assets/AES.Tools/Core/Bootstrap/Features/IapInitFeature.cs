@@ -70,11 +70,13 @@ namespace AES.Tools.VContainer.Bootstrap.Framework
             var processor = new IapPurchaseProcessor(db, cap.RewardApplier, tx, verifier: null);
             router.Target = processor;
 
-            var backend = new UnityIapBackend(products, router);
-            facade.SetReady(db, backend);
+            var iap = new UnityIapBackend(products, router);
+            facade.SetReady(db, iap);
             IAP.Bind(facade);
             
-            await backend.InitializeAsync();
+            await iap.InitializeAsync();
+            await iap.WaitForProductsFetched();
+            await iap.WaitForPurchasesFetched();
             
             Debug.Log("[IAP] Initialized.");
         }

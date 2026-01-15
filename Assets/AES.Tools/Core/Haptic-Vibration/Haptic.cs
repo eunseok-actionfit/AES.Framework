@@ -50,7 +50,7 @@ namespace AES.Tools
             
 #if UNITY_ANDROID && PROJECT_INSTALLED_HAPTIC
             Vibration.VibrateAndroid(20);
-#elif UNITY_IOS && PROJECT_INSTALLED_HAPTIC
+#elif UNITY_IOS && PROJECT_INSTALLED_HAPTIC && !UNITY_EDITOR
             Vibration.VibrateIOS(ImpactFeedbackStyle.Light);
 #endif
         }
@@ -64,7 +64,7 @@ namespace AES.Tools
             
 #if UNITY_ANDROID && PROJECT_INSTALLED_HAPTIC
             Vibration.VibrateAndroid(30);
-#elif UNITY_IOS && PROJECT_INSTALLED_HAPTIC
+#elif UNITY_IOS && PROJECT_INSTALLED_HAPTIC  && !UNITY_EDITOR
             Vibration.VibrateIOS(ImpactFeedbackStyle.Soft);
 #endif
         }
@@ -76,9 +76,9 @@ namespace AES.Tools
                 return;
             }
             
-#if UNITY_ANDROID 
+#if UNITY_ANDROID && PROJECT_INSTALLED_HAPTIC
             Vibration.VibrateAndroid(60);
-#elif UNITY_IOS 
+#elif UNITY_IOS && PROJECT_INSTALLED_HAPTIC  && !UNITY_EDITOR
             Vibration.VibrateIOS(ImpactFeedbackStyle.Medium);
 #endif
         }
@@ -92,7 +92,7 @@ namespace AES.Tools
             
 #if UNITY_ANDROID && PROJECT_INSTALLED_HAPTIC
             Vibration.VibrateAndroid(100);
-#elif UNITY_IOS && PROJECT_INSTALLED_HAPTIC
+#elif UNITY_IOS && PROJECT_INSTALLED_HAPTIC  && !UNITY_EDITOR
             Vibration.VibrateIOS(ImpactFeedbackStyle.Heavy);
 #endif
         }
