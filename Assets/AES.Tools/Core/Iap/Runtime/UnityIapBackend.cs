@@ -45,6 +45,14 @@ namespace AES.Tools
 
             _store.OnPurchasePending += HandlePending;
 
+            // _store.OnPurchasesFetched += orders =>
+            // {
+            //     foreach (var order in orders.PendingOrders)
+            //     {
+            //         HandlePending(order);   
+            //     }
+            // };
+
             _store.OnPurchaseConfirmed += o =>
             {
                 VContainer.ADS.NotifySensitiveFlowEnded();
@@ -86,15 +94,13 @@ namespace AES.Tools
                 return;
 
             _initialized = true;
-
-            Debug.Log("[IAP] InitializeAsync");
+            
             await _store.Connect().AsUniTask();
-            Debug.Log("[IAP] Connected");
 
             _store.FetchProducts(_products);
             _store.FetchPurchases();
 
-#if UNITY_IOS
+#if UNITY_IOS && !UNITY_EDITOR
             VContainer.ADS.NotifySensitiveFlowStarted();
             _store.RestoreTransactions((ok, err) =>
             {
@@ -133,8 +139,6 @@ namespace AES.Tools
 
         private void OnProductsFetched(List<Product> products)
         {
-            Debug.Log($"[IAP] OnProductsFetched count={(products?.Count ?? 0)}");
-
             if (products == null)
                 return;
 
@@ -142,10 +146,7 @@ namespace AES.Tools
             {
                 if (p?.definition == null)
                     continue;
-
-                Debug.Log(
-                    $"[IAP] Product id={p.definition.id}, storeId={p.definition.storeSpecificId}, type={p.definition.type}, price={p.metadata?.localizedPriceString}");
-
+                
                 if (!string.IsNullOrEmpty(p.metadata?.localizedPriceString))
                     PriceUpdated?.Invoke(p.definition.id, p.metadata.localizedPriceString);
             }
@@ -159,15 +160,12 @@ namespace AES.Tools
 
         private void OnPurchasesFetchedInternal(Orders orders)
         {
-            Debug.Log($"[IAP] OnPurchasesFetched confirmed={orders.ConfirmedOrders.Count}");
-
+           
             foreach (var order in orders.ConfirmedOrders)
             {
                 var receipt = order.Info.Receipt;
                 var tx = order.Info.TransactionID;
-
-                Debug.Log($"[IAP] Order tx={tx}, receiptLen={(receipt?.Length ?? 0)}");
-
+                
                 if (string.IsNullOrEmpty(receipt))
                     continue;
 
@@ -194,8 +192,6 @@ namespace AES.Tools
 
             foreach (var p in info.PurchasedProductInfo)
             {
-                Debug.Log($"[IAP] Pending productId={p.productId}, tx={info.TransactionID}");
-
                 var ctx = new IapPurchaseContext
                 {
                     StoreProductId = p.productId,
@@ -204,7 +200,6 @@ namespace AES.Tools
                 };
 
                 var ok = await _processor.ProcessAsync(ctx);
-                Debug.Log($"[IAP] Process result={ok}");
 
                 if (!ok)
                     return;
@@ -229,6 +224,10 @@ namespace AES.Tools
         {
             try
             {
+                Debug.Log($"[IAP] googleTangle null={(googleTangle==null)} len={(googleTangle?.Length ?? -1)}");
+                if (googleTangle != null && googleTangle.Length >= 2)
+                    Debug.Log($"[IAP] googleTangle head={BitConverter.ToString(googleTangle, 0, 2)}");
+                
                 var validator = new CrossPlatformValidator(
                     googleTangle,
                     appleTangle,
@@ -237,32 +236,39 @@ namespace AES.Tools
                 var result = validator.Validate(receipt);
 
 #if UNITY_ANDROID
-                GooglePlayReceipt latest = null;
-
-                foreach (var r in result)
+                GooglePlayReceipt latestGoogleReceipt = null;
+                foreach (var purchaseReceipt in result)
                 {
-                    if (r is not GooglePlayReceipt g || g.productID != productId)
+                    if (purchaseReceipt is not GooglePlayReceipt googlePlayReceipt
+                        || googlePlayReceipt.productID != productId)
+                    {
                         continue;
-
-                    if (latest == null || g.purchaseDate > latest.purchaseDate)
-                        latest = g;
+                    }
+                    
+                    if (latestGoogleReceipt == null || googlePlayReceipt.purchaseDate > latestGoogleReceipt.purchaseDate)
+                    {
+                        latestGoogleReceipt = googlePlayReceipt;
+                    }
                 }
 
-                return latest is { purchaseState: GooglePurchaseState.Purchased };
-
+                return latestGoogleReceipt is { purchaseState: GooglePurchaseState.Purchased };
 #elif UNITY_IOS
-                AppleInAppPurchaseReceipt latest = null;
-
-                foreach (var r in result)
+                AppleInAppPurchaseReceipt latestAppleReceipt = null;
+                foreach (var purchaseReceipt in result)
                 {
-                    if (r is not AppleInAppPurchaseReceipt a || a.productID != productId)
+                    if (purchaseReceipt is not AppleInAppPurchaseReceipt appleReceipt
+                        || appleReceipt.productID != productId)
+                    {
                         continue;
+                    }
 
-                    if (latest == null || a.purchaseDate > latest.purchaseDate)
-                        latest = a;
+                    if (latestAppleReceipt == null || appleReceipt.purchaseDate > latestAppleReceipt.purchaseDate)
+                    {
+                        latestAppleReceipt = appleReceipt;
+                    }
                 }
-
-                return latest != null && latest.cancellationDate == DateTime.MinValue;
+                
+                return latestAppleReceipt != null && latestAppleReceipt.cancellationDate == DateTime.MinValue;
 #else
                 return true;
 #endif

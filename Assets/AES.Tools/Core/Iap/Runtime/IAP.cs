@@ -99,7 +99,7 @@ namespace AES.Tools
         public static UniTask RestoreAsync()
             => _service?.RestoreAsync() ?? UniTask.CompletedTask;
         
-        public static bool ValidateReceiptByProductKey(string productKey, byte[] googleTangle, byte[] appleTangle)
+        public static bool ValidateReceiptByProductKey(string productKey, string receipt, byte[] googleTangle, byte[] appleTangle)
         {
             if (_service == null)
             {
@@ -108,7 +108,7 @@ namespace AES.Tools
 
             // 실제 구현은 IapFacade에만 있으므로 캐스팅
             if (_service is IapFacade facade)
-                return facade.ValidateReceiptByProductKey(productKey, googleTangle, appleTangle);
+                return facade.ValidateReceiptByProductKey(productKey, receipt, googleTangle, appleTangle);
 
             return false;
         }

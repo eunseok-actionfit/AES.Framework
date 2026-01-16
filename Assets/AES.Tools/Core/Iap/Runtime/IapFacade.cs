@@ -176,7 +176,7 @@ namespace AES.Tools
         
         public UniTask  WaitForProductsFetched() => _backend.WaitForProductsFetched();
 
-        public bool ValidateReceiptByProductKey(string productKey, byte[] googleTangle, byte[] appleTangle)
+        public bool ValidateReceiptByProductKey(string productKey, string receipt, byte[] googleTangle, byte[] appleTangle)
         {
             if (!IsReady) return false;
 
@@ -199,34 +199,34 @@ namespace AES.Tools
                 return false;
             }
 
-
-            if (unityBackend.TryGetProduct(productId, out var product) && product != null)
-            {
-                // Consumable은 영수증 검증 대상에서 제외 (원본 코드와 동일)
-                if (product.definition.type == ProductType.Consumable)
-                {
-                    Debug.Log("[IAP] ValidateReceiptByProductKey: Consumable product cannot be validated.");
-                    return false;
-                }
-
-
-                // Non-Consumable / Subscription인데 영수증이 없으면 실패
-                if (!product.hasReceipt || string.IsNullOrWhiteSpace(product.receipt))
-                {
-                    Debug.LogError("[IAP] ValidateReceiptByProductKey: No receipt found for non-consumable/subscription product.");
-                    return false;
-                }
-
-                var result = unityBackend.ValidateReceipt(product.receipt, productId, googleTangle, appleTangle);
-                Debug.Log($"[IAP] ValidateReceiptByProductKey: result={result}");
-                return result;
-            }
-
-            if (!unityBackend.TryGetReceipt(productId, out var receipt) || string.IsNullOrWhiteSpace(receipt))
-            {
-                Debug.LogError("[IAP] ValidateReceiptByProductKey: Failed to get receipt.");
-                return false;
-            }
+            //
+            // if (unityBackend.TryGetProduct(productId, out var product) && product != null)
+            // {
+            //     // Consumable은 영수증 검증 대상에서 제외 (원본 코드와 동일)
+            //     if (product.definition.type == ProductType.Consumable)
+            //     {
+            //         Debug.Log("[IAP] ValidateReceiptByProductKey: Consumable product cannot be validated.");
+            //         return false;
+            //     }
+            //
+            //
+            //     // Non-Consumable / Subscription인데 영수증이 없으면 실패
+            //     if (!product.hasReceipt || string.IsNullOrWhiteSpace(product.receipt))
+            //     {
+            //         Debug.LogError("[IAP] ValidateReceiptByProductKey: No receipt found for non-consumable/subscription product.");
+            //         return false;
+            //     }
+            //
+            //     var result = unityBackend.ValidateReceipt(product.receipt, productId, googleTangle, appleTangle);
+            //     Debug.Log($"[IAP] ValidateReceiptByProductKey: result={result}");
+            //     return result;
+            // }
+            //
+            // if (!unityBackend.TryGetReceipt(productId, out var receipt) || string.IsNullOrWhiteSpace(receipt))
+            // {
+            //     Debug.LogError("[IAP] ValidateReceiptByProductKey: Failed to get receipt.");
+            //     return false;
+            // }
 
             var validate = unityBackend.ValidateReceipt(receipt, productId, googleTangle, appleTangle);
             Debug.Log($"[IAP] ValidateReceiptByProductKey: receipt={receipt}");
