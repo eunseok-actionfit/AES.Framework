@@ -38,15 +38,16 @@ namespace AES.Tools
 
             _ctx = context;
 
-            // VM → UI
-            _token = context.RegisterListener(path, OnModelChanged);
-
             // UI → VM
             dropdown.onValueChanged.AddListener(OnDropdownChanged);
 
             // 사전 옵션이 있으면 먼저 세팅
             if (predefinedOptions != null && predefinedOptions.Count > 0)
                 InitializeOptions(predefinedOptions);
+            
+            // VM → UI
+            _token = context.RegisterListener(path, OnModelChanged);
+            
         }
 
         protected override void OnContextUnavailable()
@@ -79,8 +80,7 @@ namespace AES.Tools
         // VM → UI
         void OnModelChanged(object rawValue)
         {
-            if (rawValue == null)
-                return;
+            if (rawValue == null) return;
 
             object value = rawValue;
 
@@ -89,19 +89,24 @@ namespace AES.Tools
 
             if (value is not string displayText)
             {
-                Debug.LogError(
-                    $"StringDropdownBinding: Converter 결과가 string이 아닙니다. path='{ResolvedPath}'",
-                    this);
+                Debug.LogError($"StringDropdownBinding: Converter 결과가 string이 아닙니다. path='{ResolvedPath}'", this);
                 return;
             }
 
-            // 옵션 미초기화면: 사전 옵션이 없을 때만, 최초 값으로 옵션 1개 생성
+            // 옵션이 아직 없고(predefinedOptions도 없던 케이스)만 1개 생성
             if (!_optionsInitialized)
                 InitializeOptions(new[] { displayText });
 
             int index = dropdown.options.FindIndex(o => o.text == displayText);
-            if (index < 0)
-                index = 0;
+
+            // predefinedOptions가 있는 경우: 모델 값이 옵션에 없으면 추가(권장)
+            if (index < 0 && _optionsInitialized)
+            {
+                dropdown.options.Add(new TMP_Dropdown.OptionData(displayText));
+                index = dropdown.options.Count - 1;
+            }
+
+            if (index < 0) index = 0;
 
             _isUpdatingFromModel = true;
             dropdown.SetValueWithoutNotify(index);
@@ -111,6 +116,7 @@ namespace AES.Tools
             Debug_OnValueUpdated(displayText, ResolvedPath);
 #endif
         }
+
 
         // UI → VM
         void OnDropdownChanged(int index)

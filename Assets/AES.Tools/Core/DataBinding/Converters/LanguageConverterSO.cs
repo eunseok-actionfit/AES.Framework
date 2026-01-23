@@ -40,7 +40,7 @@ namespace AES.Tools
             {
                 "English" => "en",
                 "한국어" => "ko-KR",
-                "日本語" => "ja",
+                "日本語" => "ja-JP",
                 _ => text
             };
         }

@@ -6,7 +6,7 @@ using UnityEngine;
 using UnityEngine.Purchasing;
 using UnityEngine.Purchasing.Security;
 
-#if AESFW_SINGULAR
+#if AESFW_ANALYTICS_SINGULAR
 using Singular;
 #endif
 
@@ -100,15 +100,15 @@ namespace AES.Tools
             _store.FetchProducts(_products);
             _store.FetchPurchases();
 
-#if UNITY_IOS && !UNITY_EDITOR
-            VContainer.ADS.NotifySensitiveFlowStarted();
-            _store.RestoreTransactions((ok, err) =>
-            {
-                VContainer.ADS.NotifySensitiveFlowEnded();
-                if (!ok)
-                    Debug.LogError($"[IAP] RestoreTransactions failed: {err}");
-            });
-#endif
+// #if UNITY_IOS && !UNITY_EDITOR
+//             VContainer.ADS.NotifySensitiveFlowStarted();
+//             _store.RestoreTransactions((ok, err) =>
+//             {
+//                 VContainer.ADS.NotifySensitiveFlowEnded();
+//                 if (!ok)
+//                     Debug.LogError($"[IAP] RestoreTransactions failed: {err}");
+//             });
+// #endif
         }
 
         // --------------------------------------------------------------------
@@ -205,7 +205,7 @@ namespace AES.Tools
                     return;
             }
 
-#if AESFW_SINGULAR
+#if AESFW_ANALYTICS_SINGULAR
             SingularSDK.InAppPurchase(order);
 #endif
 
