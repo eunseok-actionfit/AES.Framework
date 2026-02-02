@@ -202,7 +202,7 @@ namespace AES.Tools.VContainer
 
         public bool TryShowRewarded(string reason, Action onReward)
         {
-            if (_runtimeDisabled) return false;
+            //if (_runtimeDisabled) return false;
             if (_rewarded == null || !_rewarded.IsReady) return false;
 
             if (CanShowRewardedGate != null &&
@@ -234,7 +234,7 @@ namespace AES.Tools.VContainer
         
         public async UniTask<bool> ShowRewardedAsync(string reason, CancellationToken ct = default)
         {
-            if (_runtimeDisabled) return false;
+            //if (_runtimeDisabled) return false;
             if (_rewarded == null || !_rewarded.IsReady) return false;
 
             if (CanShowRewardedGate != null &&
@@ -278,7 +278,7 @@ namespace AES.Tools.VContainer
             _appOpen.ShowIfReady();
             return true;
         }
-
+        
         public UniTask<bool> WaitForAppOpenReadyAsync(
             float maxWaitSeconds,
             CancellationToken ct = default)
