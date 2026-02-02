@@ -58,7 +58,7 @@ namespace AES.Tools.VContainer
         // IAdsService Properties
         // =========================================================
         public bool IsReadyInterstitial => !_runtimeDisabled && (_interstitial?.IsReady ?? false);
-        public bool IsReadyRewarded => !_runtimeDisabled && (_rewarded?.IsReady ?? false);
+        public bool IsReadyRewarded =>  (_rewarded?.IsReady ?? false);
         public bool IsReadyAppOpen => !_runtimeDisabled && (_appOpen?.IsReady ?? false);
 
         // =========================================================
